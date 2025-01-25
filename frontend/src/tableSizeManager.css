@@ -16,7 +16,7 @@
     }
     
      .ant-table-body {
-      max-width: 300px !important;
+      max-width: 400px !important;
       overflow: hidden;
     } 
   }
