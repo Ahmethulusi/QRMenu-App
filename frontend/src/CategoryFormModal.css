@@ -1,0 +1,31 @@
+/* @primary-color: #4A90E2;  // Tema rengi (kenarlık, buton hover renkleri vs.)
+@border-color-base: #4A90E2;  // Kenarlık rengi */
+/* Input alanları için kenarlık ayarları */
+.ant-input {
+  border-color: #88befc; /* Daha koyu mavi bir kenarlık */
+  border-width: 1px; /* Kenarlık kalınlığını artır */
+}
+
+.ant-input:hover, .ant-input:focus{
+  border-color: #0558b7; /* Daha koyu mavi bir kenarlık */
+  border-width: 1px; /* Kenarlık kalınlığını artır */
+
+}
+/* Select ve diğer form elemanları için benzer ayarlar */
+.ant-select-selector, .ant-input-password, .ant-textarea {
+  border-color: #4A90E2;
+  border-width: 2px;
+}
+
+/* Form Item içindeki bileşenler */
+.ant-form-item {
+  margin-bottom: 16px; /* Her form elemanı arasında daha fazla boşluk */
+}
+
+/* Mobil cihazlar için ayrıca kenarlıkları daha belirgin yapabiliriz */
+@media (max-width: 768px) {
+  .ant-input, .ant-select-selector, .ant-input-password, .ant-textarea {
+    border-color: #5e8dbc; /* Mobilde daha koyu bir kenarlık */
+    border-width: 2px;
+  }
+}

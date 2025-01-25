@@ -1,0 +1,49 @@
+
+/* context-menu.css */
+.context-menu {
+    display: block;
+    position: absolute;
+    z-index: 1000;
+    width: 150px;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #ececec;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; 
+  
+  }
+  
+  .context-menu__item {
+    padding: 8px 6px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  .context-menu__item:hover {
+    background-color: #696969;
+    cursor: pointer;
+  }
+  
+  .context-menu__item2{
+    padding: 8px 6px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .context-menu__item2:hover {
+    background-color: #abff1a;
+    cursor: pointer;
+  }
+  .context-menu__item3{
+    padding: 8px 6px;
+    align-items: center;
+    justify-content: center;  
+    cursor: pointer;
+  }
+
+  .context-menu__item3:hover {
+    background-color: #aea5a5;
+    cursor: pointer;
+  }
+

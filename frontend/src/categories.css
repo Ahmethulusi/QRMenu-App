@@ -1,0 +1,108 @@
+/* .table-container {
+    width: 100%;
+ 
+  }
+  
+  .ant-table {
+    width: 100%;
+    max-width: 100%;}
+    
+  .table tbody tr {
+    border-bottom: 2px solid #8d8d8d;
+  }
+
+.edit-button {
+  margin-right: 10px;
+  font-size:16px;
+  text-decoration: none;
+  color: blue;
+  cursor: pointer;
+}
+
+.delete-button {
+  font-size:16px;
+  text-decoration: none;
+  color: red;
+  cursor: pointer;
+}
+
+.delete-button:hover{
+  color:rgb(91, 0, 0);
+  opacity: 1;
+}
+.edit-button:hover{
+  color:rgb(10, 147, 233);
+  opacity: 1;
+}
+
+ */
+
+
+ /* Özel tablo stili */
+.custom-table .ant-table {
+  font-size: 16px;
+  font-family: 'Arial', sans-serif; /* Font değiştirme */
+  border: 3px solid #e0e0e0; /* Tablonun dış sınırı */
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background-color: #f0f0f0; /* Başlık satırları */
+  color: #000; /* Başlık metin rengi */
+  font-weight: bold;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  padding: 16px; /* Hücre içi boşluklar */
+  color: #333;   /* Hücre metin rengi */
+}
+
+.custom-table .ant-table-tbody > tr:hover {
+  background-color: #f3f3f3; /* Satır üzerine gelindiğinde arka plan */
+  transition:background-transform 0.10s ease-in-out;
+}
+
+/* Küçük ekranlar için stil düzenlemeleri */
+@media (max-width: 480px) {
+  .custom-table .ant-table {
+    font-size: 12px;  /* Küçük ekranlarda font boyutu */
+  }
+  .custom-table .ant-table-thead > tr > th,
+  .custom-table .ant-table-tbody > tr > td {
+    padding: 8px;  /* Küçük ekranlar için padding */
+  }
+}
+
+.add-button {
+  margin-right: 20px;
+  font-size:16px;
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+}
+.edit-button {
+  margin-right: 10px;
+  font-size:16px;
+  text-decoration: none;
+  color: blue;
+  cursor: pointer;
+}
+
+.delete-button {
+  font-size:16px;
+  text-decoration: none;
+  color: red;
+  cursor: pointer;
+}
+
+.delete-button:hover{
+  color:rgb(91, 0, 0);
+  opacity: 1;
+}
+.add-button:hover{
+  color:rgb(110, 103, 103);
+  opacity: 1;
+}
+.edit-button:hover{
+  color:rgb(10, 147, 233);
+  opacity: 1;
+}

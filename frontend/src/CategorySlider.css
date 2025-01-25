@@ -1,0 +1,52 @@
+.category-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 0 20px; /* Sağ ve sol boşluk ekleyerek, en uçtaki kartların oklara yapışmasını engelliyoruz */
+}
+
+.carousel-content {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Kartlar arasındaki boşluk */
+}
+
+.carousel-item {
+  width: 250px; /* Kart genişliği */
+  text-align: center;
+  flex-shrink: 0; /* Kartların küçülmesini engelliyor */
+  transition: transform 0.5s ease;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.prev-btn {
+  left: 10px; /* Sol ok */
+}
+
+.next-btn {
+  right: 10px; /* Sağ ok */
+}
+
+
+@media (max-width: 768px) {
+  .category-carousel {
+    padding: 0 10px; /* Sağ ve sol boşluk ekleyerek, en uçtaki kartların oklara yapışmasını engelliyoruz */
+  }
+  
+  .carousel-item {
+    width: 200px; /* Kart genişliği */
+  }
+}
