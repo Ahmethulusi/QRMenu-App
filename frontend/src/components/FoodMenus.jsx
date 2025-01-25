@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../FoodMenus.css';
+import '../css/FoodMenus.css';
 import MenuModal from './MenuCreateModal';
 import AddProductModal from './AddProductToMenuModal';
 

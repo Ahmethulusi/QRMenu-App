@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../categories.css';
+import '../css/categories.css';
 import { Table, Button } from 'antd';
 import { MinusSquareOutlined, PlusCircleOutlined, PlusOutlined,EditOutlined,DeleteTwoTone} from '@ant-design/icons';
 

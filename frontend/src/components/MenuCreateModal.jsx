@@ -1,5 +1,5 @@
 import React , { useEffect, useState } from 'react';
-import '../menuModal.css'
+import '../css/menuModal.css'
 const MenuCreateModal = ({ show, handleClose, handleSave }) =>{
     const [menuName, setMenuName] = useState('');
     const [error,setError] = useState('');

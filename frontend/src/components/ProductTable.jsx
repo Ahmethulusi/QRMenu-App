@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext ,useMemo} from 'react';
-import '../table2.css';
+import '../css/table2.css';
 import ProductModal from './NewProductModal';
 import CategoryModal from './NewCategoryModal';
 import EditModal from './EditModal';

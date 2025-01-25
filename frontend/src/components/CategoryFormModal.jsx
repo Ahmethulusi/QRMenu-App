@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import '../CategoryFormModal.css';
+import '../css/CategoryFormModal.css';
 
 const ModalForm = ({ visible, onCancel, onOk }) => {
   const [form] = Form.useForm(); // Form kontrolü

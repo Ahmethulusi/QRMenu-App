@@ -4,7 +4,7 @@ import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeI
 import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './EditModal';
-import '../tableSizeManager.css';
+import '../css/tableSizeManager.css';
 
 
 const Product_Table = () => {

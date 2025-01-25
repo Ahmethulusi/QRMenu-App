@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message ,InputNumber, Col,Row,Select,Radio, AutoComplete} from 'antd';
 import { PlusOutlined,UploadOutlined } from '@ant-design/icons';
 import CategorySelector from './CategorySelector'
-// import '../CategoryFormModal.css';
+// import '../css/CategoryFormModal.css';
 const ModalForm = ({ visible, onCancel, onOk}) => {
   const [form] = Form.useForm(); // Form kontrolü
   // const [loading, setLoading] = useState(false);

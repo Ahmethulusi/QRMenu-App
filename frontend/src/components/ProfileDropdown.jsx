@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import '../profileDropdown.css'; // CSS dosyasını ekliyoruz
+import '../css/profileDropdown.css'; // CSS dosyasını ekliyoruz
 
 const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);

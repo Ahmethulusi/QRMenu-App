@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../categories.css';
+import '../css/categories.css';
 import CategoryModal from './NewCategoryModal';
 import SubCategoryModal from './NewSubCategory';
 // import { color, margin, width } from '@mui/system';

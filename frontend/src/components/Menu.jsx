@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../Sidebar.css';
+import '../css/Sidebar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 

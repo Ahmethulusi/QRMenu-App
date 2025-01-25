@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import CategoryModal from './NewCategoryModal';
-import '../productModal.css';
+import '../css/productModal.css';
 const ProductModal = ({ show, handleClose, handleSave }) => {
   const [file, setFile] = useState(null); // Dosyayı saklamak için state
   const [fileName, setFileName] = useState('Dosya Seçilmedi'); // Başlangıçta "Dosya Seçilmedi" metni

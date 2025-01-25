@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Carousel, Card, Checkbox } from 'antd';
 const { Meta } = Card;
-// import "../CategorySlider.css";
+// import "../css/CategorySlider.css";
 
 const contentStyle = {
   paddingTop: '20px',
