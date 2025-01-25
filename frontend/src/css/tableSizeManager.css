@@ -1,22 +1,12 @@
 .ant-table-thead > tr > th {
     height: 70px !important;  /* Header yüksekliğini sabit tutar */
-    padding: 8px !important;  /* Padding'i azaltır */
+    padding: 8px !important;  
     white-space: nowrap;  /* Header içeriğinin alt satıra geçmesini engeller */
   }
   
    .ant-table-body {
-    max-height: 600px !important;
+    max-height: 700px !important;
   } 
 
-  @media (max-width: 480px) {
-    .ant-table-thead > tr > th {
-      height: 50px !important;  /* Header yüksekliğini sabit tutar */
-      padding: 8px !important;  /* Padding'i azaltır */
-      white-space: nowrap;  /* Header içeriğinin alt satıra gelebilmesini engeller */
-    }
-    
-     .ant-table-body {
-      max-width: 00px !important;
-      overflow: hidden;
-    } 
-  }
+
+

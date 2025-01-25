@@ -443,86 +443,83 @@ exports.updateStatus = async (req, res) => {
 };
   
 exports.uploadExcel = async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
-      }
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
+    }
 
-      const workbook = xlsx.readFile(req.file.path);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = xlsx.utils.sheet_to_json(worksheet);
+    const workbook = xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(worksheet);
 
-      if (data.length === 0) {
-        return res.status(400).json({ message: 'Excel dosyası boş.' });
-      }
+    if (data.length === 0) {
+      return res.status(400).json({ message: 'Excel dosyası boş.' });
+    }
 
+    // Zorunlu alanları kontrol et
+    const missingFields = [];
+    data.forEach((item, index) => {
+      console.log(item);
+      if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
+      if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
+      if (!item.category_id) missingFields.push(`Satır ${index + 1}: Kategori ID eksik`);
+    });
 
-      // Zorunlu alanları kontrol et
-      const missingFields = [];
-      data.forEach((item, index) => {
-        console.log(item);
-        if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
-        if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
-        if (!item.category_id) missingFields.push(`Satır ${index + 1}: Kategori ID eksik`);
-      });
-
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          message: 'Zorunlu alanlar eksik:',
-          details: missingFields
-        });
-      }
-
-      // Verileri veritabanına ekleme işlemleri
-      const count = await Products.count(); // Mevcut ürün sayısını al
-      
-      const duplicateProducts = [];
-      const successfulProducts =  [];
-
-      for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-
-        const existingProduct = await Products.findOne({
-          where:{
-            product_name:item.product_name
-          }
-        });
-        if(existingProduct){
-          duplicateProducts.push(item.product_name);
-          continue;
-        }
-        await Products.create({
-          // Zorunlu alanlar
-          product_name: item.product_name,
-          price: item.price,
-          category_id: item.category_id,
-          
-          // Opsiyonel alanlar
-          description: item.description || null,
-          is_selected: item.is_selected || false,
-          is_available: item.is_available === undefined ? true : item.is_available,
-          sira_id: count + i + 1,
-          image_url: item.image_url || null,
-          calorie_count: item.calorie_count || null,
-          cooking_time: item.cooking_time || null,
-          stock: item.stock || null
-        });
-      }
-      successfulProducts.push(item.product_name);
-
-      res.status(200).json({ 
-        message: 'Excel dosyası başarıyla yüklendi ve veritabanına eklendi.',
-        addedProducts: successfulProducts,
-        duplicateProducts: duplicateProducts,
-        addedCount: successfulProducts.length,
-        duplicateCount: duplicateProducts.length
-      });
-    } catch (error) {
-      console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
-      res.status(500).json({ 
-        message: 'Excel dosyası yüklenirken bir hata oluştu.',
-        error: error.message 
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: 'Zorunlu alanlar eksik:',
+        details: missingFields
       });
     }
+
+    const count = await Products.count();
+    const duplicateProducts = [];
+    const successfulProducts = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+
+      const existingProduct = await Products.findOne({
+        where: {
+          product_name: item.product_name
+        }
+      });
+
+      if (existingProduct) {
+        duplicateProducts.push(item.product_name);
+        continue;
+      }
+
+      await Products.create({
+        product_name: item.product_name,
+        price: item.price,
+        category_id: item.category_id,
+        description: item.description || null,
+        is_selected: item.is_selected || false,
+        is_available: item.is_available === undefined ? true : item.is_available,
+        sira_id: count + 1,
+        image_url: item.image_url || null,
+        calorie_count: item.calorie_count || null,
+        cooking_time: item.cooking_time || null,
+        stock: item.stock || null
+      });
+      
+      successfulProducts.push(item.product_name); // Bu satırı döngü içine taşıdık
+    }
+
+    res.status(200).json({ 
+      message: 'Excel dosyası başarıyla yüklendi ve veritabanına eklendi.',
+      addedProducts: successfulProducts,
+      duplicateProducts: duplicateProducts,
+      addedCount: successfulProducts.length,
+      duplicateCount: duplicateProducts.length
+    });
+  } catch (error) {
+    console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
+    res.status(500).json({ 
+      message: 'Excel dosyası yüklenirken bir hata oluştu.',
+      error: error.message 
+    });
+  }
 }

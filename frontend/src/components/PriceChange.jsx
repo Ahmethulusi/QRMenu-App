@@ -61,6 +61,7 @@ const ProductPriceTable = () => {
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [percentageChange, setPercentageChange] = useState(''); // Yüzdelik değişim
   const [modifiedData, setModifiedData] = useState([]); // Toplu fiyat güncelleme için
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Seçili satırların key'leri için state
 
   useEffect(() => {
     fetchProducts();
@@ -162,51 +163,91 @@ const ProductPriceTable = () => {
     }
   };
 
-  const cancelBulkPriceChange = () => {
-    const resetData = data.map((item) => ({
-      ...item,
-      newPrice: '',  // Yeni fiyatları boşalt
-    }));
-    setPercentageChange('');
-    setData(resetData);  // Veriyi güncelle
+  // Row selection config
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys) => {
+      setSelectedRowKeys(selectedKeys);
+    },
   };
-  
 
   const applyPriceChange = () => {
     const percentage = parseFloat(percentageChange);
     if (isNaN(percentage)) {
-        message.error('Lütfen geçerli bir yüzdelik değer girin!');
-        return;
+      message.error('Lütfen geçerli bir yüzdelik değer girin!');
+      return;
+    }
+
+    if (selectedRowKeys.length === 0) {
+      message.error('Lütfen en az bir ürün seçin!');
+      return;
     }
 
     // Helper function to round to the nearest multiple of 5
     const roundToNearestFive = (price) => {
-        return Math.round(price / 5) * 5;
+      return Math.round(price / 5) * 5;
     };
 
     const updatedData = data.map((item) => {
-        if (filteredCategories.some((filter) => filter.value === item.category)) {
-            const newPrice = (item.currentPrice * (1 + percentage / 100));
-            const roundedPrice = roundToNearestFive(newPrice).toFixed(2); // Round and format to 2 decimal places
-            return { ...item, newPrice: roundedPrice };
-        }
-        return item;
+      if (selectedRowKeys.includes(item.key)) {
+        const newPrice = item.currentPrice * (1 + percentage / 100);
+        const roundedPrice = roundToNearestFive(newPrice).toFixed(2);
+        return { ...item, newPrice: roundedPrice };
+      }
+      return item;
     });
 
     setData(updatedData);
     setModifiedData(updatedData.filter((item) => item.newPrice !== ''));
-};
+    message.success(`${selectedRowKeys.length} ürün için fiyat değişikliği hesaplandı`);
+  };
+
+  const cancelBulkPriceChange = () => {
+    const resetData = data.map((item) => ({
+      ...item,
+      newPrice: '',
+    }));
+    setPercentageChange('');
+    setData(resetData);
+    setSelectedRowKeys([]); // Seçimleri sıfırla
+  };
+
   const saveAll = async () => {
     try {
+      // Sadece seçili ve yeni fiyatı olan ürünleri güncelle
+      const selectedItems = data.filter(item => 
+        selectedRowKeys.includes(item.key) && item.newPrice !== ''
+      );
+
+      if (selectedItems.length === 0) {
+        message.error('Güncellenecek fiyat bulunamadı!');
+        return;
+      }
+
       await Promise.all(
-        modifiedData.map((item) =>
+        selectedItems.map((item) =>
           updateProductPrice(item.id, item.newPrice)
         )
       );
-      setPercentageChange('');
 
+      // Başarılı kaydetme sonrası:
+      // 1. Yeni fiyatları mevcut fiyat olarak güncelle
+      // 2. Yeni fiyat alanlarını temizle
+      const updatedData = data.map((item) => {
+        if (selectedRowKeys.includes(item.key) && item.newPrice !== '') {
+          return {
+            ...item,
+            currentPrice: parseFloat(item.newPrice), // Yeni fiyatı mevcut fiyat yap
+            newPrice: '' // Yeni fiyat alanını temizle
+          };
+        }
+        return item;
+      });
+
+      setData(updatedData);
+      setPercentageChange('');
+      setSelectedRowKeys([]); // Seçimleri sıfırla
       message.success('Tüm fiyatlar başarıyla güncellendi!');
-      fetchProducts(); // Verileri yeniden çekme
     } catch (error) {
       message.error('Toplu güncelleme sırasında bir hata oluştu!');
     }
@@ -309,22 +350,31 @@ const ProductPriceTable = () => {
           onChange={(e) => setPercentageChange(e.target.value)}
           style={{ width: '20%', marginRight: '8px' }}
         />
-        <Button type="primary" onClick={applyPriceChange}>
-          Uygula
+        <Button 
+          type="primary" 
+          onClick={applyPriceChange}
+          disabled={selectedRowKeys.length === 0}
+        >
+          Uygula ({selectedRowKeys.length} ürün seçili)
         </Button>
         <Button
           type="primary"
           onClick={saveAll}
-          style={{ marginLeft: '10px', backgroundColor: 'green' }}
+          style={{ marginLeft: '10px', backgroundColor: 'green', color: 'white' }}
+          disabled={selectedRowKeys.length === 0}
         >
           Kaydet
         </Button>
-        <Button onClick={cancelBulkPriceChange} type="default" style={{ marginLeft: 8 , backgroundColor: 'red',color: 'white'}}>
+        <Button
+          type="primary"
+          onClick={cancelBulkPriceChange}
+          style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
+        >
           Vazgeç
         </Button>
 
         <Table
-          
+          rowSelection={rowSelection}
           scroll={{ x: 410 }}  
           style={{marginTop: '20px'}}
           components={{
@@ -337,7 +387,9 @@ const ProductPriceTable = () => {
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: cancel,
+            onChange: (page) => {
+              cancel();
+            },
           }}
         />
       </Form>

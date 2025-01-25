@@ -1,14 +1,33 @@
 /* Menu (Sidebar) */
 .menu {
   position: fixed;
-  top: 9%;
+  top: 7.8%;
   left: 0;
   width: 180px; /* Sidebar genişliği */
-  height: 91%;
+  height: 92.8%;
   background-color: #333;
   transition: transform 0.3s ease;
   transform: translateX(-100%); /* Kapalıyken sol dışına taşı */
   z-index: 1000;
+}
+@media screen and (max-width: 480px) {
+  .menu {
+    top: 13%;
+    height: 85%;
+  }
+}
+@media screen and (max-width: 768px ) and (min-width: 480px) {
+  .menu {
+    top: 13%;
+    height: 87%;
+  }
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1440px) {
+  .menu {
+    top: 13%;
+    height: 87%;
+  }
 }
 
 .menu.open {
@@ -44,10 +63,11 @@
 
 .menu-icon {
   position: fixed;
-  top: 10px;
+  top: 25px;
   left: 20px;
+  display: flex;
   align-items: center;
-  font-size: 24px;
+  font-size: 30px;
   color: #ffffff;
   cursor: pointer;
   z-index: 1000;
