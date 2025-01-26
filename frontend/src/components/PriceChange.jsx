@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Form, message } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
-
+import "../css/pricechange.css";
 const EditableCell = ({
   editing,
   dataIndex,
@@ -375,8 +375,8 @@ const ProductPriceTable = () => {
 
         <Table
           rowSelection={rowSelection}
-          scroll={{ x: 410 }}  
-          style={{marginTop: '20px'}}
+          scroll={{ x: 900, y: 350 }}  
+          style={{marginTop: '20px',height: '400px'}}
           components={{
             body: {
               cell: EditableCell,
@@ -387,9 +387,13 @@ const ProductPriceTable = () => {
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: (page) => {
-              cancel();
-            },
+            className: 'custom-pagination',
+            pageSizeOptions: ['5', '10', '20', '50'],
+            showSizeChanger: true,
+            defaultPageSize: 5,
+            responsive: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+            position: ['bottomRight']
           }}
         />
       </Form>
