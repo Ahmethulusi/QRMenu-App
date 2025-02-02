@@ -1,13 +1,13 @@
 
 .content {
     align-items:left;
-    padding-top:10% ;
+    padding-top:6% ;
     padding-left: 5%;
     padding-right: 4%;
-    padding-bottom: 50%;
+    /* padding-bottom: 50%; */
     background-color: rgba(176, 178, 185, 0.155);
     width: 100%;
-    height: 100%;
+    height: 1000px;
     /* margin-left: 5%; */
   }
   

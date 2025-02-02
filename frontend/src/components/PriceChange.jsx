@@ -277,7 +277,7 @@ const ProductPriceTable = () => {
       dataIndex: 'currentPrice',
       key: 'currentPrice',
       sorter: (a, b) => a.currentPrice - b.currentPrice,
-      render: (text) => `$${parseFloat(text).toFixed(2)}`,
+      render: (text) => `${parseFloat(text).toFixed(2)} TL`,
       width: '15%',
     },
     {
@@ -285,7 +285,7 @@ const ProductPriceTable = () => {
       dataIndex: 'newPrice',
       key: 'newPrice',
       editable: true,
-      render: (text) => (text ? `$${parseFloat(text).toFixed(2)}` : ''),
+      render: (text) => (text ? `${parseFloat(text).toFixed(2)} TL` : ''),
       width: '15%',
     },
     {

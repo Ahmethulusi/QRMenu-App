@@ -310,7 +310,7 @@ const Product_Table = () => {
       <Table
         className='ant-table'
         bordered={true}
-        scroll={{x: 900, y: 500 }}  // Y scroll'u ekledik
+        scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
         columns={columns(nameFilters, categoryFilters)}
         dataSource={data}
         loading={loading} 
