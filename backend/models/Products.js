@@ -1,7 +1,10 @@
+//// IMPORTS
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db'); // sequelize instance'ınızı buraya ekleyin
 const Category  = require('./Category');
 const Menus = require('./Menus');
+
+// DEFİNİNG
 const Product = sequelize.define('Product', {
   product_id: {
     type: DataTypes.INTEGER,
@@ -61,6 +64,8 @@ const Product = sequelize.define('Product', {
   timestamps: false,
 });
 
+
+///// RELATIONSHIPS
 Category.hasMany(Product, { foreignKey: 'category_id' });
 Product.belongsTo(Category, { foreignKey: 'category_id' });
 
