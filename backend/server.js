@@ -25,13 +25,13 @@ app.use('/api/admin',adminRouter);
   try {
     await db.authenticate();
    // await db.sync({ force: false });
-    console.log('Connection has been established successfully.');
+    console.log('✅ Veritabanına başarıyla bağlandı!.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('❌ Veritabanı bağlantı hatası:', error);
   }
 })();
 
 const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Sunucu ${PORT} portunda başlatıldı.`);
 });
