@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../css/categories.css';
 import CategoryModal from './NewCategoryModal';
 import SubCategoryModal from './NewSubCategory';
+
+const API_URL = import.meta.env.VITE_API_URL;
 // import { color, margin, width } from '@mui/system';
 
 const Categories = () => {
@@ -18,7 +20,7 @@ const Categories = () => {
 
   const fetchCategories = async () => {
     try { 
-      const response = await fetch('http://localhost:5000/api/admin/categories', {
+      const response = await fetch(`${API_URL}/api/admin/categories`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });

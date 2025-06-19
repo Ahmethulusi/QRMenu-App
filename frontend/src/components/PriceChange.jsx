@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Form, message } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import "../css/pricechange.css";
+
+const API_URL = import.meta.env.VITE_API_URL;
 const EditableCell = ({
   editing,
   dataIndex,
@@ -70,7 +72,7 @@ const ProductPriceTable = () => {
   // Ürünleri API'den çekme
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/products');
+      const response = await fetch(`${API_URL}/api/admin/products`);
       if (!response.ok) {
         throw new Error('Ürünler alınamadı!');
       }
@@ -147,7 +149,7 @@ const ProductPriceTable = () => {
 
   const updateProductPrice = async (productId, newPrice) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/products/updatePrice`, {
+      const response = await fetch(`${API_URL}/api/admin/products/updatePrice`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

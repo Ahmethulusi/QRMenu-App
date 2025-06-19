@@ -3,6 +3,8 @@ import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Sel
 import { PlusOutlined } from '@ant-design/icons';
 import CategorySelector from './CategorySelector';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const EditModal = ({ visible, onCancel, onOk, record }) => {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
@@ -26,9 +28,9 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       
       // Eğer resim varsa göster
       if (record.image_url) {
-        // URL'den localhost kısmını kaldır çünkü zaten tam URL geliyor
-        const imageUrl = record.image_url.replace('http://localhost:5000', '');
-        setFile({ preview: `http://localhost:5000${imageUrl}` });
+        // URL'den ana sunucu kısmını kaldır çünkü zaten tam URL geliyor
+        const imageUrl = record.image_url.replace(`${API_URL}`, '');
+        setFile({ preview: `${API_URL}${imageUrl}` });
       }
     }
   }, [record, form]);
@@ -67,7 +69,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       formData.append('status', status === 'true');
       formData.append('showcase', showcase === 'true');
 
-      const response = await fetch('http://localhost:5000/api/admin/products/update', {
+      const response = await fetch(`${API_URL}/api/admin/products/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

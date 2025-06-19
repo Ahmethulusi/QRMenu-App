@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import CategoryModal from './NewCategoryModal';
 import '../css/productModal.css';
+const API_URL = import.meta.env.VITE_API_URL;
 const ProductModal = ({ show, handleClose, handleSave }) => {
   const [file, setFile] = useState(null); // Dosyayı saklamak için state
   const [fileName, setFileName] = useState('Dosya Seçilmedi'); // Başlangıçta "Dosya Seçilmedi" metni
@@ -22,7 +23,7 @@ const ProductModal = ({ show, handleClose, handleSave }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/categories');
+      const response = await fetch(`${API_URL}/api/admin/categories`);
       if (!response.ok) {
         throw new Error('Kategorileri çekmede bir hata oluştu');
       }
@@ -46,7 +47,7 @@ const ProductModal = ({ show, handleClose, handleSave }) => {
     
     try {
       const response = await fetch(
-        'http://localhost:5000/api/admin/products/create',
+        `${API_URL}/api/admin/products/create`,
         {
           method: 'POST',
           body: formData,
@@ -72,7 +73,7 @@ const ProductModal = ({ show, handleClose, handleSave }) => {
 
   const fetchLastCategory = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/categories/last');
+      const response = await fetch(`${API_URL}/api/admin/categories/last`);
       if (!response.ok) {
         throw new Error('Kategorileri çekmede bir hata oluştu');
       }

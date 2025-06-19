@@ -1,5 +1,7 @@
 import React, { useState ,useEffect} from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const SubCategoryModal = ({ show, handleClose, handleSave ,parentId }) => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +19,7 @@ const SubCategoryModal = ({ show, handleClose, handleSave ,parentId }) => {
     e.preventDefault();
     try{
         const response = await fetch(
-            `http://localhost:5000/api/admin/categories/subs/${parentId}` ,
+            `${API_URL}/api/admin/categories/subs/${parentId}` ,
             {
                 method: 'GET',
                 headers: {
@@ -47,7 +49,7 @@ const SubCategoryModal = ({ show, handleClose, handleSave ,parentId }) => {
     e.preventDefault();
     try {
       const response = await fetch(
-        'http://localhost:5000/api/admin/categories/create-sub',
+        `${API_URL}/api/admin/categories/create-sub`,
         {
           method: 'POST',
           headers: {
