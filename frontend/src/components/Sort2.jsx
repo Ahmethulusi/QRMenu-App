@@ -6,6 +6,8 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Table } from 'antd';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const RowContext = React.createContext({});
 
 const DragHandle = () => {
@@ -80,7 +82,7 @@ const DragAndDropTable = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/productsBySiraid');
+      const response = await fetch(`${API_URL}/api/admin/productsBySiraid`);
       if (!response.ok) throw new Error('Network response was not ok');
       const result = await response.json();
       setData(result);
@@ -105,7 +107,7 @@ const DragAndDropTable = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/products/yeniSira', {
+      const response = await fetch(`${API_URL}/api/admin/products/yeniSira`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: data }),

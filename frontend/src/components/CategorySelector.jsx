@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Select, Divider, Input, Space, Button, Form } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const { Option } = Select;
 
 const CategorySelect = () => {
@@ -13,7 +15,7 @@ const CategorySelect = () => {
   // categories prop'u değiştiğinde local state'i güncelle
   useEffect(() => {
   
-      fetch('http://localhost:5000/api/admin/categories')
+      fetch(`${API_URL}/api/admin/categories`)
         .then((response) => response.json())
         .then((data) => setCategories(data));
     
@@ -27,7 +29,7 @@ const CategorySelect = () => {
     if (name && !Categories.find(cat => cat.category_name === name)) {
       const newCategory = { text: name, value: name };
       
-      const response = await fetch('http://localhost:5000/api/admin/categories/create', {
+      const response = await fetch(`${API_URL}/api/admin/categories/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

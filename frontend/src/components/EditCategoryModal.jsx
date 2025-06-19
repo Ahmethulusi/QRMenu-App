@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Upload, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null); // Yeni dosya yükleme
@@ -36,7 +38,7 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
 
       formData.append('category_id', category.id); // Kategori ID'sini ekle
 
-      const response = await fetch(`http://localhost:5000/api/admin/categories/update/${category.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/categories/update/${category.id}`, {
         method: 'PUT',
         body: formData,
       });
@@ -77,7 +79,7 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
         <Form.Item label="Mevcut Resim">
           {previewImage ? (
             <img
-              src={`http://localhost:5000/images/${previewImage}`} // Backend'den gelen resim yolu
+              src={`${API_URL}/images/${previewImage}`} // Backend'den gelen resim yolu
               alt="Mevcut Resim"
               style={{ width: '50%', marginBottom: '10px' }}
             />

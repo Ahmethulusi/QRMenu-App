@@ -3,6 +3,8 @@ import '../css/FoodMenus.css';
 import MenuModal from './MenuCreateModal';
 import AddProductModal from './AddProductToMenuModal';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 
 const Menus = () => {
@@ -32,7 +34,7 @@ const handleCloseModal = () => {
 
   const fetchMenus = async () => {
     try { 
-      const response = await fetch('http://localhost:5000/api/admin/menus', {
+      const response = await fetch(`${API_URL}/api/admin/menus`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });

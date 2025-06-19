@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Carousel, Card, Checkbox } from 'antd';
 const { Meta } = Card;
+const API_URL = import.meta.env.VITE_API_URL;
 // import "../css/CategorySlider.css";
 
 const contentStyle = {
@@ -24,7 +25,7 @@ const App = () => {
   const [is_available, setIsAvailable] = useState(true); // Varsayılan olarak true, ürünler olup olmadığı kontrol edilecek
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/categories")
+    fetch(`${API_URL}/api/admin/categories`)
       .then((response) => response.json())
       .then((categories) => setCategories(categories))
       .catch((error) => console.error("Veri çekme hatası:", error));
@@ -32,7 +33,7 @@ const App = () => {
 
   const handleCategoryClick = async (category_id) => {  
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/productsByCategory/${category_id}`);
+      const response = await fetch(`${API_URL}/api/admin/productsByCategory/${category_id}`);
       
       // Burada response objesini kontrol etmemiz gerek
       if (!response.ok) {
@@ -68,7 +69,7 @@ const App = () => {
                     <img
                       style={{ width: "130px", height: "80px" }}
                       alt={category.category_name}
-                      src={`http://localhost:5000/images/${category.image_url}`}
+                      src={`${API_URL}/images/${category.image_url}`}
                     />
                   ) : null
                 }
@@ -98,7 +99,7 @@ const App = () => {
                         product.image_url ? (
                           <img
                             alt={product.product_name}
-                            src={`http://localhost:5000/images/${product.image_url}`}
+                            src={`${API_URL}/images/${product.image_url}`}
                           />
                         ) : null
                       }

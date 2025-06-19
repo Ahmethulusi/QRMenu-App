@@ -16,6 +16,8 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function not(a, b) {
     return a.filter((value) => b.indexOf(value) === -1);
 }
@@ -37,11 +39,11 @@ export default function TransferListModal({ open, handleClose, selectedMenuId })
     useEffect(() => {
         // Kategorileri ve ürünleri fetch etmek
         async function fetchData() {
-            const categoriesResponse = await fetch('http://localhost:5000/api/admin/categories'); // Kategorileri fetch et
+            const categoriesResponse = await fetch(`${API_URL}/api/admin/categories`); // Kategorileri fetch et
             const categoriesData = await categoriesResponse.json();
             setCategories(categoriesData);
 
-            const productsResponse = await fetch('http://localhost:5000/api/admin/products'); // Ürünleri fetch et
+            const productsResponse = await fetch(`${API_URL}/api/admin/products`); // Ürünleri fetch et
             const productsData = await productsResponse.json();
             setProducts(productsData);
         }
@@ -59,7 +61,7 @@ export default function TransferListModal({ open, handleClose, selectedMenuId })
 
     useEffect(() => {
         const fetchSelectedMenu = async () => {
-            const response = await fetch(`http://localhost:5000/api/admin/menus/${selectedMenuId}`);
+            const response = await fetch(`${API_URL}/api/admin/menus/${selectedMenuId}`);
             const data = await response.json();
             setSelectedMenuName(data.name);
         };
@@ -74,7 +76,7 @@ export default function TransferListModal({ open, handleClose, selectedMenuId })
         const fetchMenuProducts = async () => {
             if (selectedMenuId) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/admin/menus/getRegisteredProducts/${selectedMenuId}`);
+                    const response = await fetch(`${API_URL}/api/admin/menus/getRegisteredProducts/${selectedMenuId}`);
                     const menuProducts = await response.json();
 
                     setRight(menuProducts); // Sağ tarafa menüdeki mevcut ürünleri ekle
@@ -126,7 +128,7 @@ export default function TransferListModal({ open, handleClose, selectedMenuId })
 
     const handleSave = async () => {
         // Seçilen ürünleri menüye kaydet
-        const response = await fetch('http://localhost:5000/api/admin/menus/saveProducts', {
+        const response = await fetch(`${API_URL}/api/admin/menus/saveProducts`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
