@@ -3,6 +3,8 @@ import { Modal, Form, Input, Button, Upload, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import '../css/CategoryFormModal.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const ModalForm = ({ visible, onCancel, onOk }) => {
   const [form] = Form.useForm(); // Form kontrolü
   const [file, setFile] = useState(null); // Yüklenen dosya
@@ -30,7 +32,7 @@ const ModalForm = ({ visible, onCancel, onOk }) => {
       console.log('Gönderilen veri:', { category_name: values.name, resim: file });
 
       // Backend'e veri gönderme
-      const response = await fetch('http://localhost:5000/api/admin/categories/create', {
+      const response = await fetch(`${API_URL}/api/admin/categories/create`, {
         method: 'POST',
         body: formData,
       });

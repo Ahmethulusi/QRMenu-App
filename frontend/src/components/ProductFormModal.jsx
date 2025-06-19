@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Upload, message ,InputNumber, Col,Row,Selec
 import { PlusOutlined,UploadOutlined } from '@ant-design/icons';
 import CategorySelector from './CategorySelector'
 // import '../css/CategoryFormModal.css';
+const API_URL = import.meta.env.VITE_API_URL;
 const ModalForm = ({ visible, onCancel, onOk}) => {
   const [form] = Form.useForm(); // Form kontrolü
   // const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/products');
+      const response = await fetch(`${API_URL}/api/admin/products`);
       if (!response.ok) {
         throw new Error('Ürünler yüklenirken bir hata oluştu');
       }
@@ -83,7 +84,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       formData.append('showcase', showcase === 'true');
       
       // Backend'e veri gönderme
-      const response = await fetch('http://localhost:5000/api/admin/products/create', {
+      const response = await fetch(`${API_URL}/api/admin/products/create`, {
         method: 'POST',
         body: formData,
       });

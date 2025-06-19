@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const CategoryModal = ({ show, handleClose, handleSave }) => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -8,7 +10,7 @@ const CategoryModal = ({ show, handleClose, handleSave }) => {
     e.preventDefault();
     try {
       const response = await fetch(
-        'http://localhost:5000/api/admin/categories/create',
+        `${API_URL}/api/admin/categories/create`,
         {
           method: 'POST',
           headers: {

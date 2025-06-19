@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Form, Select, InputNumber, Button, message, Spin } from 'antd';
 import { PercentageOutlined } from '@ant-design/icons';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const { Option } = Select;
 
 const BulkPriceChange = () => {
@@ -18,7 +20,7 @@ const BulkPriceChange = () => {
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
-      const response = await fetch('http://localhost:5000/api/admin/categories');
+      const response = await fetch(`${API_URL}/api/admin/categories`);
       if (!response.ok) {
         throw new Error('Kategoriler alınamadı!');
       }
@@ -41,7 +43,7 @@ const BulkPriceChange = () => {
     const { categoryId, percentage } = values;
     setApplyingChanges(true);
     try {
-        const response = await fetch('http://localhost:5000/api/admin/products/bulk-update-prices', {
+        const response = await fetch(`${API_URL}/api/admin/products/bulk-update-prices`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

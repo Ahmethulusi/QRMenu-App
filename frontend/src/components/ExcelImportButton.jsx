@@ -2,13 +2,15 @@ import React from 'react';
 import { Button, Upload, message, Tooltip } from 'antd';
 import { UploadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const ExcelImportButton = ({ onSuccess }) => {
   const handleUpload = async ({ file }) => {
     const formData = new FormData();
     formData.append('excel', file);
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/uploadExcel', {
+      const response = await fetch(`${API_URL}/api/admin/uploadExcel`, {
         method: 'POST',
         body: formData,
       });

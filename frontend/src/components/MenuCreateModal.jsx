@@ -1,5 +1,6 @@
 import React , { useEffect, useState } from 'react';
 import '../css/menuModal.css'
+const API_URL = import.meta.env.VITE_API_URL;
 const MenuCreateModal = ({ show, handleClose, handleSave }) =>{
     const [menuName, setMenuName] = useState('');
     const [error,setError] = useState('');
@@ -11,7 +12,7 @@ const MenuCreateModal = ({ show, handleClose, handleSave }) =>{
     const handleSubmit = async(e) => {
       e.preventDefault();
       try {
-        const response = await fetch('http://localhost:5000/api/admin/menus/create', {
+        const response = await fetch(`${API_URL}/api/admin/menus/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

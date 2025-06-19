@@ -6,6 +6,8 @@ import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './EditModal';
 import '../css/tableSizeManager.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 const Product_Table = () => {
   const [data, setData] = useState([]);  // Verileri burada tutacağız
@@ -24,14 +26,14 @@ const Product_Table = () => {
   const fetchData = async () => {
 
       try {
-        const response = await fetch('http://localhost:5000/api/admin/products');
+        const response = await fetch(`${API_URL}/api/admin/products`);
         if (!response.ok) {
           throw new Error('Verileri çekmede bir hata oluştu');
         }
         const datas = await response.json();
 
         const formattedData = datas.map((item, index) => {
-          const imageUrl = item.image_url ? `http://localhost:5000/images/${item.image_url}` : null;
+          const imageUrl = item.image_url ? `${API_URL}/images/${item.image_url}` : null;
 
           return {
             key: index, 
@@ -77,7 +79,7 @@ const Product_Table = () => {
   const handleShowcaseToggle = async (productId, newShowcaseState) => {
     
     try{
-    const response =await fetch(`http://localhost:5000/api/admin/products/updateShowcase/${productId}`, {
+    const response =await fetch(`${API_URL}/api/admin/products/updateShowcase/${productId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +104,7 @@ const Product_Table = () => {
   const handleStatusToggle = async (productId, newStatus) => {
   
     try{
-      const response =await fetch(`http://localhost:5000/api/admin/products/updateStatus/${productId}`, {
+      const response =await fetch(`${API_URL}/api/admin/products/updateStatus/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -336,7 +338,7 @@ const UploadImageButton = ({ productId ,onUploadSuccess}) => {
     
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/products/updateImageUrl', {
+      const response = await fetch(`${API_URL}/api/admin/products/updateImageUrl`, {
         method: 'POST',  // "UPDATE" yerine "POST" kullanıyoruz
         body: formData,
       });
