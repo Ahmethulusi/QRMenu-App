@@ -41,7 +41,7 @@ const upload = multer({
     }
   }
    
-  });
+});
 
 
 router.post('/uploadExcel',upload.single('excel'),adminController.uploadExcel);
