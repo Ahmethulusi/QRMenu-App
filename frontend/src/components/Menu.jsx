@@ -5,6 +5,7 @@ import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 function Menu({ setSelectedComponent }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+=======
   const [menuOpen, setMenuOpen] = useState(window.innerWidth >= 768);
   const menuRef = useRef(null);
 
@@ -24,6 +25,13 @@ function Menu({ setSelectedComponent }) {
   }, []);
 
   useEffect(() => {
+      if (window.innerWidth >= 768) {
+        setMenuOpen(true);
+      } else {
+        setMenuOpen(false);
+      }
+    };
+
     const content = document.querySelector('.content');
     if (content) {
       if (menuOpen) {
@@ -34,11 +42,15 @@ function Menu({ setSelectedComponent }) {
         content.style.width = '100%';
       }
     }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [menuOpen]);
 
   const handleSelection = (component) => {
     setSelectedComponent(component);
     if (isMobile) {
+    if (window.innerWidth <= 768) {
       setMenuOpen(false);
     }
   };
