@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 function Menu({ setSelectedComponent }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [menuOpen, setMenuOpen] = useState(window.innerWidth >= 768);
   const menuRef = useRef(null);
 
@@ -13,13 +14,16 @@ function Menu({ setSelectedComponent }) {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setMenuOpen(true);
-      } else {
-        setMenuOpen(false);
-      }
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      setMenuOpen(!mobile);
     };
 
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     const content = document.querySelector('.content');
     if (content) {
       if (menuOpen) {
@@ -30,14 +34,11 @@ function Menu({ setSelectedComponent }) {
         content.style.width = '100%';
       }
     }
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [menuOpen]);
 
   const handleSelection = (component) => {
     setSelectedComponent(component);
-    if (window.innerWidth <= 768) {
+    if (isMobile) {
       setMenuOpen(false);
     }
   };
@@ -93,7 +94,12 @@ function Menu({ setSelectedComponent }) {
         </ul>
       </nav>
 
-      <div className={`overlay ${menuOpen ? 'open' : ''}`} onClick={toggleMenu}></div>
+      {isMobile && (
+        <div
+          className={`overlay ${menuOpen ? 'open' : ''}`}
+          onClick={toggleMenu}
+        ></div>
+      )}
     </>
   );
 }
