@@ -4,29 +4,16 @@
   top: 80px;
   left: 0;
   width: 180px; /* Sidebar genişliği */
-  height: 1000px;
+  height: calc(100vh - 80px);
   background-color: #333;
   transition: transform 0.3s ease;
   transform: translateX(-100%); /* Kapalıyken sol dışına taşı */
   z-index: 1000;
 }
-@media screen and (max-width: 480px) {
-  .menu {
-    top: 13%;
-    height: 90%;
-  }
-}
-@media screen and (max-width: 768px ) and (min-width: 480px) {
-  .menu {
-    top: 13%;
-    height: 87%;
-  }
-}
 
-@media screen and (min-width: 1024px) and (max-width: 1440px) {
+@media screen and (max-width: 768px) {
   .menu {
-    top: 9.9%;
-    height: 91%;
+    height: calc(100vh - 80px);
   }
 }
 
@@ -90,6 +77,12 @@
   visibility: hidden;
   transition: opacity 0.3s ease;
   z-index: 900;
+}
+
+@media screen and (min-width: 769px) {
+  .overlay {
+    display: none;
+  }
 }
 
 .overlay.open {
