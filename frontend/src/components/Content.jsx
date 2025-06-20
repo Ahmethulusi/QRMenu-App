@@ -35,10 +35,10 @@ function Content({ selectedComponent }) {
     return <Sort2/>;
   }
   
-  else if (selectedComponent === 'Home Page') {
-    return <HomePage/>;
-
-  }else {
+  // else if (selectedComponent === 'Home Page') {
+  //   return <HomePage/>;
+  // }
+  else {
     return <div>Select an option from the menu</div>;
   }
 }

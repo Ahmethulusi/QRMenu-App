@@ -39,7 +39,7 @@ function Menu({ setSelectedComponent }) {
               setSelectedComponent('Foods');
             }}
           >
-            Products
+            Ürünler
           </li>
           <li
             className="side-link"
@@ -47,23 +47,23 @@ function Menu({ setSelectedComponent }) {
               setSelectedComponent('Sort');
             }}
           >
-            Sort
+            Sıralama
           </li>
-          <li
+          {/* <li
             className="side-link"
             onClick={() => {
               setSelectedComponent('Menus');
             }}
           >
-            Menus
-          </li>
+            Menüler
+          </li> */}
           <li
             className="side-link"
             onClick={() => {
               setSelectedComponent('Categories');
             }}
           >
-            Categories
+            Kategoriler
           </li>
           <li
             className="side-link"
@@ -71,16 +71,16 @@ function Menu({ setSelectedComponent }) {
               setSelectedComponent('Price Changing');
             }}
           >
-            Price Changing
+            Fiyat Değişikliği
           </li>
-          <li
+          {/* <li
             className="side-link"
             onClick={() => {
               setSelectedComponent('Home Page');
             }}
           >
             Home Page
-          </li>
+          </li> */}
         </ul>
       </nav>
 

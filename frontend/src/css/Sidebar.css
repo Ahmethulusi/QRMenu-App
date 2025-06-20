@@ -13,7 +13,7 @@
 @media screen and (max-width: 480px) {
   .menu {
     top: 13%;
-    height: 85%;
+    height: 90%;
   }
 }
 @media screen and (max-width: 768px ) and (min-width: 480px) {
@@ -25,10 +25,11 @@
 
 @media screen and (min-width: 1024px) and (max-width: 1440px) {
   .menu {
-    top: 13%;
-    height: 87%;
+    top: 9.9%;
+    height: 91%;
   }
 }
+
 
 .menu.open {
   transform: translateX(0); /* Açıkken sola tam yerleşir */
