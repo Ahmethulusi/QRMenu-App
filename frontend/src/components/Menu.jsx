@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 function Menu({ setSelectedComponent }) {
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(window.innerWidth >= 768);
   const menuRef = useRef(null);
 
   const toggleMenu = () => {
@@ -12,18 +12,35 @@ function Menu({ setSelectedComponent }) {
   };
 
   useEffect(() => {
-    // Menu kapanınca içerik genişliğini ve margin-left ayarlıyoruz
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMenuOpen(true);
+      } else {
+        setMenuOpen(false);
+      }
+    };
+
     const content = document.querySelector('.content');
     if (content) {
       if (menuOpen) {
-        content.style.marginLeft = '180px'; // Menu açıkken soldan boşluk
-        content.style.width = 'calc(100% - 180px)'; // Genişliği ayarlıyoruz
+        content.style.marginLeft = '180px';
+        content.style.width = 'calc(100% - 180px)';
       } else {
-        content.style.marginLeft = '0'; // Menu kapalıyken solda boşluk yok
-        content.style.width = '100%'; // Tam genişlik
+        content.style.marginLeft = '0';
+        content.style.width = '100%';
       }
     }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [menuOpen]);
+
+  const handleSelection = (component) => {
+    setSelectedComponent(component);
+    if (window.innerWidth <= 768) {
+      setMenuOpen(false);
+    }
+  };
 
   return (
     <>
@@ -35,17 +52,13 @@ function Menu({ setSelectedComponent }) {
         <ul>
           <li
             className="side-link"
-            onClick={() => {
-              setSelectedComponent('Foods');
-            }}
+            onClick={() => handleSelection('Foods')}
           >
             Ürünler
           </li>
           <li
             className="side-link"
-            onClick={() => {
-              setSelectedComponent('Sort');
-            }}
+            onClick={() => handleSelection('Sort')}
           >
             Sıralama
           </li>
@@ -59,17 +72,13 @@ function Menu({ setSelectedComponent }) {
           </li> */}
           <li
             className="side-link"
-            onClick={() => {
-              setSelectedComponent('Categories');
-            }}
+            onClick={() => handleSelection('Categories')}
           >
             Kategoriler
           </li>
           <li
             className="side-link"
-            onClick={() => {
-              setSelectedComponent('Price Changing');
-            }}
+            onClick={() => handleSelection('Price Changing')}
           >
             Fiyat Değişikliği
           </li>
