@@ -9,37 +9,36 @@ import ProductTable from './Product_Table';
 import PriceChangingPage from '../components/PriceChange';
 // import EditableTable from '../components/EditableTable';
 import HomePage from '../components/HomePage';
+import ProfileScreen from '../components/ProfileScreen';
+import TablesPage from '../components/TablesPage';
 
 function Content({ selectedComponent }) {
-  if (selectedComponent === 'Form') {
-    return <Form />;
-  }
-  
-  else if (selectedComponent === 'Foods') {
-    return <ProductTable/>;
-  }
-  
-  else if (selectedComponent === 'Categories') {
-    return <Categories />;
-  }
-  
-  else if (selectedComponent === 'Menus') {
-    return <Menus/>;
-  }
-  
-  else if (selectedComponent === 'Price Changing') {
-    return <PriceChangingPage/>;
-  }
-  
-  else if (selectedComponent === 'Sort') {
-    return <Sort2/>;
-  }
-  
-  // else if (selectedComponent === 'Home Page') {
-  //   return <HomePage/>;
-  // }
-  else {
-    return <div>Select an option from the menu</div>;
+  switch (selectedComponent) {
+    case 'Form':
+      return <Form />;
+
+    case 'Foods':
+      return <ProductTable />;
+
+    case 'Categories':
+      return <Categories />;
+
+    case 'Menus':
+      return <Menus />;
+
+    case 'Price Changing':
+      return <PriceChangingPage />;
+
+    case 'Sort':
+      return <Sort2 />;
+
+    case 'Profile':
+      return <ProfileScreen />;
+    case 'TablesAndQR':
+      return <TablesPage />;
+
+    default:
+      return <div>Menüden bir seçenek seçiniz.</div>;
   }
 }
 

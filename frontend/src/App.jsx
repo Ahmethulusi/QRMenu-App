@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Menu from './components/Menu';
 import Content from './components/Content';
-import Header from './components/Header'; 
+// import Header from './components/Header'; 
 import './css/App.css';
 import  './css/content.css';
 function App() {
@@ -13,7 +13,7 @@ function App() {
     
     <div className="App">
       
-      <Header/>
+      {/* <Header/> */}
       <div className="menu-container">
         <Menu setSelectedComponent={setSelectedComponent} />
       </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 // import Navs from './Nav';
 import '../css/navbar.css';
-import Profile from './ProfileDropdown';
+import Profile from './ProfileScreen';
 const Header = () => {
 
 

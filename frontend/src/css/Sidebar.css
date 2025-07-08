@@ -1,13 +1,12 @@
-/* Menu (Sidebar) */
-.menu {
+/* .menu {
   position: fixed;
   top: 80px;
   left: 0;
-  width: 180px; /* Sidebar genişliği */
+  width: 180px;
   height: calc(100vh - 80px);
   background-color: #333;
   transition: transform 0.3s ease;
-  transform: translateX(-100%); /* Kapalıyken sol dışına taşı */
+  transform: translateX(-100%);
   z-index: 1000;
 }
 
@@ -19,7 +18,7 @@
 
 
 .menu.open {
-  transform: translateX(0); /* Açıkken sola tam yerleşir */
+  transform: translateX(0); 
 }
 
 .menu ul {
@@ -30,7 +29,7 @@
 }
 
 .menu ul li {
-  margin: 0; /* Liste öğeleri arasında boşluk yok */
+  margin: 0; 
 }
 
 .menu ul li.side-link {
@@ -40,13 +39,13 @@
   color: #fff;
   text-align: left;
   cursor: pointer;
-  background-color: #444; /* Buton rengi */
-  border-bottom: 1px solid #555; /* Liste öğeleri arasında ayırıcı */
+  background-color: #444; 
+  border-bottom: 1px solid #555; 
   transition: background-color 0.3s;
 }
 
 .menu ul li.side-link:hover {
-  background-color: #555; /* Hover durumunda renk değişimi */
+  background-color: #555; 
 }
 
 .menu-icon {
@@ -65,7 +64,6 @@
   color: #555;
 }
 
-/* Overlay */
 .overlay {
   position: fixed;
   top: 0;
@@ -91,14 +89,79 @@
   visibility: visible;
 }
 
-/* Content alanı */
+
 .content {
   transition: margin-left 0.3s ease, width 0.3s ease;
-  margin-left: 180px; /* Sidebar açıkken içerik soldan daralır */
-  width: calc(100% - 180px); /* Sidebar genişliği hesaba katılır */
+  margin-left: 180px; 
+  width: calc(100% - 180px); 
 }
 
 .menu + .content {
-  margin-left: auto; /* Sidebar kapalıysa içerik tam genişlikte olur */
+  margin-left: auto; 
   width: 100%;
+} */
+
+/* Sidebar konteyner */
+.sidebar-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #001529;
+  width: 200px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar-container.collapsed {
+  width: 80px;
+}
+
+/* Üst bar (içine ikon yerleşir) */
+.sidebar-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+  background-color: #001529;
+  color: white;
+  font-size: 18px;
+}
+
+.sidebar-header {
+  height: 60px;
+  display: flex;
+  align-items: center;         /* dikey ortalama */
+  justify-content: center;     /* yatay ortalama */
+  background-color: #001529;
+}
+
+.collapse-btn {
+  cursor: pointer;
+  font-size: 20px;
+  color: white;
+  transition: transform 0.3s;
+}
+
+.collapse-btn:hover {
+  transform: scale(1.1);
+}
+
+/* İçerik */
+.content {
+  transition: all 0.3s ease;
+  margin-left: 200px;
+  width: calc(100% - 200px);
+}
+
+/* Overlay (mobilde) */
+.overlay.open {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
 }
