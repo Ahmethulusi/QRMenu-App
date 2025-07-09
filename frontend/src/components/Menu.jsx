@@ -107,6 +107,9 @@
 // export default Menu;
 import React, { useState, useEffect } from 'react';
 import {
+  GiftFilled,
+  UsergroupAddOutlined,
+  SettingOutlined,
   ProductOutlined,
   SortDescendingOutlined,
   MenuFoldOutlined,
@@ -117,7 +120,8 @@ import {
   PoundCircleOutlined,
   UserOutlined,
   LogoutOutlined,
-  QrcodeOutlined
+  QrcodeOutlined,
+  SettingFilled
   // ProfileOutlined
 } from '@ant-design/icons';
 import { Menu, Avatar } from 'antd';
@@ -167,17 +171,84 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       label: 'Ürün Yönetimi',
       children: [
         { key: 'Foods', label: 'Ürünler' },
-        { key: 'Categories', label: 'Kategoriler' },
-        { key: 'Price Changing', label: 'Fiyat Değişikliği' },
-        { key: 'Sort', label: 'Sıralama' },
+        { key: 'Sort', label: 'Ürün Sıralama' },
       ],
     },
-    { key: 'TablesAndQR', icon: <QrcodeOutlined />, label: 'Masalar' },
-    { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
+    {
+      key: 'CategoryManagement',
+      icon: <GroupOutlined />,
+      label: 'Kategori Yönetimi',
+      children: [
+        { key: 'Categories', label: 'Ana Kategoriler' },
+        { key: 'Foods', label: 'Alt Kategoriler' },
+        { key: 'Sort', label: 'Kategori Sıralama' },
+      ],
+    },
+    {
+  key: 'TablesAndQRManagement',
+  icon: <QrcodeOutlined />,
+  label: 'Masa ve QR Yönetimi',
+  children: [
+    {
+      key: 'OrderableQR',
+      label: 'Siparişli QR',
+      children: [
+        { key: 'TableSections', label: 'Bölümler' },
+        { key: 'Tables', label: 'Masalar ve QR Oluştur' },
+        { key: 'DesignSettings', label: 'QR Tasarım Ayarları' }, // opsiyonel
+      ],
+    },
+    {
+      key: 'NonOrderableQR',
+      label: 'Siparişsiz QR',
+      children: [
+        { key: 'GeneralQR', label: 'Tekil QR Oluştur' },
+        { key: 'QRDesigns', label: 'QR Tasarımları' },
+      ],
+    },
+  ],
+},
+
+    {
+      key: 'CampaingsAndIngredients',
+      icon: <GiftFilled />,
+      label: 'Kampanya ve Bileşenler',
+      children: [
+        {key:'DaySMenu', label:'Günün Menüsü'},
+        { key: 'Campaigns', label: 'Kampanyalar' },
+        {key:'DiscountedProducts',label:'İndirimli Ürünler'},
+        { key: 'Ingredients', label: 'İçerikler (Malzemeler)' },
+        { key: 'Labels', label: 'Etiketler' },
+      ],
+    },
+    { key: 'Price Changing', label: 'Fiyat Değişikliği',icon:<PoundCircleOutlined/> },
+    // { key: 'TablesAndQR', icon: <QrcodeOutlined />, label: 'Masa Yönetimi' },
+    {
+      key: 'UserManagement',
+      icon: <UsergroupAddOutlined />,
+      label: 'Kullanıcı Yönetimi',
+      children: [
+        { key: 'Roles', label: 'Kullanıcı Roller ' },
+        { key: 'BusinessManagement', label: 'İşletme Yönetimi' },
+        { key: 'Auth', label: 'Yetkilendirme Ayarları' },
+      ],
+    },
+    { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },
+    // { key: 'GeneralSettings', label: 'Genel Ayarlar',icon:<SettingFilled/> },
+     {
+      key: 'GeneralSettings',
+      icon: <SettingFilled />,
+      label: 'Genel Ayarlar',
+      children: [
+        { key: 'Settings', label: 'Ayarlar' },
+        { key: 'ThemeSettings', label: 'Tema Ayarları' },
+        { key: 'Subscription', label: 'Abonelik Ayarları' },
+        { key: 'Language', label: 'Dil Ayarları' },
+      ],
+    },
     { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' },
   ];
-
-
+   
   return (
     <>
       <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
@@ -186,8 +257,6 @@ const SidebarMenu = ({ setSelectedComponent }) => {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </span>
         </div>
-
-   
         <Menu
           mode="inline"
           theme="dark"
@@ -196,10 +265,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
           onClick={handleClick}
           defaultSelectedKeys={['Foods']}
         />
-
-       
       </div>
-
       {isMobile && !collapsed && (
         <div className="overlay open" onClick={toggleCollapsed}></div>
       )}

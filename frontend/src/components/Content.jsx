@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Sort2 from '../components/Sort2';
 import Menus from '../components/FoodMenus';
@@ -11,6 +10,8 @@ import PriceChangingPage from '../components/PriceChange';
 import HomePage from '../components/HomePage';
 import ProfileScreen from '../components/ProfileScreen';
 import TablesPage from '../components/TablesPage';
+import NonOrderableQR from '../components/Non_OrderableQR';
+import QRDesignsTable from '../components/QRDesignsTable';
 
 function Content({ selectedComponent }) {
   switch (selectedComponent) {
@@ -36,7 +37,13 @@ function Content({ selectedComponent }) {
       return <ProfileScreen />;
     case 'TablesAndQR':
       return <TablesPage />;
-
+    
+    case 'GeneralQR':
+      return <NonOrderableQR />;
+    
+    case 'QRDesigns':
+      return <QRDesignsTable businessId={1} />;
+    
     default:
       return <div>Menüden bir seçenek seçiniz.</div>;
   }
