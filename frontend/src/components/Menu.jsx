@@ -92,7 +92,6 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       label: 'Kategori Yönetimi',
       children: [
         { key: 'Categories', label: 'Ana Kategoriler' },
-        { key: 'Foods', label: 'Alt Kategoriler' },
         { key: 'Sort', label: 'Kategori Sıralama' },
       ],
     },
@@ -144,12 +143,12 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       ],
     },
     {
-      key: 'UserManagement',
+      key: 'BranchManagement',
       icon: <UsergroupAddOutlined />,
       label: 'Şube Yönetimi',
       children: [
-        { key: 'BusinessManagement', label: 'Şubeler' },
-        { key: 'BusinessManagement', label: 'Ürünler' },
+        { key: 'Branches', label: 'Şubeler' },
+        { key: 'Branches_Products', label: 'Ürünler' },
       ],
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },

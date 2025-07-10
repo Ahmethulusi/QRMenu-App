@@ -85,6 +85,7 @@ router.get('/categories/:id', adminController.getCategoryById);
 
 router.get('/categories', adminController.getCategories);
 
+router.delete('/categories/:id', adminController.deleteCategory);
 
 router.get('/menus/getRegisteredProducts/:id',adminController.getRegisteredProducts);
 router.post('/menus/saveProducts', adminController.save_Products_To_Selected_Menu);

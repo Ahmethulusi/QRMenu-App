@@ -165,47 +165,62 @@ exports.getCategories = async (req, res) => {
     }
 }
 
+// Kategori silme endpointi
+exports.deleteCategory = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const productCount = await Products.count({ where: { category_id: id } });
+    if (productCount > 0) {
+      return res.status(400).json({ error: 'Bu kategoriye bağlı ürünler var, önce ürünleri silin veya başka kategoriye taşıyın.' });
+    }
+    const deleted = await Category.destroy({ where: { category_id: id } });
+    if (deleted) {
+      res.json({ message: 'Kategori silindi' });
+    } else {
+      res.status(404).json({ error: 'Kategori bulunamadı' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Silme işlemi başarısız' });
+  }
+};
+
+
+// Kategori oluştururken parent_id desteği
 exports.createCategory = async (req, res) => {
-    try {
-      const {category_name} = req.body;
-      console.log('Gönderilen veri:', { category_name: category_name });
-
-      const image_url = req.file ? req.file.filename : null;
-      console.log(image_url);
-      // Değerin null olup olmadığını kontrol et
-      if (!category_name) {
-        return res.status(400).json({ error: "Kategori adı boş olamaz!" });
-      }
-  
-      const category = await Category.create({
-        category_name: category_name,
-        sira_id: 0,
-        parent_id: null,
-        image_url: image_url
-      });
-      
-      res.json(category);
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Bir hata oluştu!" });
+  try {
+    const { category_name, parent_id } = req.body;
+    const image_url = req.file ? req.file.filename : null;
+    if (!category_name) {
+      return res.status(400).json({ error: "Kategori adı boş olamaz!" });
     }
-  };
+    const category = await Category.create({
+      category_name: category_name,
+      sira_id: 0,
+      parent_id: parent_id ? parseInt(parent_id) : null,
+      image_url: image_url
+    });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: "Bir hata oluştu!" });
+  }
+};
   
 
-exports.createSubCategory = async (req,res) =>{
-    const {name,parentId} = req.body;
-    try {
-        const category = await Category.create({
-            category_name:name,
-            sira_id:0,
-            parent_id:parentId
-        });
-        res.json(category);
-    }
-    catch (error) {
-        console.log(error);
-    }
-}
+// ✅ 1. backend/controller/adminController.js içine alt kategori oluşturmayı doğru şekilde sağlayan endpoint
+exports.createSubCategory = async (req, res) => {
+  const { name, parentId } = req.body;
+  try {
+    const category = await Category.create({
+      category_name: name,
+      sira_id: 0,
+      parent_id: parentId || null
+    });
+    res.json(category);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Alt kategori oluşturulamadı' });
+  }
+};
 
 exports.getSubCategoriesByParentId = async (req,res) => {
     const id = req.params.id;
@@ -442,95 +457,7 @@ exports.updateStatus = async (req, res) => {
       return res.status(500).json({ message: 'Vitrin durumu güncellenirken bir hata oluştu.' });
     }
 };
-  
-// exports.uploadExcel = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
-//     }
 
-//     const workbook = xlsx.readFile(req.file.path);
-//     const sheetName = workbook.SheetNames[0];
-//     const worksheet = workbook.Sheets[sheetName];
-//     const data = xlsx.utils.sheet_to_json(worksheet);
-
-//     if (data.length === 0) {
-//       return res.status(400).json({ message: 'Excel dosyası boş.' });
-//     }
-
-//     // Zorunlu alanları kontrol et
-//     const missingFields = [];
-//     data.forEach((item, index) => {
-//       console.log(item);
-//       if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
-//       if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
-//       if (!item.category_id) missingFields.push(`Satır ${index + 1}: Kategori ID eksik`);
-//     });
-
-//     if (missingFields.length > 0) {
-//       return res.status(400).json({
-//         message: 'Zorunlu alanlar eksik:',
-//         details: missingFields
-//       });
-//     }
-
-//     const count = await Products.count();
-//     const duplicateProducts = [];
-//     const successfulProducts = [];
-
-//     for (let i = 0; i < data.length; i++) {
-//       const item = data[i];
-
-//       const existingProduct = await Products.findOne({
-//         where: {
-//           product_name: item.product_name
-//         }
-//       });
-
-//       if (existingProduct) {
-//         duplicateProducts.push(item.product_name);
-//         continue;
-//       }
-
-//       await Products.create({
-//         product_name: item.product_name,
-//         price: item.price,
-//         category_id: item.category_id,
-//         description: item.description || null,
-//         is_selected: item.is_selected || false,
-//         is_available: item.is_available === undefined ? true : item.is_available,
-//         sira_id: count + 1,
-//         image_url: item.image_url || null,
-//         calorie_count: item.calorie_count || null,
-//         cooking_time: item.cooking_time || null,
-//         stock: item.stock || null
-//       });
-      
-//       successfulProducts.push(item.product_name); // Bu satırı döngü içine taşıdık
-//     }
-
-//     res.status(200).json({ 
-//       message: 'Excel dosyası başarıyla yüklendi ve veritabanına eklendi.',
-//       addedProducts: successfulProducts,
-//       duplicateProducts: duplicateProducts,
-//       addedCount: successfulProducts.length,
-//       duplicateCount: duplicateProducts.length
-//     });
-//   } catch (error) {
-//     console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
-//     res.status(500).json({ 
-//       message: 'Excel dosyası yüklenirken bir hata oluştu.',
-//       error: error.message 
-//     });
-//   }
-// }
-
-
-
-
-// const xlsx = require('xlsx');
-// const { Products, Category } = require('../models');
-// const sequelize = require('sequelize');
 const stringSimilarity = require('string-similarity');
 
 exports.uploadExcel = async (req, res) => {

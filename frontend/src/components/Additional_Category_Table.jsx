@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../css/categories.css';
-import { Table, Button } from 'antd';
-import { MinusSquareOutlined, PlusCircleOutlined, PlusOutlined,EditOutlined,DeleteTwoTone} from '@ant-design/icons';
+import { Table, Button, message, Modal } from 'antd';
 
+import { MinusSquareOutlined, PlusCircleOutlined, PlusOutlined, EditOutlined, DeleteTwoTone } from '@ant-design/icons';
+
+const { confirm } = Modal;
 const API_URL = import.meta.env.VITE_API_URL;
 
 import ModalForm from './CategoryFormModal';
@@ -12,12 +14,44 @@ const App = () => {
   const [isModalVisible, setIsModalVisible] = useState(false); // Modalın görünürlük durumu
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [parentId, setParentId] = useState(null); // Alt kategori için parentId
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  
+
+
+  const handleAddSubCategory = (parentId) => {
+    setParentId(parentId);
+    setIsModalVisible(true);
+  };
+
+  const handleDelete = async (categoryId) => {
+    confirm({
+      title: 'Kategori Silinsin mi?',
+      content: 'Bu kategoriyi silmek istediğinize emin misiniz?',
+      okText: 'Evet, Sil',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/admin/categories/${categoryId}`, {
+            method: 'DELETE',
+          });
+          if (res.ok) {
+            message.success('Kategori silindi!');
+            fetchCategories();
+          } else {
+            const data = await res.json();
+            message.error(data.error || 'Silme işlemi başarısız!');
+          }
+        } catch (err) {
+          message.error('Silme işlemi başarısız!');
+        }
+      },
+    });
+  };
+
 const columns = [
   {
     title: 'Name',
@@ -34,10 +68,9 @@ const columns = [
     width: '30%',
     render: (record) => (
       <div className='action-buttons-container'>
-  
-        <Button style={{ color: 'blue' }}><PlusOutlined/> Add</Button>
+        <Button style={{ color: 'blue' }} onClick={() => handleAddSubCategory(record.id)}><PlusOutlined/> Add</Button>
         <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}><EditOutlined/> Edit</Button>
-        <Button style={{ color: 'red' , marginLeft: '20px' }}><DeleteTwoTone/> Delete</Button>
+        <Button style={{ color: 'red' , marginLeft: '20px' }} onClick={() => handleDelete(record.id)}><DeleteTwoTone/> Delete</Button>
       </div>
     ),
   },
@@ -58,10 +91,8 @@ const columns = [
       }));
       
       const treeData = buildCategoryTree(formattedData);
-      console.log(treeData); // Yapıyı konsola yazdır
       setData(treeData);
     } catch (error) {
-      console.log('Fetch Hatası:', error);
       message.error('Kategoriler alınırken bir hata oluştu!');
     }
   };
@@ -93,6 +124,7 @@ const columns = [
 
   // Modal'ı açma işlevi
   const showModal = () => {
+    setParentId(null); // Ana kategori eklerken parentId null
     setIsModalVisible(true);
   };
 
@@ -108,7 +140,6 @@ const columns = [
   };
 
   const showEditModal = (category) => {
-    console.log(category);
     setSelectedCategory(category);
     setIsEditModalVisible(true);
   };
@@ -118,48 +149,41 @@ const columns = [
     // Güncellenen verileri yeniden fetch et veya güncelle
   };
 
-
-
   return (
-
     <div>
-      
-      <Button type="primary" onClick={showModal} style={{ marginBottom: '20px', position: 'relative' }}>
+      <Button type="primary" onClick={showModal} style={{ marginBottom: '10px', position: 'relative' }}>
         <PlusOutlined/> Create a Category
       </Button>
-      
       {/* ModalForm'u burada kullanıyoruz */}
       <ModalForm
         visible={isModalVisible}    // Modalın görünürlük durumu
         onCancel={handleCancel}      // Cancel butonuna basıldığında çalışacak işlev
         onOk={handleOk}              // Form submit edildiğinde çalışacak işlev
+        parentId={parentId}          // Alt kategori için parentId
       />
-
       <EditCategoryModal
         visible={isEditModalVisible}
         onCancel={() => setIsEditModalVisible(false)}
         onOk={handleEditOk}
         category={selectedCategory} // Düzenlenecek kategori bilgisi
       />
-      
-      <Table
-        columns={columns}
-        className='custom-table'
-        dataSource={data}
-        rowKey="id"
-        pagination={{
-          pageSize: 5,
-        }}
-        expandable={{
-          rowExpandable: record => record.children.length > 0, // Çocukları varsa genişlet
-          expandIcon: ({ expanded, onExpand, record }) =>
-            record.children.length > 0 ? (
-              <span onClick={e => onExpand(record, e)} style={{ cursor: 'pointer', marginRight: '10px', fontSize: '15px', color: 'blue' }}>
-                {expanded ? <MinusSquareOutlined /> : <PlusCircleOutlined />}
-              </span>
-            ) : null, // Eğer çocuk yoksa plus/minus iconu gösterilmez
-        }}
-      />
+     <Table
+  columns={columns}
+  className='custom-table'
+  dataSource={data}
+  rowKey="id"
+  pagination={false}
+  scroll={{ y: 200 }} // 200px dene
+  expandable={{
+    rowExpandable: record => record.children.length > 0,
+    expandIcon: ({ expanded, onExpand, record }) =>
+      record.children.length > 0 ? (
+        <span onClick={e => onExpand(record, e)} style={{ cursor: 'pointer', marginRight: '10px', fontSize: '15px', color: 'blue' }}>
+          {expanded ? <MinusSquareOutlined /> : <PlusCircleOutlined />}
+        </span>
+      ) : null,
+  }}
+/>
     </div>
   );
 };

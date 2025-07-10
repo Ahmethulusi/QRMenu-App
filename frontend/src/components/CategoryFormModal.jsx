@@ -5,7 +5,7 @@ import '../css/CategoryFormModal.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const ModalForm = ({ visible, onCancel, onOk }) => {
+const ModalForm = ({ visible, onCancel, onOk, parentId }) => {
   const [form] = Form.useForm(); // Form kontrolü
   const [file, setFile] = useState(null); // Yüklenen dosya
 
@@ -27,9 +27,10 @@ const ModalForm = ({ visible, onCancel, onOk }) => {
 
       const formData = new FormData();
       formData.append('resim', file);
-      formData.append('category_name', values.name); 
-
-      console.log('Gönderilen veri:', { category_name: values.name, resim: file });
+      formData.append('category_name', values.name);
+      if (parentId !== null && parentId !== undefined) {
+        formData.append('parent_id', parentId);
+      }
 
       // Backend'e veri gönderme
       const response = await fetch(`${API_URL}/api/admin/categories/create`, {
@@ -46,14 +47,13 @@ const ModalForm = ({ visible, onCancel, onOk }) => {
       onOk();
       message.success('Kategori oluşturuldu!'); 
     } catch (error) {
-      console.log('Form Hatası:', error);
       message.error('Kategori oluşturulurken bir hata oluştu!');
     }
   };
 
   return (
     <Modal
-      title="Kategori Oluştur"
+      title={parentId ? 'Alt Kategori Oluştur' : 'Kategori Oluştur'}
       visible={visible}
       onOk={handleOk}
       onCancel={onCancel}

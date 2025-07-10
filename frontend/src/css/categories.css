@@ -39,6 +39,12 @@
 
 
  /* Özel tablo stili */
+
+.custom_table .ant-table {
+  height:fit-content;
+  height: 400px;
+}
+
 .custom-table .ant-table {
   font-size: 16px;
   font-family: 'Arial', sans-serif; /* Font değiştirme */
@@ -106,3 +112,15 @@
   color:rgb(10, 147, 233);
   opacity: 1;
 }
+
+.custom-table .ant-table-body {
+  max-height: 480px !important;
+  min-height: 200px !important;
+  overflow-y: auto !important;
+}
+/* 
+.content {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+} */
