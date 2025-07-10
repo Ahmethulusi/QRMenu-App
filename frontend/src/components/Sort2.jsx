@@ -139,6 +139,8 @@ const DragAndDropTable = () => {
             components={{ body: { row: Row } }}
             columns={columns}
             dataSource={data}
+            scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
+
             pagination={{
           
               pageSizeOptions: ['5', '10', '20', '50'], // Seçenekler

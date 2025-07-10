@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Button, message } from 'antd';
+import { Table, Tag, Button, message, Popconfirm } from 'antd';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -48,6 +48,23 @@ const QRDesignsTable = ({ businessId }) => {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/api/table_qr/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        message.success('QR silindi!');
+        fetchQRCodes();
+      } else {
+        const data = await res.json();
+        message.error(data.error || 'Silme işlemi başarısız!');
+      }
+    } catch (err) {
+      message.error('Silme işlemi başarısız!');
+    }
+  };
+
   const columns = [
     {
       title: 'Önizleme',
@@ -86,10 +103,21 @@ const QRDesignsTable = ({ businessId }) => {
     {
       title: 'İşlem',
       key: 'action',
-      render: (_, record) =>
-        !record.is_active && (
-          <Button onClick={() => handleActivate(record.id)}>Aktif Yap</Button>
-        ),
+      render: (_, record) => (
+        <>
+          {!record.is_active && (
+            <Button onClick={() => handleActivate(record.id)} style={{ marginRight: 8 }}>Aktif Yap</Button>
+          )}
+          <Popconfirm
+            title="Bu QR kodunu silmek istediğinize emin misiniz?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Evet"
+            cancelText="Hayır"
+          >
+            <Button danger>Sil</Button>
+          </Popconfirm>
+        </>
+      ),
     },
   ];
 
@@ -102,6 +130,7 @@ const QRDesignsTable = ({ businessId }) => {
         rowKey="id"
         loading={loading}
         pagination={false}
+        scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
       />
     </div>
   );

@@ -290,7 +290,7 @@ const Product_Table = () => {
     <>
 
     <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px' ,position: 'relative'}}>
-        <PlusOutlined/> Create a Product
+        <PlusOutlined/> Yeni
     </Button>
 
     <ExcelImportButton onSuccess={fetchData} />

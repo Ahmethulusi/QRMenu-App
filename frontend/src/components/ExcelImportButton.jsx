@@ -40,16 +40,16 @@ const ExcelImportButton = ({ onSuccess }) => {
         showUploadList={false}
       >
         <Button icon={<UploadOutlined />} type="primary">
-          Import Data
+          İçeri Aktar
         </Button>
       </Upload>
       <Tooltip title={
         <div>
           <p>Excel dosyası için zorunlu alanlar:</p>
           <ul>
-            <li>Ürün Adi (product_name) </li>
-            <li>Fiyat (price)</li>
-            <li>Kategori ID (category_id)</li>
+            <li>Ürün Adi </li>
+            <li>Fiyat</li>
+            <li>Kategori</li>
           </ul>
           <p>Opsiyonel alanlar:</p>
           <ul>
