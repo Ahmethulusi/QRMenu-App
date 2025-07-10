@@ -140,8 +140,16 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       label: 'Kullanıcı Yönetimi',
       children: [
         { key: 'Roles', label: 'Kullanıcı Roller ' },
-        { key: 'BusinessManagement', label: 'İşletme Yönetimi' },
         { key: 'Auth', label: 'Yetkilendirme Ayarları' },
+      ],
+    },
+    {
+      key: 'UserManagement',
+      icon: <UsergroupAddOutlined />,
+      label: 'Şube Yönetimi',
+      children: [
+        { key: 'BusinessManagement', label: 'Şubeler' },
+        { key: 'BusinessManagement', label: 'Ürünler' },
       ],
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },
