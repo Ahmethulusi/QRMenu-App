@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
     if(file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       file.mimetype === 'application/vnd.ms-excel'
     ) {
-      return cb(null, 'public/excel/'); // Excel dosyalarının kaydedileceği dizin
+      return cb(null, 'public/xlsx/'); // Excel dosyalarının kaydedileceği dizin
     }
     else if(file.mimetype.startsWith('image/')){
       cb(null, 'public/images/'); // Resimlerin kaydedileceği dizin

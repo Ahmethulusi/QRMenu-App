@@ -111,11 +111,23 @@
   width: 200px;
   transition: all 0.3s ease;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-container.collapsed {
   width: 80px;
 }
+
+/* Mobile sidebar behavior - REMOVED - now using bottom sheet */
+/* .sidebar-container.mobile {
+  transform: translateX(-100%);
+  width: 200px;
+}
+
+.sidebar-container.mobile.mobile-open {
+  transform: translateX(0);
+} */
 
 /* Üst bar (içine ikon yerleşir) */
 .sidebar-header {
@@ -127,6 +139,7 @@
   background-color: #001529;
   color: white;
   font-size: 18px;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -148,11 +161,185 @@
   transform: scale(1.1);
 }
 
+/* Menu scroll container */
+.menu-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollable menu styles */
+.scrollable-menu {
+  height: 100%;
+  border-right: none;
+}
+
+.scrollable-menu .ant-menu-inline {
+  border-right: none;
+}
+
+/* Custom scrollbar for menu */
+.menu-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-scroll-container::-webkit-scrollbar-track {
+  background: #001529;
+}
+
+.menu-scroll-container::-webkit-scrollbar-thumb {
+  background: #1890ff;
+  border-radius: 3px;
+}
+
+.menu-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #40a9ff;
+}
+
+/* Mobile hamburger menu icon */
+.mobile-menu-icon {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1001;
+  background-color: #001529;
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  display: none;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-icon:hover {
+  background-color: #1890ff;
+  transform: scale(1.1);
+}
+
+/* Show hamburger icon only on mobile */
+@media screen and (max-width: 768px) {
+  .mobile-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile bottom sheet menu */
+.mobile-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #001529;
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 1002;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-bottom-sheet.open {
+  transform: translateY(0);
+}
+
+/* Mobile menu header */
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #1890ff;
+  flex-shrink: 0;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-btn {
+  cursor: pointer;
+  font-size: 20px;
+  color: #1890ff;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #40a9ff;
+}
+
+/* Mobile menu scroll container */
+.mobile-menu-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+/* Mobile menu content */
+.mobile-menu-content {
+  border: none;
+  background: transparent;
+}
+
+.mobile-menu-content .ant-menu-inline {
+  border-right: none;
+}
+
+/* Custom scrollbar for mobile menu */
+.mobile-menu-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mobile-menu-scroll-container::-webkit-scrollbar-track {
+  background: #001529;
+}
+
+.mobile-menu-scroll-container::-webkit-scrollbar-thumb {
+  background: #1890ff;
+  border-radius: 3px;
+}
+
+.mobile-menu-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #40a9ff;
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* İçerik */
 .content {
   transition: all 0.3s ease;
   margin-left: 200px;
   width: calc(100% - 200px);
+}
+
+/* Mobile content adjustments */
+@media screen and (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 /* Overlay (mobilde) */

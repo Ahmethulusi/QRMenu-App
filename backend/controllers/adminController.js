@@ -4,6 +4,7 @@ const Menus = require('../models/Menus');
 const Menu_Products = require('../models/Menu_Products');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
+const sequelize = require('../db');
 
 
 
@@ -442,28 +443,150 @@ exports.updateStatus = async (req, res) => {
     }
 };
   
+// exports.uploadExcel = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
+//     }
+
+//     const workbook = xlsx.readFile(req.file.path);
+//     const sheetName = workbook.SheetNames[0];
+//     const worksheet = workbook.Sheets[sheetName];
+//     const data = xlsx.utils.sheet_to_json(worksheet);
+
+//     if (data.length === 0) {
+//       return res.status(400).json({ message: 'Excel dosyası boş.' });
+//     }
+
+//     // Zorunlu alanları kontrol et
+//     const missingFields = [];
+//     data.forEach((item, index) => {
+//       console.log(item);
+//       if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
+//       if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
+//       if (!item.category_id) missingFields.push(`Satır ${index + 1}: Kategori ID eksik`);
+//     });
+
+//     if (missingFields.length > 0) {
+//       return res.status(400).json({
+//         message: 'Zorunlu alanlar eksik:',
+//         details: missingFields
+//       });
+//     }
+
+//     const count = await Products.count();
+//     const duplicateProducts = [];
+//     const successfulProducts = [];
+
+//     for (let i = 0; i < data.length; i++) {
+//       const item = data[i];
+
+//       const existingProduct = await Products.findOne({
+//         where: {
+//           product_name: item.product_name
+//         }
+//       });
+
+//       if (existingProduct) {
+//         duplicateProducts.push(item.product_name);
+//         continue;
+//       }
+
+//       await Products.create({
+//         product_name: item.product_name,
+//         price: item.price,
+//         category_id: item.category_id,
+//         description: item.description || null,
+//         is_selected: item.is_selected || false,
+//         is_available: item.is_available === undefined ? true : item.is_available,
+//         sira_id: count + 1,
+//         image_url: item.image_url || null,
+//         calorie_count: item.calorie_count || null,
+//         cooking_time: item.cooking_time || null,
+//         stock: item.stock || null
+//       });
+      
+//       successfulProducts.push(item.product_name); // Bu satırı döngü içine taşıdık
+//     }
+
+//     res.status(200).json({ 
+//       message: 'Excel dosyası başarıyla yüklendi ve veritabanına eklendi.',
+//       addedProducts: successfulProducts,
+//       duplicateProducts: duplicateProducts,
+//       addedCount: successfulProducts.length,
+//       duplicateCount: duplicateProducts.length
+//     });
+//   } catch (error) {
+//     console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
+//     res.status(500).json({ 
+//       message: 'Excel dosyası yüklenirken bir hata oluştu.',
+//       error: error.message 
+//     });
+//   }
+// }
+
+
+
+
+// const xlsx = require('xlsx');
+// const { Products, Category } = require('../models');
+// const sequelize = require('sequelize');
+const stringSimilarity = require('string-similarity');
+
 exports.uploadExcel = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
     }
 
+    const columnMapping = {
+      "Ürün Adı": "product_name",
+      "Fiyat": "price",
+      "Kategori": "category_name",
+      "Açıklama": "description",
+      "Stok": "stock",
+      "Seçili": "is_selected",
+      "Mevcut": "is_available",
+      "Resim": "image_url",
+      "Kalori": "calorie_count",
+      "Pişirme Süresi": "cooking_time"
+    };
+
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const data = xlsx.utils.sheet_to_json(worksheet);
+    const rawData = xlsx.utils.sheet_to_json(worksheet);
 
-    if (data.length === 0) {
+    if (rawData.length === 0) {
       return res.status(400).json({ message: 'Excel dosyası boş.' });
     }
 
-    // Zorunlu alanları kontrol et
+    const unknownColumns = Object.keys(rawData[0]).filter(
+      col => !columnMapping[col.trim()]
+    );
+    if (unknownColumns.length > 0) {
+      return res.status(400).json({
+        message: "Bilinmeyen sütun başlıkları tespit edildi.",
+        unknownColumns
+      });
+    }
+
+    const data = rawData.map(item => {
+      const mappedItem = {};
+      for (const key in item) {
+        const mappedKey = columnMapping[key.trim()];
+        if (mappedKey) {
+          mappedItem[mappedKey] = item[key];
+        }
+      }
+      return mappedItem;
+    });
+
     const missingFields = [];
     data.forEach((item, index) => {
-      console.log(item);
       if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
       if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
-      if (!item.category_id) missingFields.push(`Satır ${index + 1}: Kategori ID eksik`);
+      if (!item.category_name) missingFields.push(`Satır ${index + 1}: Kategori adı eksik`);
     });
 
     if (missingFields.length > 0) {
@@ -476,50 +599,91 @@ exports.uploadExcel = async (req, res) => {
     const count = await Products.count();
     const duplicateProducts = [];
     const successfulProducts = [];
+    const categoryErrors = [];
+
+    // 🧠 Kategorileri başta çekip bellekten kontrol edeceğiz
+    const allCategories = await Category.findAll();
+    const allCategoryNames = allCategories.map(cat =>
+      cat.category_name.toString().trim().toLowerCase()
+    );
 
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
 
       const existingProduct = await Products.findOne({
-        where: {
-          product_name: item.product_name
-        }
+        where: { product_name: item.product_name }
       });
-
       if (existingProduct) {
         duplicateProducts.push(item.product_name);
         continue;
       }
 
-      await Products.create({
-        product_name: item.product_name,
-        price: item.price,
-        category_id: item.category_id,
-        description: item.description || null,
-        is_selected: item.is_selected || false,
-        is_available: item.is_available === undefined ? true : item.is_available,
-        sira_id: count + 1,
-        image_url: item.image_url || null,
-        calorie_count: item.calorie_count || null,
-        cooking_time: item.cooking_time || null,
-        stock: item.stock || null
-      });
-      
-      successfulProducts.push(item.product_name); // Bu satırı döngü içine taşıdık
+      const categoryName = item.category_name.toString().trim().toLowerCase();
+      let matchedCategory = allCategories.find(cat =>
+        cat.category_name.toString().trim().toLowerCase() === categoryName
+      );
+
+      // ✅ Yakın eşleşme yapılmazsa yeni oluşturulacak
+      if (!matchedCategory) {
+        const { bestMatch } = stringSimilarity.findBestMatch(categoryName, allCategoryNames);
+        const bestMatchName = bestMatch.target;
+        const bestCategory = allCategories.find(cat =>
+          cat.category_name.toString().trim().toLowerCase() === bestMatchName
+        );
+
+        if (bestMatch.rating > 0.6 && bestCategory) {
+          matchedCategory = bestCategory;
+        } else {
+          try {
+            matchedCategory = await Category.create({
+              category_name: item.category_name.trim(),
+              parent_id: null,
+              sira_id: 0,
+              depth: 0
+            });
+            allCategories.push(matchedCategory); // Belleğe yeni kategori de eklenmeli
+            allCategoryNames.push(matchedCategory.category_name.trim().toLowerCase());
+          } catch (catErr) {
+            categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı.`);
+            continue;
+          }
+        }
+      }
+
+      try {
+        await Products.create({
+          product_name: item.product_name,
+          price: item.price,
+          category_id: matchedCategory.category_id,
+          description: item.description || null,
+          is_selected: item.is_selected || false,
+          is_available: item.is_available === undefined ? true : item.is_available,
+          sira_id: count + successfulProducts.length + 1,
+          image_url: item.image_url || null,
+          calorie_count: item.calorie_count || null,
+          cooking_time: item.cooking_time || null,
+          stock: item.stock || null
+        });
+
+        successfulProducts.push(item.product_name);
+      } catch (createErr) {
+        categoryErrors.push(`Satır ${i + 1}: ${item.product_name} ürünü eklenemedi.`);
+      }
     }
 
-    res.status(200).json({ 
-      message: 'Excel dosyası başarıyla yüklendi ve veritabanına eklendi.',
+    res.status(200).json({
+      message: 'Excel yüklemesi tamamlandı.',
       addedProducts: successfulProducts,
-      duplicateProducts: duplicateProducts,
+      duplicateProducts,
+      categoryErrors,
       addedCount: successfulProducts.length,
       duplicateCount: duplicateProducts.length
     });
   } catch (error) {
     console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Excel dosyası yüklenirken bir hata oluştu.',
-      error: error.message 
+      error: error.message
     });
   }
-}
+};

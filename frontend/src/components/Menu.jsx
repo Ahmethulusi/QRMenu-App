@@ -1,110 +1,3 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import '../css/Sidebar.css';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faBars } from '@fortawesome/free-solid-svg-icons';
-
-// function Menu({ setSelectedComponent }) {
-//   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-//   const [menuOpen, setMenuOpen] = useState(window.innerWidth >= 768);
-//   const menuRef = useRef(null);
-
-//   const toggleMenu = () => {
-//     setMenuOpen(!menuOpen);
-//   };
-
-//   useEffect(() => {
-//     const handleResize = () => {
-//       const mobile = window.innerWidth <= 768;
-//       setIsMobile(mobile);
-//       setMenuOpen(!mobile);
-//     };
-
-//     window.addEventListener('resize', handleResize);
-//     return () => window.removeEventListener('resize', handleResize);
-//   }, []);
-
-//   useEffect(() => {
-//     const content = document.querySelector('.content');
-//     if (content) {
-//       if (menuOpen) {
-//         content.style.marginLeft = '180px';
-//         content.style.width = 'calc(100% - 180px)';
-//       } else {
-//         content.style.marginLeft = '0';
-//         content.style.width = '100%';
-//       }
-//     }
-//   }, [menuOpen]);
-
-//   const handleSelection = (component) => {
-//     setSelectedComponent(component);
-//     if (isMobile) {
-//       setMenuOpen(false);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <div className={`menu-icon`} onClick={toggleMenu}>
-//         <FontAwesomeIcon icon={faBars} />
-//       </div>
-
-//       <nav className={`menu ${menuOpen ? 'open' : ''}`} ref={menuRef}>
-//         <ul>
-//           <li
-//             className="side-link"
-//             onClick={() => handleSelection('Foods')}
-//           >
-//             Ürünler
-//           </li>
-//           <li
-//             className="side-link"
-//             onClick={() => handleSelection('Sort')}
-//           >
-//             Sıralama
-//           </li>
-//           {/* <li
-//             className="side-link"
-//             onClick={() => {
-//               setSelectedComponent('Menus');
-//             }}
-//           >
-//             Menüler
-//           </li> */}
-//           <li
-//             className="side-link"
-//             onClick={() => handleSelection('Categories')}
-//           >
-//             Kategoriler
-//           </li>
-//           <li
-//             className="side-link"
-//             onClick={() => handleSelection('Price Changing')}
-//           >
-//             Fiyat Değişikliği
-//           </li>
-//           {/* <li
-//             className="side-link"
-//             onClick={() => {
-//               setSelectedComponent('Home Page');
-//             }}
-//           >
-//             Home Page
-//           </li> */}
-//         </ul>
-//       </nav>
-
-//       {isMobile && (
-//         <div
-//           className={`overlay ${menuOpen ? 'open' : ''}`}
-//           onClick={toggleMenu}
-//         ></div>
-//       )}
-//     </>
-//   );
-// }
-
-// export default Menu;
 import React, { useState, useEffect } from 'react';
 import {
   GiftFilled,
@@ -121,7 +14,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   QrcodeOutlined,
-  SettingFilled
+  SettingFilled,
+  MenuOutlined
   // ProfileOutlined
 } from '@ant-design/icons';
 import { Menu, Avatar } from 'antd';
@@ -130,14 +24,23 @@ import '../css/Sidebar.css';
 const SidebarMenu = ({ setSelectedComponent }) => {
   const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openKeys, setOpenKeys] = useState([]);
 
   const toggleCollapsed = () => setCollapsed(!collapsed);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   useEffect(() => {
     const handleResize = () => {
       const isNowMobile = window.innerWidth <= 768;
       setIsMobile(isNowMobile);
-      setCollapsed(isNowMobile);
+      if (isNowMobile) {
+        setCollapsed(true);
+        setMobileMenuOpen(false);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -149,20 +52,29 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       if (!collapsed && !isMobile) {
         content.style.marginLeft = '200px';
         content.style.width = 'calc(100% - 200px)';
+      } else if (isMobile && mobileMenuOpen) {
+        content.style.marginLeft = '0';
+        content.style.width = '100%';
       } else {
-        content.style.marginLeft = '80px';
-        content.style.width = 'calc(100% - 80px)';
+        content.style.marginLeft = '0';
+        content.style.width = '100%';
       }
     }
-  }, [collapsed, isMobile]);
+  }, [collapsed, isMobile, mobileMenuOpen]);
 
   const handleClick = (e) => {
-  if (e.key !== 'productManagement') {
-    setSelectedComponent(e.key);
-    if (isMobile) setCollapsed(true);
-  }
-};
+    if (e.key !== 'productManagement') {
+      setSelectedComponent(e.key);
+      if (isMobile) {
+        setMobileMenuOpen(false);
+      }
+    }
+  };
 
+  const handleOpenChange = (keys) => {
+    // Allow nested menus to stay open - don't close parent when child opens
+    setOpenKeys(keys);
+  };
 
   const items = [
     {
@@ -185,30 +97,29 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       ],
     },
     {
-  key: 'TablesAndQRManagement',
-  icon: <QrcodeOutlined />,
-  label: 'Masa ve QR Yönetimi',
-  children: [
-    {
-      key: 'OrderableQR',
-      label: 'Siparişli QR',
+      key: 'TablesAndQRManagement',
+      icon: <QrcodeOutlined />,
+      label: 'Masa ve QR Yönetimi',
       children: [
-        { key: 'TableSections', label: 'Bölümler' },
-        { key: 'Tables', label: 'Masalar ve QR Oluştur' },
-        { key: 'DesignSettings', label: 'QR Tasarım Ayarları' }, // opsiyonel
+        {
+          key: 'OrderableQR',
+          label: 'Siparişli QR',
+          children: [
+            { key: 'TableSections', label: 'Bölümler' },
+            { key: 'Tables', label: 'Masalar ve QR Oluştur' },
+            { key: 'DesignSettings', label: 'QR Tasarım Ayarları' }, // opsiyonel
+          ],
+        },
+        {
+          key: 'NonOrderableQR',
+          label: 'Siparişsiz QR',
+          children: [
+            { key: 'GeneralQR', label: 'Tekil QR Oluştur' },
+            { key: 'QRDesigns', label: 'QR Tasarımları' },
+          ],
+        },
       ],
     },
-    {
-      key: 'NonOrderableQR',
-      label: 'Siparişsiz QR',
-      children: [
-        { key: 'GeneralQR', label: 'Tekil QR Oluştur' },
-        { key: 'QRDesigns', label: 'QR Tasarımları' },
-      ],
-    },
-  ],
-},
-
     {
       key: 'CampaingsAndIngredients',
       icon: <GiftFilled />,
@@ -251,23 +162,64 @@ const SidebarMenu = ({ setSelectedComponent }) => {
    
   return (
     <>
-      <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
-        <div className="sidebar-header">
-          <span onClick={toggleCollapsed} className="collapse-btn">
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          </span>
+      {/* Mobile hamburger menu icon */}
+      {isMobile && (
+        <div className="mobile-menu-icon" onClick={toggleMobileMenu}>
+          <MenuOutlined />
         </div>
-        <Menu
-          mode="inline"
-          theme="dark"
-          inlineCollapsed={collapsed}
-          items={items}
-          onClick={handleClick}
-          defaultSelectedKeys={['Foods']}
-        />
-      </div>
-      {isMobile && !collapsed && (
-        <div className="overlay open" onClick={toggleCollapsed}></div>
+      )}
+
+      {/* Desktop sidebar */}
+      {!isMobile && (
+        <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
+          <div className="sidebar-header">
+            <span onClick={toggleCollapsed} className="collapse-btn">
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </span>
+          </div>
+          <div className="menu-scroll-container">
+            <Menu
+              mode="inline"
+              theme="dark"
+              inlineCollapsed={collapsed}
+              items={items}
+              onClick={handleClick}
+              openKeys={openKeys}
+              onOpenChange={handleOpenChange}
+              defaultSelectedKeys={['Foods']}
+              className="scrollable-menu"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom sheet menu */}
+      {isMobile && (
+        <div className={`mobile-bottom-sheet ${mobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-header">
+            <span>Menü</span>
+            <span onClick={toggleMobileMenu} className="close-btn">
+              ✕
+            </span>
+          </div>
+          <div className="mobile-menu-scroll-container">
+            <Menu
+              mode="inline"
+              theme="dark"
+              items={items}
+              onClick={handleClick}
+              openKeys={openKeys}
+              onOpenChange={handleOpenChange}
+              defaultSelectedKeys={['Foods']}
+              className="mobile-menu-content"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Mobile overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div className="mobile-overlay" onClick={toggleMobileMenu}></div>
       )}
     </>
   );
