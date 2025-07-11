@@ -6,7 +6,7 @@ const Section = sequelize.define('Section', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  business_id: {
+  branch_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -16,7 +16,7 @@ const Section = sequelize.define('Section', {
 });
 
 Section.associate = models => {
-  Section.belongsTo(models.Business, { foreignKey: 'business_id' });
+  Section.belongsTo(models.Branch, { foreignKey: 'branch_id' ,targetKey:"id"});
   Section.hasMany(models.Table, { foreignKey: 'section_id' });
 };
 

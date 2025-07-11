@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Upload, Row, Col, Slider, message, Typography, Card } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import QRCode from 'react-qr-code';
@@ -14,6 +14,25 @@ const NonOrderableQR = () => {
   const [qrFilePath, setQrFilePath] = useState('');
   const [logoSizePercent, setLogoSizePercent] = useState(20);
   const [logoFile, setLogoFile] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      setLoadingBranches(true);
+      try {
+        const res = await fetch(`${API_URL}/api/branches/8`);
+        if (!res.ok) throw new Error('Şubeler alınamadı');
+        const data = await res.json();
+        setBranches(data);
+      } catch (err) {
+        setBranches([]);
+      } finally {
+        setLoadingBranches(false);
+      }
+    };
+    fetchBranches();
+  }, []);
 
   const handleGenerate = async (values) => {
     try {
@@ -24,19 +43,17 @@ const NonOrderableQR = () => {
       formData.append('color', color);
       formData.append('size', size);
       formData.append('logo_size_percent', 20);
-  
+      if (values.branch_id) {
+        formData.append('branch_id', values.branch_id);
+      }
       if (logoFile) {
         formData.append('logo', logoFile);
       }
-  
       const response = await fetch(`${API_URL}/api/table_qr`, {
         method: 'POST',
         body: formData,
-        // !!! headers yazma, FormData kendi ayarlar
       });
-  
       if (!response.ok) throw new Error('Sunucu hatası');
-  
       const data = await response.json();
       setQrFilePath(data.file_path);
       message.success('QR kodu başarıyla oluşturuldu!');
@@ -75,6 +92,16 @@ const NonOrderableQR = () => {
       <Col xs={24} md={12}>
         <Title level={3}>Siparişsiz QR Oluştur</Title>
         <Form layout="vertical" form={form} onFinish={handleGenerate}>
+          <Form.Item label="Şube" name="branch_id" rules={[{ required: true, message: 'Şube seçimi gerekli' }]}> 
+            <select disabled={loadingBranches} style={{ width: '100%', padding: 8, borderRadius: 4 }}>
+              <option value="">Şube Seçin</option>
+              {branches.map(branch => (
+                <option key={branch.id || branch.branch_id} value={branch.id || branch.branch_id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </Form.Item>
           <Form.Item label="Yönlendirme URL'si" name="qr_url" rules={[{ required: true, message: 'URL gerekli' }]}>
             <Input placeholder="https://ornekmenu.com/menu" />
           </Form.Item>

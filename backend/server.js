@@ -1,47 +1,45 @@
 const express = require('express');
 const cors = require('cors');
-
-const adminRouter = require('./routes/adminRoute');
-const table_qr_mng_router = require('./routes/table_qr_route');
-
-
-// const authRouter = require('./routes/authRoute');
+const path = require('path');
 
 const app = express();
-const db = require('./db');
 
+// Veritabanı ve modeller
+const db = require('./db');
+const models = require('./models'); // ./models/index.js üzerinden
+
+// Router'lar
+const adminRouter = require('./routes/adminRoute');
+const tableQrMngRouter = require('./routes/table_qr_route');
+const branchRoute = require('./routes/branchRoute');
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-
-const path = require('path');
-
-// Public klasörünü statik olarak ayarlıyoruz
+// Statik dosyalar
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Router kullanımı
+app.use('/api/admin', adminRouter);
+app.use('/api/table_qr', tableQrMngRouter);
+app.use("/api/branches",branchRoute);
+// app.use('/api/auth', authRouter);
 
-app.use('/api/admin',adminRouter);
-app.use('/api/table_qr',table_qr_mng_router);
-
-
+// Veritabanı bağlantısı ve senkronizasyon
 (async () => {
   try {
     await db.authenticate();
-   // await db.sync({ force: false });
-    console.log('✅ Veritabanına başarıyla bağlandı!.');
+    console.log('✅ Veritabanına başarıyla bağlanıldı.');
+
+    await db.sync({ alter: true }); // değişikliklere göre tabloyu günceller
+    console.log('✅ Veritabanı senkronize edildi.');
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Sunucu ${PORT} portunda çalışıyor...`);
+    });
   } catch (error) {
-    console.error('❌ Veritabanı bağlantı hatası:', error);
+    console.error('❌ Veritabanı bağlantı/senkronizasyon hatası:', error);
   }
 })();
-
-const models = require('./models/QRCode');
-
-// Bu geçici çözüm: tabloları yeniden senkronize eder
-models.sequelize.sync({ alter: true }).then(() => {
-  console.log("Veritabanı senkronize edildi.");
-});
-
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Sunucu ${PORT} portunda başlatıldı.`);
-});

@@ -1,10 +1,6 @@
-//// IMPORTS
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // sequelize instance'ınızı buraya ekleyin
-const Category  = require('./Category');
-const Menus = require('./Menus');
+const sequelize = require('../db');
 
-// DEFİNİNG
 const Product = sequelize.define('Product', {
   product_id: {
     type: DataTypes.INTEGER,
@@ -22,9 +18,13 @@ const Product = sequelize.define('Product', {
   category_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  business_id: {  
+    type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
-      model: 'categories',
-      key: 'category_id',
+      model: 'businesses',
+      key: 'id',
     },
   },
   is_selected: {
@@ -43,8 +43,8 @@ const Product = sequelize.define('Product', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  image_url:{
-    type:DataTypes.STRING(200),
+  image_url: {
+    type: DataTypes.STRING(200),
     allowNull: true,
   },
   calorie_count: {
@@ -58,20 +58,20 @@ const Product = sequelize.define('Product', {
   stock: {
     type: DataTypes.INTEGER,
     allowNull: true,
-  }
+  },
 }, {
   tableName: 'products',
   timestamps: false,
 });
 
-
-///// RELATIONSHIPS
-Category.hasMany(Product, { foreignKey: 'category_id' });
-Product.belongsTo(Category, { foreignKey: 'category_id' });
-
-Menus.belongsToMany(Product, { through: 'menu_products', foreignKey: 'menu_id',timestamps: false });
-Product.belongsToMany(Menus, { through: 'menu_products', foreignKey: 'product_id' ,timestamps: false });
-
-
+Product.associate = models => {
+  Product.belongsTo(models.Category, { foreignKey: 'category_id' });
+  Product.belongsTo(models.Business, { foreignKey: 'business_id' ,targetKey:'id'});
+  Product.belongsToMany(models.Branch, {
+    through: models.BranchProduct,
+    foreignKey: 'product_id',
+    otherKey: 'branch_id',
+  });
+};
 
 module.exports = Product;

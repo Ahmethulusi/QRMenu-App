@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/adminController');
+const adminController = require('../controllers/adminControllerBackup');
 const multer = require('multer');
 const path = require('path');
 const xlsx = require('xlsx');
@@ -87,11 +87,7 @@ router.get('/categories', adminController.getCategories);
 
 router.delete('/categories/:id', adminController.deleteCategory);
 
-router.get('/menus/getRegisteredProducts/:id',adminController.getRegisteredProducts);
-router.post('/menus/saveProducts', adminController.save_Products_To_Selected_Menu);
-router.post('/menus/create', adminController.createMenu);
-router.get('/menus/:id', adminController.getMenuById);
-router.get('/menus', adminController.getMenus);
+
 
 module.exports = router;
 

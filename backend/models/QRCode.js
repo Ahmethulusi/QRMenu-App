@@ -1,7 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // sequelize instance'ınızı buraya ekleyin
-const Business = require('./Business');
-const Table = require('./Tables');
+const sequelize = require('../db');
 
 const QRCode = sequelize.define('QRCode', {
   id: {
@@ -11,19 +9,15 @@ const QRCode = sequelize.define('QRCode', {
   },
   business_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'businesses',
-      key: 'id',
-    },
+    allowNull: true,
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   table_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'tables',
-      key: 'id',
-    },
+    allowNull: true, // Siparişsiz sistemde null
   },
   type: {
     type: DataTypes.ENUM('orderable', 'nonorderable'),
@@ -58,16 +52,9 @@ const QRCode = sequelize.define('QRCode', {
   timestamps: false,
 });
 
-// İlişkiler
-Business.hasMany(QRCode, { foreignKey: 'business_id' });
-QRCode.belongsTo(Business, { foreignKey: 'business_id' });
-
-Table.hasMany(QRCode, { foreignKey: 'table_id' });
-QRCode.belongsTo(Table, { foreignKey: 'table_id' });
-
-// QRCode.associate = models => {
-//   QRCode.belongsTo(models.Business, { foreignKey: 'business_id' });
-//   QRCode.belongsTo(models.Table, { foreignKey: 'table_id' });
-// };
+QRCode.associate = models => {
+  QRCode.belongsTo(models.Branch, { foreignKey: 'branch_id',targetKey:"id" });// Siparişsiz Sistem
+  QRCode.belongsTo(models.Table, { foreignKey: 'table_id' ,targetKey:"id"});//  Siparişli Sistem
+};
 
 module.exports = QRCode;

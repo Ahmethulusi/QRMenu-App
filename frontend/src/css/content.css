@@ -12,14 +12,14 @@
     /* margin-left: 5%; */
   }
   
-  /* html, body {
-    overflow-y: hidden; 
-  }
-   */
-  .container {
+  html, body {
     overflow-y: hidden; 
   }
   
+  /* .container {
+    overflow-y: hidden; 
+  }
+   */
 
   @media (max-width: 800px) {
     .content{

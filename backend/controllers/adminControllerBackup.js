@@ -22,15 +22,21 @@ exports.updateImageUrl = async (req, res) => {
 
 exports.getAllProuducts = async (req, res) => {
     try {
-
+        const db = require('../models');
         const products = await Products.findAll({
-            include: {
-                model: Category
-            }
+            include: [
+                { model: db.Category },
+                { model: db.Business },
+                { 
+                    model: db.Branch, 
+                    through: { attributes: ['price', 'stock'] } 
+                }
+            ]
         });
         res.json(products);
     } catch (error) {
         console.log(error);
+        res.status(500).json({ error: 'An error occurred while fetching products.' });
     }
 }
 exports.getAllProductsOrderBySiraId = async (req,res) => {
@@ -67,92 +73,105 @@ exports.updateProductsBySiraId = async (req, res) => {
 };
 
 exports.getProductById = async (req, res) => {
-
-    const id = req.params.id;
-
     try {
+        const db = require('../models');
         const product = await Products.findOne({
-            where: {
-                product_id: req.params.id
-            },
-            include: {
-                model: Category
-            }
+            where: { product_id: req.params.id },
+            include: [
+                { model: db.Category },
+                { model: db.Business },
+                { 
+                    model: db.Branch, 
+                    through: { attributes: ['price', 'stock'] } 
+                }
+            ]
         });
         res.json(product);
     } catch (err) {
         console.log(err);
+        res.status(500).json({ error: 'An error occurred while fetching the product.' });
     }
 }
+// 1. Update createProduct to require business_id and optionally assign to branches
 exports.createProduct = async (req, res) => {
-    // Gelen verileri kontrol et
     if (!req.body) {
         return res.status(400).json({ error: "Request body is empty" });
     }
     try {
-        const { name, price, description, category_id, status, showcase } = req.body;
-
-        // Zorunlu alanlar kontrolü (validation)
-        if (!name || !price || !category_id) {
-            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id" });
+        const { name, price, description, category_id, business_id, status, showcase, branch_ids, branch_prices, branch_stocks } = req.body;
+        if (!name || !price || !category_id || !business_id) {
+            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id, business_id" });
         }
-
-        const existingProduct = await Products.findOne({
-          where:{
-            product_name:name
-          }
-        })
-
-        if(existingProduct){
-          message.error("Bu ürün zaten mevcut");
-          return res.status(400).json({error:"Bu ürün zaten mevcut"});
+        const existingProduct = await Products.findOne({ where: { product_name: name, business_id } });
+        if (existingProduct) {
+            return res.status(400).json({ error: "Bu ürün zaten mevcut" });
         }
-
         const imageUrl = req.file ? req.file.filename : null;
-        // Ürün sırası için ürün sayısı alınıyor
         const count = await Products.count();
-
-        
-        // Yeni ürün oluşturuluyor
         const product = await Products.create({
             product_name: name,
             price: price,
             description: description,
             category_id: category_id,
+            business_id: business_id,
             is_selected: showcase,
             is_available: status,
-            sira_id: count + 1,  // Ürün sırası
-            image_url: imageUrl,  // Yüklenen resim URL'si
+            sira_id: count + 1,
+            image_url: imageUrl,
         });
-
-        // Başarılı yanıt
+        // Branch assignment (optional)
+        if (Array.isArray(branch_ids)) {
+            const BranchProduct = require('../models/BranchProduct');
+            for (let i = 0; i < branch_ids.length; i++) {
+                await BranchProduct.create({
+                    branch_id: branch_ids[i],
+                    product_id: product.product_id,
+                    price: branch_prices && branch_prices[i] ? branch_prices[i] : price,
+                    stock: branch_stocks && branch_stocks[i] ? branch_stocks[i] : null
+                });
+            }
+        }
         return res.status(201).json(product);
-
     } catch (error) {
         console.error("Product creation error:", error);
         return res.status(500).json({ error: "Ürün oluşturulurken bir hata oluştu." });
     }
 };
 
+// 4. Update updateProduct to allow updating business_id and branch assignments
 exports.updateProduct = async (req, res) => {
-    const { newName, newPrice, newDescription, newCategory_id ,id} = req.body;
+    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks } = req.body;
     try {
         const product = await Products.update({
             product_name: newName,
             price: newPrice,
             description: newDescription,
             category_id: newCategory_id,
-            // image_url:imageUrl
+            business_id: newBusiness_id
         }, {
-            where: {
-                product_id: id
-            }
+            where: { product_id: id }
         });
+        // Update branch assignments if provided
+        if (Array.isArray(branch_ids)) {
+            const BranchProduct = require('../models/BranchProduct');
+            // Remove old assignments
+            await BranchProduct.destroy({ where: { product_id: id } });
+            // Add new assignments
+            for (let i = 0; i < branch_ids.length; i++) {
+                await BranchProduct.create({
+                    branch_id: branch_ids[i],
+                    product_id: id,
+                    price: branch_prices && branch_prices[i] ? branch_prices[i] : newPrice,
+                    stock: branch_stocks && branch_stocks[i] ? branch_stocks[i] : null
+                });
+            }
+        }
         res.json(product);
     } catch (error) {
         console.log(error);
-    }   
-}
+        res.status(500).json({ error: 'An error occurred while updating the product.' });
+    }
+};
 
 exports.getCategories = async (req, res) => {
     try {

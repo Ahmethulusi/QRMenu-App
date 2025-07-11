@@ -6,11 +6,17 @@ const { v4: uuidv4 } = require('uuid');
 // const QRCodeModel = require('../models/QRCode'); // kendi model dosyana göre değişebilir
 const QRCodeModel  = require('../models/QRCode');
 
+const { Business } = require('../models'); // İşletme modelini içe aktar
+
+
 
 exports.createQRCode = async (req, res) => {
   try {
+    console.log('🟡 [createQRCode] İstek alındı:', req.body);
+
     const {
       business_id,
+      branch_id,
       table_id,
       type,
       qr_url,
@@ -19,27 +25,27 @@ exports.createQRCode = async (req, res) => {
       logo_size_percent,
     } = req.body;
 
-    console.log('Gelen body:', req.body);
-    console.log('Gelen dosya:', req.file);
+    if (!business_id || !qr_url || typeof qr_url !== 'string' || qr_url.trim() === '') {
+      console.log('🔴 Gerekli alanlar eksik.');
+      return res.status(400).json({ error: 'Geçerli bir qr_url ve business_id gönderilmelidir.' });
+    }
 
-    // ❗ Önemli: frontend'den gelen veriler string olabilir, parse edelim
     const parsedBusinessId = parseInt(business_id);
+    const parsedBranchId = branch_id ? parseInt(branch_id) : null;
+    const parsedTableId = table_id ? parseInt(table_id) : null;
     const parsedSize = parseInt(size) || 256;
     const parsedLogoPercent = parseInt(logo_size_percent) || 20;
 
-    if (!qr_url || typeof qr_url !== 'string' || qr_url.trim() === '') {
-      return res.status(400).json({ error: 'Geçerli bir qr_url alanı gönderilmelidir.' });
-    }
-
-    let logoPath = null;
-    if (req.file) {
-      logoPath = req.file.path; // multer ile gelen dosya yolu
+    // ✅ Business kontrolü
+    const business = await Business.findByPk(parsedBusinessId);
+    if (!business) {
+      console.log(`🔴 İşletme bulunamadı: ID ${parsedBusinessId}`);
+      return res.status(400).json({ error: `ID'si ${parsedBusinessId} olan bir işletme bulunamadı.` });
     }
 
     const fileName = `${uuidv4()}.png`;
     const outputPath = path.join(__dirname, '..', 'public', 'qrcodes', fileName);
 
-    // 1. QR kodu buffer olarak oluştur
     const qrBuffer = await QRCode.toBuffer(qr_url, {
       color: {
         dark: color || '#000000',
@@ -49,33 +55,30 @@ exports.createQRCode = async (req, res) => {
     });
 
     let finalImage;
-
-    if (logoPath) {
+    if (req.file) {
       try {
         const qrImage = await Jimp.read(qrBuffer);
-        const logoImage = await Jimp.read(path.resolve(logoPath));
+        const logoImage = await Jimp.read(path.resolve(req.file.path));
         const logoSize = Math.round(parsedSize * parsedLogoPercent / 100);
         logoImage.resize(logoSize, logoSize);
         const x = (qrImage.bitmap.width - logoSize) / 2;
         const y = (qrImage.bitmap.height - logoSize) / 2;
         finalImage = qrImage.composite(logoImage, x, y);
-      } catch (err) {
-        console.error('Logo eklenirken hata, logosuz devam ediliyor:', err);
+      } catch (logoErr) {
+        console.error('🟠 Logo eklenemedi:', logoErr);
         finalImage = await Jimp.read(qrBuffer);
       }
     } else {
       finalImage = await Jimp.read(qrBuffer);
     }
 
-    // 2. Görseli kaydet
     await finalImage.writeAsync(outputPath);
-
     const file_path = `/qrcodes/${fileName}`;
 
-    // 3. Veritabanına kayıt (isteğe bağlı alanlar varsa kontrol et)
-    const result = await QRCodeModel.create({
+    const qrRecord = await QRCodeModel.create({
       business_id: parsedBusinessId,
-      table_id: table_id || null,
+      branch_id: parsedBranchId,
+      table_id: parsedTableId,
       type,
       qr_url,
       file_path,
@@ -83,10 +86,41 @@ exports.createQRCode = async (req, res) => {
       size: parsedSize,
     });
 
-    res.status(201).json({ message: 'QR oluşturuldu', file_path });
+    console.log('🟢 QR başarıyla oluşturuldu:', qrRecord.id);
+
+    res.status(201).json({
+      message: 'QR oluşturuldu',
+      file_path,
+      qr: qrRecord,
+    });
+
   } catch (err) {
-    console.error('QR oluşturma hatası:', err);
-    res.status(500).json({ error: 'QR oluşturulamadı' });
+    console.error('🔴 QR oluşturma hatası:', err);
+    res.status(500).json({ error: 'QR oluşturulamadı', details: err.message });
+  }
+};
+
+
+// List all QRs for a business, optionally filter by branch or table
+exports.getQRCodes = async (req, res) => {
+  try {
+    const { business_id, branch_id, table_id, type } = req.query;
+
+    const where = {};
+    if (business_id) where.business_id = business_id;
+    if (branch_id) where.branch_id = branch_id;
+    if (table_id) where.table_id = table_id;
+    if (type) where.type = type;
+
+    const qrCodes = await QRCodeModel.findAll({
+      where,
+      order: [['id', 'DESC']],
+    });
+
+    res.status(200).json(qrCodes);
+  } catch (error) {
+    console.error("QR kodları alınamadı:", error);
+    res.status(500).json({ error: 'QR kodları alınamadı', details: error.message });
   }
 };
 
@@ -103,9 +137,9 @@ exports.createQRCode = async (req, res) => {
 // };
 
 
+// List all nonorderable QRs for a business (DEPRECATED, use getQRCodes with type)
 exports.getNonOrderableQRCodesByBusiness = async (req, res) => {
   const { businessId } = req.params;
-
   try {
     const qrCodes = await QRCodeModel.findAll({
       where: {
@@ -114,8 +148,7 @@ exports.getNonOrderableQRCodesByBusiness = async (req, res) => {
       },
       order: [['id', 'DESC']],
     });
-
-    res.json(qrCodes); // sade bir array döndürüyoruz
+    res.json(qrCodes);
   } catch (error) {
     console.error("QR kodları alınamadı:", error);
     res.status(500).json({ error: 'QR kodları alınamadı' });

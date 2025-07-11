@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const Business = sequelize.define('Business', {
+
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -12,9 +13,9 @@ const Business = sequelize.define('Business', {
 });
 
 Business.associate = models => {
-  Business.hasMany(models.Section, { foreignKey: 'business_id' });
-  Business.hasMany(models.QRDesignSetting, { foreignKey: 'business_id' });
-  Business.hasMany(models.QRCode, { foreignKey: 'business_id' });
+  Business.hasMany(models.User, { foreignKey: 'business_id' });
+  Business.hasMany(models.Branch, { foreignKey: 'business_id' });
+  Business.hasMany(models.Product, { foreignKey: 'business_id' });
 };
 
 module.exports = Business;

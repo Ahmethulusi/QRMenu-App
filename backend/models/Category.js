@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // sequelize instance'ınızı buraya ekleyin
+const sequelize = require('../db');
 
 const Category = sequelize.define('Category', {
   category_id: {
@@ -27,5 +27,9 @@ const Category = sequelize.define('Category', {
   tableName: 'categories',
   timestamps: false,
 });
+
+Category.associate = models => {
+  Category.hasMany(models.Product, { foreignKey: 'category_id' });
+};
 
 module.exports = Category;
