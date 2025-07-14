@@ -98,13 +98,13 @@ exports.createProduct = async (req, res) => {
         return res.status(400).json({ error: "Request body is empty" });
     }
     try {
-        const { name, price, description, category_id, business_id, status, showcase, branch_ids, branch_prices, branch_stocks } = req.body;
-        if (!name || !price || !category_id || !business_id) {
-            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id, business_id" });
+        const { name, price, description, category_id, status, showcase, branch_ids, branch_prices, branch_stocks } = req.body;
+        if (!name || !price || !category_id) {
+            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id" });
         }
-        const existingProduct = await Products.findOne({ where: { product_name: name, business_id } });
+        const existingProduct = await Products.findOne({ where: { product_name: name,business_id:8 } });
         if (existingProduct) {
-            return res.status(400).json({ error: "Bu ürün zaten mevcut" });
+            return res.status(400).json({ error: "Bu ürün zaten mevcut" }); 
         }
         const imageUrl = req.file ? req.file.filename : null;
         const count = await Products.count();
@@ -113,11 +113,11 @@ exports.createProduct = async (req, res) => {
             price: price,
             description: description,
             category_id: category_id,
-            business_id: business_id,
             is_selected: showcase,
             is_available: status,
             sira_id: count + 1,
             image_url: imageUrl,
+            business_id:8
         });
         // Branch assignment (optional)
         if (Array.isArray(branch_ids)) {
@@ -536,7 +536,8 @@ exports.uploadExcel = async (req, res) => {
           image_url: item.image_url || null,
           calorie_count: item.calorie_count || null,
           cooking_time: item.cooking_time || null,
-          stock: item.stock || null
+          stock: item.stock || null,
+          business_id:8
         });
 
         successfulProducts.push(item.product_name);

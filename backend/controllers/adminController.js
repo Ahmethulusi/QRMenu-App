@@ -94,7 +94,7 @@ exports.createProduct = async (req, res) => {
 
         // Zorunlu alanlar kontrolü (validation)
         if (!name || !price || !category_id) {
-            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id" });
+            return res.status(400).json({ error: "Zorunlu alanlar eksik" });
         }
 
         const existingProduct = await Products.findOne({
@@ -123,6 +123,7 @@ exports.createProduct = async (req, res) => {
             is_available: status,
             sira_id: count + 1,  // Ürün sırası
             image_url: imageUrl,  // Yüklenen resim URL'si
+            business_id:8
         });
 
         // Başarılı yanıt
@@ -133,6 +134,9 @@ exports.createProduct = async (req, res) => {
         return res.status(500).json({ error: "Ürün oluşturulurken bir hata oluştu." });
     }
 };
+
+
+
 
 exports.updateProduct = async (req, res) => {
     const { newName, newPrice, newDescription, newCategory_id ,id} = req.body;
@@ -517,7 +521,8 @@ exports.uploadExcel = async (req, res) => {
           image_url: item.image_url || null,
           calorie_count: item.calorie_count || null,
           cooking_time: item.cooking_time || null,
-          stock: item.stock || null
+          stock: item.stock || null,
+          business_id: 8
         });
 
         successfulProducts.push(item.product_name);

@@ -20,7 +20,7 @@ const ExcelImportButton = ({ onSuccess }) => {
         throw new Error(errorData.message || 'Excel yüklemede bir hata oluştu');
       }
 
-      const data = await response.json();
+      const data = await response.json()
       message.success('Excel dosyası başarıyla yüklendi');
       if (onSuccess) {
         onSuccess();
