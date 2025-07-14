@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Upload, Button, Popover ,Switch, message} from 'antd';
+import { Table, Upload, Button, Popover ,Switch, message,Popconfirm} from 'antd';
 import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeInvisibleFilled} from '@ant-design/icons';
 import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
@@ -98,6 +98,27 @@ const Product_Table = () => {
       message.error('Bir hata oluştu: ' + error.message);
     };
   };
+
+  const handleDelete = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/admin/products/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    // Anlık olarak silinen ürünü state'den çıkar
+    setData(prev => prev.filter(item => item.id !== id));
+    message.success('Ürün başarıyla silindi!');
+  } catch (error) {
+    console.error('Silme işlemi başarısız:', error);
+    message.error('Silme işlemi başarısız! ' + error.message);
+  }
+};
 
 
 
@@ -222,18 +243,31 @@ const Product_Table = () => {
       onFilter: (value, record) => record.category.includes(value),
       
     },
-    {
-      title: 'Action',
-      dataIndex: '',
-      key: 'id',
-      width: '8%',
-      render: (record) => (
-        <div className='action-buttons-container'>        
-          <Button style={{ color: 'green' }} onClick={() => showEditModal(record)} ><EditOutlined/>  Edit</Button>
-          <Button style={{ color: 'red' }} onClick={() => handleDelete(record.id)}><DeleteTwoTone/> Delete</Button>
-        </div>
-      ),
-    },
+   {
+  title: 'Action',
+  dataIndex: '',
+  key: 'id',
+  width: '8%',
+  render: (record) => (
+    <div className='action-buttons-container'>
+      <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
+        <EditOutlined /> Edit
+      </Button>
+      
+      <Popconfirm
+        title="Bu ürünü silmek istediğinize emin misiniz?"
+        onConfirm={() => handleDelete(record.id)}
+        okText="Evet"
+        cancelText="Hayır"
+      >
+        <Button style={{ color: 'red' }}>
+          <DeleteTwoTone /> Delete
+        </Button>
+      </Popconfirm>
+    </div>
+  ),
+},
+
     {
       title: 'Status',
       dataIndex: 'status',
@@ -288,6 +322,7 @@ const Product_Table = () => {
 
   return (
     <>
+
 
     <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px' ,position: 'relative'}}>
         <PlusOutlined/> Yeni

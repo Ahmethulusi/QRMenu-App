@@ -60,6 +60,7 @@ router.put('/products/bulk-update-prices',adminController.bulkCreatePrices);
 router.put('/products/yeniSira',adminController.updateProductsBySiraId);
 
 router.post('/products/create',upload.single('resim'),adminController.createProduct);
+router.delete('/products/:id',adminController.deleteProduct);
 
 router.get('/products/:id', adminController.getProductById);
 

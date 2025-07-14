@@ -138,6 +138,29 @@ exports.createProduct = async (req, res) => {
     }
 };
 
+
+// Ürün Silme Endpoint'i
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Products.destroy({
+      where: { product_id: id }
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Ürün bulunamadı' });
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Silme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+};
+
+
+
 // 4. Update updateProduct to allow updating business_id and branch assignments
 exports.updateProduct = async (req, res) => {
     const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks } = req.body;
@@ -438,6 +461,7 @@ exports.uploadExcel = async (req, res) => {
     const unknownColumns = Object.keys(rawData[0]).filter(
       col => !columnMapping[col.trim()]
     );
+    
     if (unknownColumns.length > 0) {
       return res.status(400).json({
         message: "Bilinmeyen sütun başlıkları tespit edildi.",
@@ -481,14 +505,35 @@ exports.uploadExcel = async (req, res) => {
       cat.category_name.toString().trim().toLowerCase()
     );
 
+    // 🧠 Tüm ürünler belleğe alınıyor
+    const allProducts = await Products.findAll();
+    const allProductNames = allProducts.map(p =>
+      p.product_name.toString().trim().toLowerCase()
+    );
+
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
+      const incomingName = item.product_name.toString().trim().toLowerCase();
 
-      const existingProduct = await Products.findOne({
-        where: { product_name: item.product_name }
-      });
-      if (existingProduct) {
-        duplicateProducts.push(item.product_name);
+      // 🔍 Benzer ürün var mı?
+      let matchedProduct = allProducts.find(p =>
+        p.product_name.toString().trim().toLowerCase() === incomingName
+      );
+
+      if (!matchedProduct) {
+        const { bestMatch } = stringSimilarity.findBestMatch(incomingName, allProductNames);
+        const bestMatchName = bestMatch.target;
+        const bestRating = bestMatch.rating;
+
+        if (bestRating > 0.6) {
+          matchedProduct = allProducts.find(p =>
+            p.product_name.toString().trim().toLowerCase() === bestMatchName
+          );
+        }
+      }
+
+      if (matchedProduct) {
+        duplicateProducts.push(`${item.product_name} (benzer: ${matchedProduct.product_name})`);
         continue;
       }
 
@@ -497,7 +542,6 @@ exports.uploadExcel = async (req, res) => {
         cat.category_name.toString().trim().toLowerCase() === categoryName
       );
 
-      // ✅ Yakın eşleşme yapılmazsa yeni oluşturulacak
       if (!matchedCategory) {
         const { bestMatch } = stringSimilarity.findBestMatch(categoryName, allCategoryNames);
         const bestMatchName = bestMatch.target;
@@ -505,7 +549,7 @@ exports.uploadExcel = async (req, res) => {
           cat.category_name.toString().trim().toLowerCase() === bestMatchName
         );
 
-        if (bestMatch.rating > 0.6 && bestCategory) {
+        if (bestMatch.rating > 0.8 && bestCategory) {
           matchedCategory = bestCategory;
         } else {
           try {
@@ -515,7 +559,7 @@ exports.uploadExcel = async (req, res) => {
               sira_id: 0,
               depth: 0
             });
-            allCategories.push(matchedCategory); // Belleğe yeni kategori de eklenmeli
+            allCategories.push(matchedCategory);
             allCategoryNames.push(matchedCategory.category_name.trim().toLowerCase());
           } catch (catErr) {
             categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı.`);
@@ -537,7 +581,7 @@ exports.uploadExcel = async (req, res) => {
           calorie_count: item.calorie_count || null,
           cooking_time: item.cooking_time || null,
           stock: item.stock || null,
-          business_id:8
+          business_id: 8
         });
 
         successfulProducts.push(item.product_name);
@@ -546,14 +590,27 @@ exports.uploadExcel = async (req, res) => {
       }
     }
 
-    res.status(200).json({
-      message: 'Excel yüklemesi tamamlandı.',
-      addedProducts: successfulProducts,
-      duplicateProducts,
-      categoryErrors,
-      addedCount: successfulProducts.length,
-      duplicateCount: duplicateProducts.length
-    });
+   let responseMessage = '';
+let statusCode = 200;
+
+if (successfulProducts.length === 0) {
+  responseMessage = 'Hiçbir ürün eklenmedi. Tüm ürünler sistemde zaten mevcut veya hatalıydı.';
+  statusCode = 400; // bad request gibi davran
+} else if (duplicateProducts.length > 0 || categoryErrors.length > 0) {
+  responseMessage = 'Bazı ürünler eklendi fakat bazıları atlandı.';
+} else {
+  responseMessage = 'Excel yüklemesi tamamlandı.';
+}
+
+res.status(statusCode).json({
+  message: responseMessage,
+  addedProducts: successfulProducts,
+  duplicateProducts,
+  categoryErrors,
+  addedCount: successfulProducts.length,
+  duplicateCount: duplicateProducts.length
+});
+
   } catch (error) {
     console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
     res.status(500).json({
