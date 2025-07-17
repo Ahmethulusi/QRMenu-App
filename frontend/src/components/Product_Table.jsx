@@ -321,8 +321,8 @@ const Product_Table = () => {
   }
 
   return (
-    <>
-
+    
+    <div className='table-content'>
 
     <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px' ,position: 'relative'}}>
         <PlusOutlined/> Yeni
@@ -360,7 +360,8 @@ const Product_Table = () => {
           position: ['bottomRight']
         }}
       />
-    </>
+    
+    </div>
   );
 };
 

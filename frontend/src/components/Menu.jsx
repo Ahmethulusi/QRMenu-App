@@ -35,7 +35,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      const isNowMobile = window.innerWidth <= 768;
+      const isNowMobile = window.innerWidth <= 900;
       setIsMobile(isNowMobile);
       if (isNowMobile) {
         setCollapsed(true);

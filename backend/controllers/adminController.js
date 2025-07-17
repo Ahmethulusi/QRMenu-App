@@ -1,5 +1,6 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
+const Business = require('../models/Business');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
@@ -335,6 +336,22 @@ exports.getProductsByCategory = async (req, res) => {
       }
   
       const products = await Products.findAll({ where: { category_id } });
+  
+      res.status(200).json(products);
+    } catch (error) {
+      console.error('Ürünler alınırken hata oluştu:', error);
+      res.status(500).json({ message: 'Ürünler alınamadı' });
+    }
+  };
+
+exports.getProductsByBusiness = async (req, res) => {
+    const { business_id } = req.params; 
+    try {
+      if (!business_id) {
+        return res.status(400).json({ message: 'Kategori ID gerekli' });
+      }
+  
+      const products = await Products.findAll({ where: { business_id } });
   
       res.status(200).json(products);
     } catch (error) {

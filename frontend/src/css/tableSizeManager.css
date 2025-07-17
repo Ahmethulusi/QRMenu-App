@@ -1,12 +1,12 @@
 .ant-table-thead > tr > th {
-    height: 70px !important;  /* Header yüksekliğini sabit tutar */
-    padding: 8px !important;  
-    white-space: nowrap;  /* Header içeriğinin alt satıra geçmesini engeller */
-  }
-  
-   .ant-table-body {
-    max-height: 480px !important;
-  } 
+  height: 70px !important;
+  padding: 8px !important;
+  white-space: nowrap;
+}
 
+.ant-table-body {
+  max-height: 65vh !important;
+  overflow-y: auto;
+}
 
 

@@ -218,7 +218,7 @@
 }
 
 /* Show hamburger icon only on mobile */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 900px) {
   .mobile-menu-icon {
     display: flex;
     align-items: center;
@@ -233,7 +233,7 @@
   left: 0;
   right: 0;
   background-color: #001529;
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px 20px 0 0; 
   transform: translateY(100%);
   transition: transform 0.3s ease;
   z-index: 1002;
@@ -335,7 +335,7 @@
 }
 
 /* Mobile content adjustments */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 900px) {
   .content {
     margin-left: 0;
     width: 100%;

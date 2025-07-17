@@ -12,6 +12,7 @@ import ProfileScreen from '../components/ProfileScreen';
 import TablesPage from '../components/TablesPage';
 import NonOrderableQR from '../components/Non_OrderableQR';
 import QRDesignsTable from '../components/QRDesignsTable';
+import BranchTable from '../components/BranchTable';
 
 function Content({ selectedComponent }) {
   switch (selectedComponent) {
@@ -40,6 +41,9 @@ function Content({ selectedComponent }) {
     
     case 'GeneralQR':
       return <NonOrderableQR />;
+
+    case 'Branches':
+      return <BranchTable />;
     
     case 'QRDesigns':
       return <QRDesignsTable businessId={1} />;

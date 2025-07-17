@@ -47,7 +47,7 @@ const ExcelImportButton = ({ onSuccess }) => {
         <div>
           <p>Excel dosyası için zorunlu alanlar:</p>
           <ul>
-            <li>Ürün Adi </li>
+            <li>Ürün Adı </li>
             <li>Fiyat</li>
             <li>Kategori</li>
           </ul>

@@ -62,6 +62,7 @@ router.put('/products/yeniSira',adminController.updateProductsBySiraId);
 router.post('/products/create',upload.single('resim'),adminController.createProduct);
 router.delete('/products/:id',adminController.deleteProduct);
 
+router.get('/productsByBusiness/:business_id',adminController.getProductsByBusiness);
 router.get('/products/:id', adminController.getProductById);
 
 
@@ -73,7 +74,6 @@ router.get('/productsByCategory/:category_id', adminController.getProductsByCate
 router.get('/productsBySiraid', adminController.getAllProductsOrderBySiraId);
 
 router.get('/products', adminController.getAllProuducts);
-
 
 
 

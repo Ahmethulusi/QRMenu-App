@@ -72,6 +72,22 @@ exports.updateProductsBySiraId = async (req, res) => {
     }
 };
 
+exports.getProductsByBusiness = async (req, res) => {
+    const { business_id } = req.params; 
+    try {
+      if (!business_id) {
+        return res.status(400).json({ message: 'Kategori ID gerekli' });
+      }
+  
+      const products = await Products.findAll({ where: { business_id } });
+  
+      res.status(200).json(products);
+    } catch (error) {
+      console.error('Ürünler alınırken hata oluştu:', error);
+      res.status(500).json({ message: 'Ürünler alınamadı' });
+    }
+  };
+
 exports.getProductById = async (req, res) => {
     try {
         const db = require('../models');

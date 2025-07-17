@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import '../css/categories.css';
 import { Table, Button, message, Modal } from 'antd';
-
 import { MinusSquareOutlined, PlusCircleOutlined, PlusOutlined, EditOutlined, DeleteTwoTone } from '@ant-design/icons';
+import '../css/tableSizeManager.css';
+
 
 const { confirm } = Modal;
 const API_URL = import.meta.env.VITE_API_URL;
@@ -169,7 +170,7 @@ const columns = [
       />
      <Table
   columns={columns}
-  className='custom-table'
+  className='ant-table'
   dataSource={data}
   rowKey="id"
   pagination={false}
