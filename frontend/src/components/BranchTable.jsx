@@ -91,7 +91,7 @@ const fetchAvailableProducts = async () => {
         ? `${API_URL}/api/branches/${branchId}`
         : `${API_URL}/api/branches/`;
       const method = editingBranch ? 'PUT' : 'POST';
-      const body = JSON.stringify({ ...values, business_id: businessId });
+      const body = JSON.stringify({ ...values, businessId: businessId });
 
       const res = await fetch(url, {
         method,
