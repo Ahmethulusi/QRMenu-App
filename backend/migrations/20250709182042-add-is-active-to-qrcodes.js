@@ -22,14 +22,3 @@
 // };
 
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('qrcodes', 'is_active', {
-      type: Sequelize.BOOLEAN,
-      defaultValue: true,
-    });
-  },
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('qrcodes', 'is_active');
-  }
-};

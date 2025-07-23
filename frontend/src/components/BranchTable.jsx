@@ -85,7 +85,7 @@ const fetchAvailableProducts = async () => {
 
   const handleSave = async () => {
     try {
-      const values = await form.validateFields();
+      const values = await form.validateFields(); 
       const branchId = editingBranch ? editingBranch.id : null;
       const url = editingBranch
         ? `${API_URL}/api/branches/${branchId}`

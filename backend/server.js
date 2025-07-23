@@ -33,7 +33,7 @@ app.use("/api/branches",branchRoute);
     await db.authenticate();
     console.log('✅ Veritabanına başarıyla bağlanıldı.');
 
-    await db.sync({ alter: true }); // değişikliklere göre tabloyu günceller
+    await db.sync({ force: false }); // değişikliklere göre tabloyu günceller
     console.log('✅ Veritabanı senkronize edildi.');
 
     const PORT = process.env.PORT || 5000;
