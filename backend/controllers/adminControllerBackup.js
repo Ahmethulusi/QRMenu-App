@@ -133,7 +133,7 @@ exports.createProduct = async (req, res) => {
             is_available: status,
             sira_id: count + 1,
             image_url: imageUrl,
-            business_id:8
+            business_id:1
         });
         // Branch assignment (optional)
         if (Array.isArray(branch_ids)) {

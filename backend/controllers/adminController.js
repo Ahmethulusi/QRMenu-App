@@ -124,7 +124,7 @@ exports.createProduct = async (req, res) => {
             is_available: status,
             sira_id: count + 1,  // Ürün sırası
             image_url: imageUrl,  // Yüklenen resim URL'si
-            business_id:8
+            business_id:1
         });
 
         // Başarılı yanıt
