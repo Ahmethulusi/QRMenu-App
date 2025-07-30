@@ -14,7 +14,11 @@ const tableQrMngRouter = require('./routes/table_qr_route');
 const branchRoute = require('./routes/branchRoute');
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: 'https://qrmenu-app-frontend.onrender.com', // Render'daki frontend adresi
+  credentials: true // Eğer cookie vs. varsa
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
