@@ -152,7 +152,8 @@ const columns = [
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} style={{ marginBottom: '10px', position: 'relative' }}>
+      <h2>Kategoriler ve Alt Kategoriler</h2>
+      <Button type="primary" onClick={showModal} style={{ marginBottom: '10px', marginTop: '10px', position: 'relative' }}>
         <PlusOutlined/> Create a Category
       </Button>
       {/* ModalForm'u burada kullanıyoruz */}

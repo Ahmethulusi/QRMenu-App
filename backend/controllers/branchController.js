@@ -29,11 +29,6 @@ exports.getProductsByBranchId = async (req, res) => {
       attributes: ['branch_id', 'product_id', 'price', 'stock'],
     });
 
-    if (!branchProducts || branchProducts.length === 0) {
-      // Eğer hiç ürün yoksa veya şube yanlışsa (ki where clause ile filtrelendi)
-      return res.status(404).json({ message: 'Bu şubeye ait ürün bulunamadı.' });
-    }
-
     // Gelen veriyi istediğiniz formata dönüştürme
     const formattedProducts = branchProducts.map(bp => ({
       branch_id: bp.branch_id,
@@ -334,6 +329,88 @@ exports.AddProductToBranch= async (req, res) => {
   }
 };
 
+// Şube ürününde fiyat ve stok güncelleme
+exports.updateBranchProduct = async (req, res) => {
+  try {
+    const { branch_id, product_id, price, stock } = req.body;
+
+    if (!branch_id || !product_id) {
+      return res.status(400).json({ error: 'branch_id ve product_id zorunludur.' });
+    }
+
+    // Model adını ezmeden doğru kullan
+    const branchProduct = await BranchProduct.findOne({
+      where: { branch_id, product_id }
+    });
+
+    if (!branchProduct) {
+      return res.status(404).json({ error: 'Şubeye ait ürün bulunamadı.' });
+    }
+
+    // Fiyat ve stok güncelle
+    if (price !== undefined) branchProduct.price = price;
+    if (stock !== undefined) branchProduct.stock = stock;
+
+    await branchProduct.save();
+
+    return res.status(200).json({ success: true, branchProduct });
+  } catch (error) {
+    console.error('Şube ürün güncelleme hatası:', error);
+    return res.status(500).json({ error: 'Sunucu hatası: Şube ürün güncellenemedi.' });
+  }
+};
+
+// Şubeye eklenebilecek ürünleri getir (henüz eklenmemiş olanlar)
+exports.getAvailableProductsForBranch = async (req, res) => {
+  try {
+    const { branchId, businessId } = req.params;
+
+    if (!branchId || !businessId) {
+      return res.status(400).json({ error: 'branchId ve businessId parametreleri zorunludur.' });
+    }
+
+    // Önce şubeye ait ürünlerin ID'lerini al
+    const branchProducts = await BranchProduct.findAll({
+      where: { branch_id: branchId },
+      attributes: ['product_id']
+    });
+
+    const existingProductIds = branchProducts.map(bp => bp.product_id);
+
+    // İşletmeye ait tüm ürünleri al, ancak şubede olmayanları filtrele
+    const allProducts = await Product.findAll({
+      where: { business_id: businessId },
+      attributes: ['product_id', 'product_name', 'description', 'price', 'image_url']
+    });
+
+    // Şubede olmayan ürünleri filtrele
+    const availableProducts = allProducts.filter(product => 
+      !existingProductIds.includes(product.product_id)
+    );
+
+    return res.status(200).json(availableProducts);
+  } catch (error) {
+    console.error('Şubeye eklenebilecek ürünleri getirme hatası:', error);
+    return res.status(500).json({ error: 'Sunucu hatası: Ürünler getirilemedi.' });
+  }
+};
+
+
+exports.deleteBranchProduct = async (req, res) => {
+  try {
+    const { branch_id, product_id } = req.body;
+    const deleted = await BranchProduct.destroy({
+      where: { branch_id, product_id }
+    });
+    if (deleted) {
+      return res.status(200).json({ success: true });
+    }
+    return res.status(404).json({ error: 'Kayıt bulunamadı' });
+  } catch (error) {
+    console.error('Silme hatası:', error);
+    return res.status(500).json({ error: 'Silme işlemi sırasında hata oluştu' });
+  }
+};
 
 
 

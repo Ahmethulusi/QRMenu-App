@@ -1,9 +1,9 @@
 // components/BranchTable.jsx
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Popconfirm, message, Select, InputNumber } from 'antd'; // InputNumber ve Select eklendi
-import { EditOutlined, DeleteOutlined, PlusOutlined, ShoppingOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, ShoppingOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 
-const businessId = 8; // Frontend'den gönderilecek sabit business ID
+const businessId = 1; // Frontend'den gönderilecek sabit business ID
 const API_URL = import.meta.env.VITE_API_URL;
 
 const { Option } = Select; // Select bileşeni için Option
@@ -19,6 +19,8 @@ const BranchTable = () => {
   const [selectedBranchName, setSelectedBranchName] = useState('');
   const [selectedBranchIdForProducts, setSelectedBranchIdForProducts] = useState(null); // NEW: Store branch ID for product operations
   const [availableProducts, setAvailableProducts] = useState([]); // NEW: To store all products for dropdown
+  const [editingKey, setEditingKey] = useState(''); // Inline editing için
+  const [editForm] = Form.useForm(); // Inline editing için form
   
   const [form] = Form.useForm(); // For Branch Add/Edit
   const [addProductForm] = Form.useForm(); // NEW: For Add Product to Branch
@@ -45,12 +47,11 @@ const BranchTable = () => {
 
 const fetchAvailableProducts = async () => {
     try {
-      console.log('Fetching available products...');
-      // API_URL/api/products veya API_URL/api/admin/productsByBusiness/${businessId}
-      // Hangi endpoint'i kullandığınızdan emin olun.
-      const res = await fetch(`${API_URL}/api/admin/productsByBusiness/${businessId}`);
+      console.log('Fetching available products for branch...');
+      // Yeni endpoint: şubeye henüz eklenmemiş ürünleri getir
+      const res = await fetch(`${API_URL}/api/branches/${selectedBranchIdForProducts}/${businessId}/available-products`);
       const data = await res.json();
-      console.log('Available products:', data);
+      console.log('Available products for branch:', data);
       setAvailableProducts(data);
     } catch (err) {
       console.error('Ürün yükleme hatası:', err);
@@ -192,12 +193,115 @@ const handleSaveProductToBranch = async () => {
     fetchBranches();
   }, []);
 
+  // Inline editing için EditableCell bileşeni
+  const EditableCell = ({
+    editing,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    ...restProps
+  }) => {
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              { required: true, message: `${title} gerekli!` },
+              { pattern: /^\d+(\.\d{1,2})?$/, message: 'Geçerli bir değer giriniz!' }
+            ]}
+          >
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  };
+
+  // Inline editing fonksiyonları
+  const isEditing = (record) => record.product_id === editingKey;
+
+  const edit = (record) => {
+    editForm.setFieldsValue({
+      price: record.price ?? 0,
+      stock: record.stock ?? 0,
+    });
+    setEditingKey(record.product_id);
+  };
+
+  const cancel = () => {
+    setEditingKey('');
+  };
+
+  const save = async (key) => {
+    try {
+      const row = await editForm.validateFields();
+      
+      // Backend'e güncelleme isteği gönder
+      const response = await fetch(`${API_URL}/api/branches/branch-products`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch_id: selectedBranchIdForProducts,
+          product_id: key,
+          price: row.price,
+          stock: row.stock,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Güncelleme başarısız');
+      }
+
+      // Frontend'de güncelle
+      const newData = [...currentBranchProducts];
+      const index = newData.findIndex((item) => key === item.product_id);
+      if (index > -1) {
+        newData[index] = { ...newData[index], ...row };
+        setCurrentBranchProducts(newData);
+        setEditingKey('');
+        message.success('Fiyat ve stok güncellendi!');
+      }
+    } catch (err) {
+      message.error(err.message || 'Güncelleme hatası!');
+    }
+  };
+
+  const handleProductDelete = async (product_id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/branches/branch-products`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch_id: selectedBranchIdForProducts,
+          product_id,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Silme işlemi başarısız');
+      }
+  
+      // Frontend'den sil
+      setCurrentBranchProducts((prev) =>
+        prev.filter((item) => item.product_id !== product_id)
+      );
+      message.success('Ürün başarıyla kaldırıldı!');
+    } catch (err) {
+      message.error(err.message || 'Silme hatası!');
+    }
+  };
+  
+
   const productColumns = [
-    {
-      title: 'Ürün ID',
-      dataIndex: 'product_id',
-      key: 'product_id',
-    },
     {
       title: 'Ürün Adı',
       dataIndex: 'product_name',
@@ -207,35 +311,68 @@ const handleSaveProductToBranch = async () => {
       title: 'Şubeye Özel Fiyat',
       dataIndex: 'price',
       key: 'price',
+      editable: true,
+      render: (text, record) => (isEditing(record) ? null : (text === null || text === undefined ? 0 : text))
     },
     {
       title: 'Şube Stoğu',
       dataIndex: 'stock',
       key: 'stock',
+      editable: true,
+      render: (text, record) => (isEditing(record) ? null : (text === null || text === undefined ? 0 : text))
     },
-    // NEW: Opsiyonel: Ürünleri şubeden silme aksiyonu
-    // {
-    //   title: 'Aksiyonlar',
-    //   key: 'product_actions',
-    //   render: (_, record) => (
-    //     <Popconfirm
-    //       title="Bu ürünü şubeden kaldırmak istediğinize emin misiniz?"
-    //       onConfirm={() => handleDeleteBranchProduct(selectedBranchIdForProducts, record.product_id)}
-    //     >
-    //       <Button icon={<DeleteOutlined />} danger type="link" size="small">
-    //         Kaldır
-    //       </Button>
-    //     </Popconfirm>
-    //   ),
-    // },
+    {
+      title: 'İşlem',
+      dataIndex: 'operation',
+      key: 'operation',
+      render: (_, record) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <span>
+            <Button
+              onClick={() => save(record.product_id)}
+              type="link"
+              icon={<SaveOutlined />}
+              style={{ marginRight: 8 }}
+            >
+              Kaydet
+            </Button>
+            <Button
+              onClick={cancel}
+              type="link"
+              icon={<CloseOutlined />}
+            >
+              İptal
+            </Button>
+          </span>
+        ) : (
+          <span>
+            <Button
+              disabled={editingKey !== ''}
+              onClick={() => edit(record)}
+              type="link"
+              icon={<EditOutlined />}
+              style={{ marginRight: 8 }}
+            >
+              Düzenle
+            </Button>
+            <Button
+              danger
+              type="link"
+              icon={<DeleteOutlined />}
+              onClick={() => handleProductDelete(record.product_id)}
+            >
+              Kaldır
+            </Button>
+          </span>
+        );
+      },
+    },
+    
   ];
 
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      width: 60,
-    },
+   
     {
       title: 'Şube Adı',
       dataIndex: 'name',
@@ -338,13 +475,34 @@ const handleSaveProductToBranch = async () => {
         ]}
         width={800}
       >
-        <Table
-          columns={productColumns}
-          dataSource={currentBranchProducts}
-          rowKey="product_id" // branch_id ve product_id birlikte primary key olduğu için bu satır önemli
-          loading={loading}
-          pagination={{ pageSize: 5 }}
-        />
+        <Form form={editForm} component={false}>
+          <Table
+            components={{
+              body: {
+                cell: EditableCell,
+              },
+            }}
+            columns={productColumns.map(col => {
+              if (!col.editable) {
+                return col;
+              }
+              return {
+                ...col,
+                onCell: record => ({
+                  record,
+                  inputType: col.dataIndex === 'price' ? 'number' : 'number',
+                  dataIndex: col.dataIndex,
+                  title: col.title,
+                  editing: isEditing(record),
+                }),
+              };
+            })}
+            dataSource={currentBranchProducts}
+            rowKey="product_id"
+            loading={loading}
+            pagination={{ pageSize: 5 }}
+          />
+        </Form>
       </Modal>
 
       {/* NEW: Add Product to Branch Modal */}

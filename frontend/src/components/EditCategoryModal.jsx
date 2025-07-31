@@ -49,7 +49,7 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
 
       form.resetFields();
       setFile(null);
-      setPreviewImage(null); // Form temizleme işlemi
+      setPreviewImage(null); // Form temizleme işlemi 
       onOk();
       message.success('Kategori güncellendi!');
     } catch (error) {
