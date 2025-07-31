@@ -21,7 +21,9 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
         description: record.description,
         price: record.price,
         category: record.category_id,
-        stock: record.stock
+        stock: record.stock,
+        status: record.is_available ? 'true' : 'false',
+        showcase: record.is_selected ? 'true' : 'false'
       });
       setStatus(record.is_available ? 'true' : 'false');
       setShowcase(record.is_selected ? 'true' : 'false');
@@ -57,18 +59,6 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       setLoading(true);
       const values = await form.validateFields();
 
-      const formData = new FormData();
-      if (file) {
-        formData.append('resim', file);
-      }
-      formData.append('newName', values.name);
-      formData.append('newDescription', values.description);
-      formData.append('newCategory_id', values.category);
-      formData.append('newPrice', values.price);
-      formData.append('id', record.product_id);
-      formData.append('status', status === 'true');
-      formData.append('showcase', showcase === 'true');
-
       const response = await fetch(`${API_URL}/api/admin/products/update`, {
         method: 'PUT',
         headers: {
@@ -79,7 +69,10 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
           newName: values.name,
           newPrice: values.price,
           newDescription: values.description,
-          newCategory_id: values.category.category_id,
+          newCategory_id: parseInt(values.category),
+          stock: values.stock,
+          status: status === 'true',
+          showcase: showcase === 'true'
         }),
       });
 
@@ -98,6 +91,8 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     }
   };
 
+
+  
   return (
     <Modal
       title="Ürün Düzenle"

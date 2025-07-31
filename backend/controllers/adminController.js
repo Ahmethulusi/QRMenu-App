@@ -140,13 +140,17 @@ exports.createProduct = async (req, res) => {
 
 
 exports.updateProduct = async (req, res) => {
-    const { newName, newPrice, newDescription, newCategory_id ,id} = req.body;
+    const { newName, newPrice, newDescription, newCategory_id, id, stock, status, showcase } = req.body;
+    console.log(req.body);
     try {
         const product = await Products.update({
             product_name: newName,
             price: newPrice,
             description: newDescription,
-            category_id: newCategory_id,
+            category_id: parseInt(newCategory_id),
+            stock: stock,
+            is_available: status,
+            is_selected: showcase,
             // image_url:imageUrl
         }, {
             where: {
@@ -156,8 +160,11 @@ exports.updateProduct = async (req, res) => {
         res.json(product);
     } catch (error) {
         console.log(error);
+        res.status(500).json({ error: "Ürün güncellenirken bir hata oluştu." });
     }   
 }
+
+
 
 exports.getCategories = async (req, res) => {
     try {
