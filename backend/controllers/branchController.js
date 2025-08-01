@@ -412,6 +412,80 @@ exports.deleteBranchProduct = async (req, res) => {
   }
 };
 
+// Yeni endpoint: Şubeleri ve her şubedeki ürünleri/kategorileri getir
+exports.getBranchProductMatrix = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+
+    if (!businessId) {
+      return res.status(400).json({ error: 'businessId parametresi gerekli' });
+    }
+
+    // Tüm şubeleri al
+    const branches = await Branch.findAll({
+      where: { business_id: businessId },
+      order: [['id', 'ASC']],
+    });
+
+    // Her şube için ürünleri ve kategorileri al
+    const branchesWithProducts = [];
+
+    for (const branch of branches) {
+      // Bu şubedeki ürünleri al
+      const branchProducts = await BranchProduct.findAll({
+        where: { branch_id: branch.id },
+        include: [
+          {
+            model: Product,
+            include: [
+              {
+                model: require('../models/Category'),
+                attributes: ['category_name'],
+              },
+            ],
+            attributes: ['product_id', 'product_name', 'price'],
+          },
+        ],
+        order: [
+          [Product, 'category_id', 'ASC'],
+          [Product, 'product_id', 'ASC'],
+        ],
+      });
+
+      // Kategorileri grupla
+      const categories = {};
+      branchProducts.forEach(bp => {
+        const categoryName = bp.Product.Category.category_name;
+        if (!categories[categoryName]) {
+          categories[categoryName] = [];
+        }
+        categories[categoryName].push({
+          product_id: bp.Product.product_id,
+          product_name: bp.Product.product_name,
+          list_price: bp.Product.price,
+          branch_price: bp.price,
+          stock: bp.stock,
+          available: true,
+        });
+      });
+
+      branchesWithProducts.push({
+        branch_id: branch.id,
+        branch_name: branch.name,
+        categories: Object.keys(categories).map(categoryName => ({
+          category_name: categoryName,
+          products: categories[categoryName],
+        })),
+      });
+    }
+
+    return res.status(200).json(branchesWithProducts);
+  } catch (error) {
+    console.error('Matrix veri getirme hatası:', error);
+    return res.status(500).json({ error: 'Sunucu hatası: Matrix verisi getirilemedi.' });
+  }
+};
+
 
 
 

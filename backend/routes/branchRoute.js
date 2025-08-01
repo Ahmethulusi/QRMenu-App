@@ -6,6 +6,7 @@ const branchController= require('../controllers/branchController');
 router.get('/:businessId', branchController.getAllBranchesByBusinessId);
 router.get('/:businessId/details', branchController.getBusinessDetailsWithProducts);
 router.get("/:branchId/products",branchController.getProductsByBranchId);
+router.get('/matrix/:businessId', branchController.getBranchProductMatrix);
 // Şubeye eklenebilecek ürünleri getir
 router.get('/:branchId/:businessId/available-products', branchController.getAvailableProductsForBranch);
 // Yeni şube oluştur (business_id gövdede gelir)

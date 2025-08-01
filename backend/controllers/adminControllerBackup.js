@@ -29,7 +29,7 @@ exports.getAllProuducts = async (req, res) => {
                 { model: db.Business },
                 { 
                     model: db.Branch, 
-                    through: { attributes: ['price', 'stock'] } 
+                    through: { attributes: ['price'] } 
                 }
             ]
         });

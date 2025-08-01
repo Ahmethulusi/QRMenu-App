@@ -427,6 +427,7 @@ const handleSaveProductToBranch = async () => {
       </div>
 
       <Table
+        scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
         columns={columns}
         dataSource={branches}
         rowKey="id"
@@ -477,6 +478,8 @@ const handleSaveProductToBranch = async () => {
       >
         <Form form={editForm} component={false}>
           <Table
+            scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
+
             components={{
               body: {
                 cell: EditableCell,

@@ -143,13 +143,9 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       ],
     },
     {
-      key: 'BranchManagement',
+      key: 'Branches',
       icon: <UsergroupAddOutlined />,
       label: 'Şube Yönetimi',
-      children: [
-        { key: 'Branches', label: 'Şubeler' },
-        { key: 'Branches_Products', label: 'Ürünler' },
-      ],
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },
     // { key: 'GeneralSettings', label: 'Genel Ayarlar',icon:<SettingFilled/> },

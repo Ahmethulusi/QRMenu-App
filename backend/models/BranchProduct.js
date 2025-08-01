@@ -14,9 +14,9 @@ const BranchProduct = sequelize.define('BranchProduct', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  stock: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
+  is_available: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
   },
 }, {
   tableName: 'branch_products',

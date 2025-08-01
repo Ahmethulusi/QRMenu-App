@@ -223,14 +223,14 @@ const Product_Table = () => {
       title: 'Açıklama',
       key: 'description',
       dataIndex: 'description',
-      width: '20%',
+      width: '25%',
     },
     {
       title: 'Fiyat',
       dataIndex: 'price',
       key: 'price',
       defaultSortOrder: 'descend',
-      width: '10%',
+      width: '13%',
       sorter: (a, b) => a.price - b.price,
     },
     {
@@ -238,80 +238,79 @@ const Product_Table = () => {
       dataIndex: 'category',
       key: 'category',
       filters: categoryFilters,
-      width: '10%',
+      width: '14%',
       filterSearch: true,
       onFilter: (value, record) => record.category.includes(value),
       
     },
    {
-  title: 'Action',
-  dataIndex: '',
-  key: 'id',
-  width: '8%',
-  render: (record) => (
-    <div className='action-buttons-container'>
-      <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
-        <EditOutlined /> Edit
-      </Button>
-      
-      <Popconfirm
-        title="Bu ürünü silmek istediğinize emin misiniz?"
-        onConfirm={() => handleDelete(record.id)}
-        okText="Evet"
-        cancelText="Hayır"
-      >
-        <Button style={{ color: 'red' }}>
-          <DeleteTwoTone /> Delete
-        </Button>
-      </Popconfirm>
-    </div>
-  ),
-},
-
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: '5%',
-      render: (status,record) => (
-        <div className='action-buttons-container'>        
-        {status ?
-         ( <Switch checked={true} onClick={()=> handleStatusToggle(record.id,false)}/>)
-         :
-         (<Switch checked={false} onClick={()=> handleStatusToggle(record.id,true)}/>)
-        }
-        </div>
-      ),
-    },
-    {
-      title: 'Showcase',
-      dataIndex: 'showcase',
-      key: 'showcase',
-      width: '5%',
-      render: (showcase,record) => {
-        return (
-              
-          <div className="showcase-icon">
-            {showcase ? (
-              <EyeFilled
-                onClick={() => handleShowcaseToggle(record.id, false)}
-                style={{ fontSize: '20px', marginLeft: '15px', cursor: 'pointer' }}
-              />
-            ) : (
-              <EyeInvisibleFilled
-                onClick={() => handleShowcaseToggle(record.id, true)}
-                style={{
-                  fontSize: '20px',
-                  marginLeft: '15px',
-                  cursor: 'pointer',
-                  color:'gray'
-                }}
-              />
-            )}
+        title: 'Action',
+        dataIndex: '',
+        key: 'id',
+        width: '16%',
+        render: (record) => (
+          <div className='action-buttons-container'>
+            <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
+              <EditOutlined /> Edit
+            </Button>
+            
+            <Popconfirm
+              title="Bu ürünü silmek istediğinize emin misiniz?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Evet"
+              cancelText="Hayır"
+            >
+              <Button style={{ color: 'red' }}>
+                <DeleteTwoTone /> Delete
+              </Button>
+            </Popconfirm>
           </div>
-        );
+        ),
       },
-    },
+
+              {
+       title: 'Status',
+       dataIndex: 'status',
+       key: 'status',
+       width: '8%',
+       render: (status,record) => (
+         <div className='status-container'>        
+         {status ?
+          ( <Switch checked={true} onClick={()=> handleStatusToggle(record.id,false)}/>)
+          :
+          (<Switch checked={false} onClick={()=> handleStatusToggle(record.id,true)}/>)
+         }
+         </div>
+       ),
+     },
+     {
+       title: 'Showcase',
+       dataIndex: 'showcase',
+       key: 'showcase',
+       width: '8%',
+       render: (showcase,record) => {
+         return (
+               
+           <div className="showcase-icon">
+             {showcase ? (
+               <EyeFilled
+                 onClick={() => handleShowcaseToggle(record.id, false)}
+                 style={{ fontSize: '20px', cursor: 'pointer' }}
+               />
+             ) : (
+               <EyeInvisibleFilled
+                 onClick={() => handleShowcaseToggle(record.id, true)}
+                 style={{
+                   fontSize: '20px',
+                   cursor: 'pointer',
+                   color:'gray'
+                 }}
+               />
+             )}
+           </div>
+         );
+       },
+     },
   ];
 
 
