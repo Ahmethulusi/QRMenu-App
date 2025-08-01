@@ -329,34 +329,54 @@ exports.AddProductToBranch= async (req, res) => {
   }
 };
 
-// Şube ürününde fiyat ve stok güncelleme
+// Şube ürününde fiyat ve bulunurluk güncelleme
 exports.updateBranchProduct = async (req, res) => {
   try {
+    console.log('Gelen veri:', req.body);
     const { branch_id, product_id, price, stock } = req.body;
 
     if (!branch_id || !product_id) {
+      console.log('Eksik parametreler:', { branch_id, product_id });
       return res.status(400).json({ error: 'branch_id ve product_id zorunludur.' });
     }
 
-    // Model adını ezmeden doğru kullan
-    const branchProduct = await BranchProduct.findOne({
+    console.log('Aranan kayıt:', { branch_id, product_id });
+
+    // Önce mevcut kaydı ara
+    let branchProduct = await BranchProduct.findOne({
       where: { branch_id, product_id }
     });
 
+    console.log('Bulunan kayıt:', branchProduct);
+
     if (!branchProduct) {
-      return res.status(404).json({ error: 'Şubeye ait ürün bulunamadı.' });
+      console.log('Yeni kayıt oluşturuluyor...');
+      // Kayıt yoksa yeni bir kayıt oluştur
+      branchProduct = await BranchProduct.create({
+        branch_id,
+        product_id,
+        price: price || 0,
+        is_available: stock === 1 ? true : false // stock 1 ise true, değilse false
+      });
+      console.log('Yeni kayıt oluşturuldu:', branchProduct);
+    } else {
+      console.log('Mevcut kayıt güncelleniyor...');
+      // Mevcut kaydı güncelle
+      if (price !== undefined) branchProduct.price = price;
+      if (stock !== undefined) branchProduct.is_available = stock === 1 ? true : false;
+      await branchProduct.save();
+      console.log('Kayıt güncellendi:', branchProduct);
     }
-
-    // Fiyat ve stok güncelle
-    if (price !== undefined) branchProduct.price = price;
-    if (stock !== undefined) branchProduct.stock = stock;
-
-    await branchProduct.save();
 
     return res.status(200).json({ success: true, branchProduct });
   } catch (error) {
     console.error('Şube ürün güncelleme hatası:', error);
-    return res.status(500).json({ error: 'Sunucu hatası: Şube ürün güncellenemedi.' });
+    console.error('Hata detayı:', error.message);
+    console.error('Stack trace:', error.stack);
+    return res.status(500).json({ 
+      error: 'Sunucu hatası: Şube ürün güncellenemedi.',
+      details: error.message 
+    });
   }
 };
 
@@ -412,7 +432,7 @@ exports.deleteBranchProduct = async (req, res) => {
   }
 };
 
-// Yeni endpoint: Şubeleri ve her şubedeki ürünleri/kategorileri getir
+// Yeni endpoint: Tüm ürünleri ve seçili şubedeki durumlarını getir
 exports.getBranchProductMatrix = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -427,7 +447,22 @@ exports.getBranchProductMatrix = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
-    // Her şube için ürünleri ve kategorileri al
+    // Tüm ürünleri ve kategorileri al
+    const allProducts = await Product.findAll({
+      where: { business_id: businessId },
+      include: [
+        {
+          model: require('../models/Category'),
+          attributes: ['category_name'],
+        },
+      ],
+      order: [
+        ['category_id', 'ASC'],
+        ['product_id', 'ASC'],
+      ],
+    });
+
+    // Her şube için ürün durumlarını al
     const branchesWithProducts = [];
 
     for (const branch of branches) {
@@ -452,20 +487,27 @@ exports.getBranchProductMatrix = async (req, res) => {
         ],
       });
 
-      // Kategorileri grupla
+      // Şubedeki ürün ID'lerini al
+      const branchProductIds = branchProducts.map(bp => bp.Product.product_id);
+
+      // Kategorileri grupla (şubede olan ve olmayan tüm ürünler)
       const categories = {};
-      branchProducts.forEach(bp => {
-        const categoryName = bp.Product.Category.category_name;
+      
+      allProducts.forEach(product => {
+        const categoryName = product.Category.category_name;
         if (!categories[categoryName]) {
           categories[categoryName] = [];
         }
+        
+        // Şubedeki ürün bilgilerini al
+        const branchProduct = branchProducts.find(bp => bp.Product.product_id === product.product_id);
+        
         categories[categoryName].push({
-          product_id: bp.Product.product_id,
-          product_name: bp.Product.product_name,
-          list_price: bp.Product.price,
-          branch_price: bp.price,
-          stock: bp.stock,
-          available: true,
+          product_id: product.product_id,
+          product_name: product.product_name,
+          list_price: product.price,
+          branch_price: branchProduct ? branchProduct.price : null,
+          available: branchProduct ? branchProduct.is_available : false, // Sadece available kullan, stock kaldır
         });
       });
 
@@ -479,7 +521,19 @@ exports.getBranchProductMatrix = async (req, res) => {
       });
     }
 
-    return res.status(200).json(branchesWithProducts);
+    // Tüm ürünleri tek seferde döndür (şube bazlı değil)
+    const allProductsFlat = allProducts.map(product => ({
+      product_id: product.product_id,
+      product_name: product.product_name,
+      list_price: product.price,
+      category_name: product.Category.category_name,
+      category_id: product.category_id,
+    }));
+
+    return res.status(200).json({
+      branches: branchesWithProducts,
+      allProducts: allProductsFlat,
+    });
   } catch (error) {
     console.error('Matrix veri getirme hatası:', error);
     return res.status(500).json({ error: 'Sunucu hatası: Matrix verisi getirilemedi.' });
