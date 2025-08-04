@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   GiftFilled,
   UsergroupAddOutlined,
@@ -26,6 +27,9 @@ const SidebarMenu = ({ setSelectedComponent }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState([]);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
@@ -67,6 +71,23 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       setSelectedComponent(e.key);
       if (isMobile) {
         setMobileMenuOpen(false);
+      }
+      
+      // Navigation mapping
+      const navigationMap = {
+        'Foods': '/products',
+        'Sort': '/products/sort',
+        'Categories': '/categories',
+        'Branches': '/branches',
+        'GeneralQR': '/qr/general',
+        'QRDesigns': '/qr/designs',
+        'Price Changing': '/price-change',
+        'Profile': '/profile',
+      };
+      
+      const targetPath = navigationMap[e.key];
+      if (targetPath) {
+        navigate(targetPath);
       }
     }
   };
@@ -138,8 +159,8 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       icon: <UsergroupAddOutlined />,
       label: 'Kullanıcı Yönetimi',
       children: [
-        { key: 'Roles', label: 'Kullanıcı Roller ' },
-        { key: 'Auth', label: 'Yetkilendirme Ayarları' },
+        { key: 'Roles', label: 'Kullanıcılar ve Roller ' },
+        { key: 'Auth', label: 'Yetkilendirmeler' },
       ],
     },
     {
