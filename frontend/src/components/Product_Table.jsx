@@ -207,8 +207,8 @@ const Product_Table = () => {
     {
       title: 'Resim',
       dataIndex: 'image',
-      key: 'image',
-      width:'8%'
+      key: 'image', 
+      width:'13%'
     },
     {
       title: 'İsim',
@@ -223,7 +223,7 @@ const Product_Table = () => {
       title: 'Açıklama',
       key: 'description',
       dataIndex: 'description',
-      width: '25%',
+      width: '20%',
     },
     {
       title: 'Fiyat',
@@ -397,7 +397,7 @@ const UploadImageButton = ({ productId ,onUploadSuccess}) => {
       onChange={info => handleUpload(info)}  // Dosyayı manuel olarak yüklüyoruz
       showUploadList={false}
     >
-      <Button icon={<UploadOutlined />} style={{width: '100px', height: '60px'}}>Resim Yükle</Button>
+      <Button icon={<UploadOutlined />} style={{width: '100px', height: '60px'}}>Resim</Button>
     </Upload>
   );
 };

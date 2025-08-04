@@ -191,9 +191,47 @@ const BranchProductMatrix = () => {
       const result = await response.json();
       console.log('Başarılı response:', result);
 
+      // State'leri güncelle - API çağrısı yapmadan
+      setFilteredProducts(prevProducts => 
+        prevProducts.map(product => {
+          if (product.product_id === productId) {
+            return {
+              ...product,
+              branch_price: row.branch_price,
+              available: row.available,
+            };
+          }
+          return product;
+        })
+      );
+
+      // Branches state'ini de güncelle
+      setBranches(prevBranches => 
+        prevBranches.map(branch => {
+          if (branch.branch_id === selectedBranch) {
+            return {
+              ...branch,
+              categories: branch.categories.map(category => ({
+                ...category,
+                products: category.products.map(product => {
+                  if (product.product_id === productId) {
+                    return {
+                      ...product,
+                      branch_price: row.branch_price,
+                      available: row.available,
+                    };
+                  }
+                  return product;
+                })
+              }))
+            };
+          }
+          return branch;
+        })
+      );
+
       message.success('Güncelleme başarılı!');
       setEditingKey('');
-      fetchData(); // Verileri yenile
     } catch (error) {
       console.error('Frontend hatası:', error);
       message.error('Güncelleme hatası!');
@@ -230,10 +268,51 @@ const BranchProductMatrix = () => {
       });
 
       await Promise.all(promises);
+      
+      // State'leri güncelle - API çağrısı yapmadan
+      setFilteredProducts(prevProducts => 
+        prevProducts.map(product => {
+          const change = editForm[product.product_id];
+          if (change) {
+            return {
+              ...product,
+              branch_price: change.branch_price,
+              available: change.available,
+            };
+          }
+          return product;
+        })
+      );
+
+      // Branches state'ini de güncelle
+      setBranches(prevBranches => 
+        prevBranches.map(branch => {
+          if (branch.branch_id === selectedBranch) {
+            return {
+              ...branch,
+              categories: branch.categories.map(category => ({
+                ...category,
+                products: category.products.map(product => {
+                  const change = editForm[product.product_id];
+                  if (change) {
+                    return {
+                      ...product,
+                      branch_price: change.branch_price,
+                      available: change.available,
+                    };
+                  }
+                  return product;
+                })
+              }))
+            };
+          }
+          return branch;
+        })
+      );
+
       message.success('Tüm değişiklikler kaydedildi!');
       setEditingKey('');
       setEditForm({});
-      fetchData();
     } catch (error) {
       message.error('Toplu kaydetme hatası!');
     }
@@ -344,53 +423,62 @@ const BranchProductMatrix = () => {
         },
       ];
 
-         return (
-       <Table
-         columns={columns}
-         dataSource={filteredProducts.map(product => ({
-           ...product,
-           key: `${product.product_id}`,
-         }))}
-         pagination={{
-           pageSize: 10,
-           showSizeChanger: true,
-           showQuickJumper: true,
-         }}
-         size="small"
-         scroll={{ x: 1200 }}
-         loading={loading}
-       />
-     );
+                   return (
+            <div style={{ 
+              height: '350px', 
+              border: '1px solid #f0f0f0',
+              borderRadius: '6px'
+            }}>
+              <Table
+                columns={columns}
+                dataSource={filteredProducts.map(product => ({
+                  ...product,
+                  key: `${product.product_id}`,
+                }))}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                }}
+                size="small"
+                // scroll={{ x: 1200 ,y: 400}}
+                loading={loading}
+                style={{ 
+                  height: '100%',
+                  overflow: 'auto'
+                }}
+              />
+            </div>
+          );
   };
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="branch-product-matrix responsive-container" style={{ padding: 16 }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2}>Şube Ürün Yönetimi</Title>
-                 <div>
-           <Button
-             type="primary"
-             icon={<PlusOutlined />}
-             style={{ marginRight: 8 }}
-             onClick={() => openModal()}
-           >
-             Yeni Şube
-           </Button>
-           <Button
-             type="primary"
-             icon={<SaveOutlined />}
-             onClick={handleSaveAll}
-             style={{ fontWeight: 'bold', fontSize: 16, padding: '8px 24px' }}
-           >
-             KAYDET
-           </Button>
-         </div>
+                           <div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => openModal()}
+                style={{ 
+                fontWeight: 'bold', 
+                fontSize: 18, 
+                padding: '12px 32px',
+                height: 'auto',
+                minHeight: '36px'
+              }}
+            >
+              Yeni Şube
+            </Button>
+           
+          </div>
       </div>
 
       {/* Filtreler */}
       <Card title="Filtreler" size="small" style={{ marginBottom: 16 }}>
         <Row gutter={16}>
-          <Col span={8}>
+          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
             <Text strong>Şube Filtresi:</Text>
             <Select
               style={{ width: '100%', marginTop: 8 }}
@@ -406,7 +494,7 @@ const BranchProductMatrix = () => {
               ))}
             </Select>
           </Col>
-          <Col span={8}>
+          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
             <Text strong>Kategori Filtresi:</Text>
             <Select
               style={{ width: '100%', marginTop: 8 }}
@@ -422,10 +510,10 @@ const BranchProductMatrix = () => {
               ))}
             </Select>
           </Col>
-          <Col span={8}>
+          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
             <Button 
               onClick={clearFilters}
-              style={{ marginTop: 32 }}
+              style={{ width: '100%', marginTop: 32 }}
             >
               Filtreleri Temizle
             </Button>
