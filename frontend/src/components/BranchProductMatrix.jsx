@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import '../css/BranchProductMatrix.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -453,7 +454,10 @@ const BranchProductMatrix = () => {
   };
 
   return (
-    <div className="branch-product-matrix responsive-container" style={{ padding: 16 }}>
+    <div className="branch-product-matrix branch-product-matrix-page" style={{ 
+      padding: 16,
+      minHeight: 'calc(100vh - 60px)'
+    }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2}>Şube Ürün Yönetimi</Title>
                            <div>
