@@ -82,6 +82,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
         'GeneralQR': '/qr/general',
         'QRDesigns': '/qr/designs',
         'Price Changing': '/price-change',
+        'Roles': '/users', // Bu satırı ekleyin
         'Profile': '/profile',
       };
       

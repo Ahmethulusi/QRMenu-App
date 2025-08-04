@@ -14,6 +14,7 @@ import NonOrderableQR from '../components/Non_OrderableQR';
 import QRDesignsTable from '../components/QRDesignsTable';
 import BranchTable from '../components/BranchTable';
 import BranchProductMatrix from '../components/BranchProductMatrix';
+import UsersTable from '../components/UsersTable';
 
 function Content({ selectedComponent }) {
   switch (selectedComponent) {
@@ -46,6 +47,12 @@ function Content({ selectedComponent }) {
     case 'Branches':
       return <BranchProductMatrix />;
     
+    // case 'Users':
+    //   return <UsersTable businessId={1} />;
+      
+    case 'Roles':
+      return <UsersTable businessId={1} />;
+      
     case 'QRDesigns':
       return <QRDesignsTable businessId={1} />;
     

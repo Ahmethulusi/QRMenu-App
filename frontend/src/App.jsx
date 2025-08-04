@@ -39,6 +39,9 @@ function App() {
             {/* Fiyat Değişikliği */}
             <Route path="/price-change" element={<Content selectedComponent="Price Changing" />} />
             
+            {/* Kullanıcı Yönetimi */}
+            <Route path="/users" element={<Content selectedComponent="Roles" />} />
+            
             {/* Profil */}
             <Route path="/profile" element={<Content selectedComponent="Profile" />} />
             

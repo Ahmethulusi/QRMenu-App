@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
 const app = express();
 
 // Veritabanı ve modeller
@@ -12,6 +11,7 @@ const models = require('./models'); // ./models/index.js üzerinden
 const adminRouter = require('./routes/adminRoute');
 const tableQrMngRouter = require('./routes/table_qr_route');
 const branchRoute = require('./routes/branchRoute');
+const userRoute = require('./routes/userRoute');
 
 // Middleware
 app.use(cors());
@@ -29,6 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/admin', adminRouter);
 app.use('/api/table_qr', tableQrMngRouter);
 app.use("/api/branches",branchRoute);
+app.use('/api/users', userRoute);
 // app.use('/api/auth', authRouter);
 
 // Veritabanı bağlantısı ve senkronizasyon
