@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
-
+const { hasPermission } = require('../utils/permissionUtils');
 
 
 exports.updateImageUrl = async (req, res) => {
@@ -160,6 +160,13 @@ exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Önce branch_products tablosundaki kayıtları sil
+    const BranchProduct = require('../models/BranchProduct');
+    await BranchProduct.destroy({
+      where: { product_id: id }
+    });
+
+    // Sonra ürünü sil
     const deleted = await Products.destroy({
       where: { product_id: id }
     });

@@ -1,7 +1,8 @@
 // components/BranchTable.jsx
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Popconfirm, message, Select, InputNumber } from 'antd'; // InputNumber ve Select eklendi
+import { Table, Button, Modal, Form, Input, Popconfirm, message, Select, InputNumber } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, ShoppingOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api';
 
 const businessId = 1; // Frontend'den gönderilecek sabit business ID
 const API_URL = import.meta.env.VITE_API_URL;
@@ -35,8 +36,7 @@ const BranchTable = () => {
   const fetchBranches = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/branches/${businessId}`);
-      const data = await res.json();
+      const data = await apiGet(`/api/branches/${businessId}`);
       setBranches(data);
     } catch (err) {
       message.error('Şubeler yüklenemedi');
@@ -49,8 +49,7 @@ const fetchAvailableProducts = async () => {
     try {
       console.log('Fetching available products for branch...');
       // Yeni endpoint: şubeye henüz eklenmemiş ürünleri getir
-      const res = await fetch(`${API_URL}/api/branches/${selectedBranchIdForProducts}/${businessId}/available-products`);
-      const data = await res.json();
+      const data = await apiGet(`/api/branches/${selectedBranchIdForProducts}/${businessId}/available-products`);
       console.log('Available products for branch:', data);
       setAvailableProducts(data);
     } catch (err) {
@@ -60,13 +59,7 @@ const fetchAvailableProducts = async () => {
   };
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${API_URL}/api/branches/${id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Silme işlemi başarısız');
-      }
+      await apiDelete(`/api/branches/${id}`);
       message.success('Şube silindi');
       fetchBranches();
     } catch (error) {

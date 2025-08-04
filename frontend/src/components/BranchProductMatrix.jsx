@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 // import '../css/BranchProductMatrix.css';
+import { apiGet, apiPut } from '../utils/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const API_URL = import.meta.env.VITE_API_URL;
-const businessId = 1; // Frontend'den gönderilecek sabit business ID
 
-const BranchProductMatrix = () => {
+const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -23,17 +23,17 @@ const BranchProductMatrix = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (businessId) { // businessId kontrolü ekledik
+      fetchData();
+    }
+  }, [businessId]); // businessId dependency olarak ekledik
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/branches/matrix/${businessId}`);
-      if (!response.ok) {
-        throw new Error('Veri çekme hatası');
-      }
-      const result = await response.json();
+      console.log('Fetching data for businessId:', businessId); // Debug için
+      const result = await apiGet(`/api/branches/matrix/${businessId}`);
+      
       setBranches(result.branches);
       
       // Tüm kategorileri topla

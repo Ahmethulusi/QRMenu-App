@@ -4,6 +4,7 @@ import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeI
 import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './EditModal';
+import { apiGet, apiPut, apiDelete, apiPost } from '../utils/api';
 import '../css/tableSizeManager.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -26,11 +27,7 @@ const Product_Table = () => {
   const fetchData = async () => {
 
       try {
-        const response = await fetch(`${API_URL}/api/admin/products`);
-        if (!response.ok) {
-          throw new Error('Verileri çekmede bir hata oluştu');
-        }
-        const datas = await response.json();
+        const datas = await apiGet('/api/admin/products');
 
         const formattedData = datas.map((item, index) => {
           const imageUrl = item.image_url ? `${API_URL}/images/${item.image_url}` : null;
@@ -79,20 +76,15 @@ const Product_Table = () => {
   const handleShowcaseToggle = async (productId, newShowcaseState) => {
     
     try{
-    const response =await fetch(`${API_URL}/api/admin/products/updateShowcase/${productId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ showcase: newShowcaseState }),
-    })
-    
-    setData((prevdatas) =>
-      prevdatas.map((product) =>
-        product.id === productId
-          ? { ...product, showcase: newShowcaseState }
-          : product
-      ));    
+      await apiPut(`/api/admin/products/updateShowcase/${productId}`, { showcase: newShowcaseState });
+      
+      setData((prevdatas) =>
+        prevdatas.map((product) =>
+          product.id === productId
+            ? { ...product, showcase: newShowcaseState }
+            : product
+        )
+      );    
     }
     catch(error) {
       message.error('Bir hata oluştu: ' + error.message);
@@ -101,17 +93,7 @@ const Product_Table = () => {
 
   const handleDelete = async (id) => {
   try {
-    const response = await fetch(`${API_URL}/api/admin/products/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-
-    // Anlık olarak silinen ürünü state'den çıkar
+    await apiDelete(`/api/admin/products/${id}`);
     setData(prev => prev.filter(item => item.id !== id));
     message.success('Ürün başarıyla silindi!');
   } catch (error) {
@@ -125,20 +107,15 @@ const Product_Table = () => {
   const handleStatusToggle = async (productId, newStatus) => {
   
     try{
-      const response =await fetch(`${API_URL}/api/admin/products/updateStatus/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      })
+      await apiPut(`/api/admin/products/updateStatus/${productId}`, { status: newStatus });
       
       setData((prevdatas) =>
         prevdatas.map((product) =>
           product.id === productId
             ? { ...product, status: newStatus }
             : product
-        ));      }
+        )
+      );      }
       catch(error) {
         message.error('Bir hata oluştu: ' + error.message);
       };
@@ -373,8 +350,13 @@ const UploadImageButton = ({ productId ,onUploadSuccess}) => {
     
 
     try {
+      // FormData için özel API çağrısı
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/products/updateImageUrl`, {
-        method: 'POST',  // "UPDATE" yerine "POST" kullanıyoruz
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -387,6 +369,7 @@ const UploadImageButton = ({ productId ,onUploadSuccess}) => {
       onUploadSuccess();
     } catch (error) {
       console.error('Resim yüklemede bir hata oluştu', error);
+      message.error('Resim yükleme başarısız!');
     }
   };
 

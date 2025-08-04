@@ -15,6 +15,7 @@ import QRDesignsTable from '../components/QRDesignsTable';
 import BranchTable from '../components/BranchTable';
 import BranchProductMatrix from '../components/BranchProductMatrix';
 import UsersTable from '../components/UsersTable';
+import PermissionsTable from '../components/PermissionsTable';
 
 function Content({ selectedComponent }) {
   switch (selectedComponent) {
@@ -45,16 +46,24 @@ function Content({ selectedComponent }) {
       return <NonOrderableQR />;
 
     case 'Branches':
-      return <BranchProductMatrix />;
+      return <BranchProductMatrix businessId={1} />;
     
-    // case 'Users':
-    //   return <UsersTable businessId={1} />;
+    case 'Users':
+      return <UsersTable businessId={1} />;
       
     case 'Roles':
       return <UsersTable businessId={1} />;
       
     case 'QRDesigns':
       return <QRDesignsTable businessId={1} />;
+    
+    case 'Auth':
+      return <PermissionsTable businessId={1} />;
+    
+    case 'Logout':
+      // Çıkış işlemi Menu.jsx'te handleClick'te yapılıyor
+      // Bu case'e gerek yok ama yine de ekleyelim
+      return <div>Çıkış yapılıyor...</div>;
     
     default:
       return <div>Menüden bir seçenek seçiniz.</div>;
