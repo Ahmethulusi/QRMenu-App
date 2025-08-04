@@ -23,6 +23,9 @@
       align-items: center;
       padding-top:20% ;
       overflow-x: scroll;
+    }
+    html, body {
+      overflow-y: auto; 
     } }
 
 @media (min-width: 481px) and (max-width: 1024px) {     .content{
