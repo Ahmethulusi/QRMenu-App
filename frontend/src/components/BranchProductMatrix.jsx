@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
-import '../css/BranchProductMatrix.css';
+// import '../css/BranchProductMatrix.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -467,10 +467,10 @@ const BranchProductMatrix = () => {
               onClick={() => openModal()}
                 style={{ 
                 fontWeight: 'bold', 
-                fontSize: 18, 
-                padding: '12px 32px',
+                fontSize: 16, 
+                padding: '12px 10px',
                 height: 'auto',
-                minHeight: '36px'
+                minHeight: '20px'
               }}
             >
               Yeni Şube

@@ -146,6 +146,13 @@ exports.getNonOrderableQRCodesByBusiness = async (req, res) => {
         business_id: businessId,
         type: 'nonorderable',
       },
+      include: [
+        {
+          model: require('../models/Branch'),
+          as: 'Branch',
+          attributes: ['name'],
+        }
+      ],
       order: [['id', 'DESC']],
     });
     res.json(qrCodes);

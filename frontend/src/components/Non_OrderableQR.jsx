@@ -21,7 +21,7 @@ const NonOrderableQR = () => {
     const fetchBranches = async () => {
       setLoadingBranches(true);
       try {
-        const res = await fetch(`${API_URL}/api/branches/8`);
+        const res = await fetch(`${API_URL}/api/branches/1`);
         if (!res.ok) throw new Error('Şubeler alınamadı');
         const data = await res.json();
         setBranches(data);

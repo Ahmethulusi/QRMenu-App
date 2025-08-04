@@ -33,11 +33,20 @@
       padding-left: 10%;
     } }
 
-@media (min-width: 1025px) and (max-width: 1440px) {  .content{
+@media (min-width: 1025px) and (max-width: 1368px) {     .content{
       width: 100%;
       justify-content: center;
       align-items: center;
-      padding-top:30% ;
+      padding-top:3% ;
+      padding-left: 5%;
+      padding-right: 5%;
+    } }
+
+@media (min-width: 1369px) and (max-width: 1440px) {  .content{
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      padding-top:3% ;
       overflow-x: scroll;
     } }
 

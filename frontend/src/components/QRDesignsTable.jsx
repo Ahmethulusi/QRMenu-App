@@ -79,6 +79,17 @@ const QRDesignsTable = ({ businessId }) => {
       ),
     },
     {
+      title: 'Şube Adı',
+      dataIndex: ['Branch', 'name'],
+      key: 'branch_name',
+      render: (branchName, record) => {
+        if (record.branch_id && branchName) {
+          return branchName;
+        }
+        return record.branch_id ? 'Şube bulunamadı' : 'Genel QR';
+      },
+    },
+    {
       title: 'URL',
       dataIndex: 'qr_url',
       key: 'qr_url',
@@ -130,7 +141,7 @@ const QRDesignsTable = ({ businessId }) => {
         rowKey="id"
         loading={loading}
         pagination={false}
-        scroll={{x: 900, y: 400 }}  // Y scroll'u ekledik
+        scroll={{x: 1100, y: 400 }}  // Yeni sütun için genişlik artırıldı
       />
     </div>
   );
