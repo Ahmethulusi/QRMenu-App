@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, KeyOutlined } from '@ant-design/icons';
-import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api';
+import { userAPI } from '../utils/api';
+import { getCurrentUser, canPerformAction } from '../utils/permissions';
 
 const { Option } = Select;
-const API_URL = import.meta.env.VITE_API_URL;
 
 const UsersTable = ({ businessId }) => {
   const [users, setUsers] = useState([]);
@@ -14,19 +14,16 @@ const UsersTable = ({ businessId }) => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [form] = Form.useForm();
+  
+  const currentUser = getCurrentUser();
 
   const fetchUsers = async () => {
     if (!businessId) return;
 
     setLoading(true);
     try {
-      const data = await apiGet(`/api/users?business_id=${businessId}`);
-
-      if (Array.isArray(data)) {
-        setUsers(data);
-      } else {
-        message.error('Beklenmeyen veri formatı!');
-      }
+      const data = await userAPI.getAllUsers(businessId);
+      setUsers(data);
     } catch (err) {
       message.error('Kullanıcılar alınamadı!');
       console.error(err);
@@ -56,7 +53,7 @@ const UsersTable = ({ businessId }) => {
 
   const handleDelete = async (userId) => {
     try {
-      await apiDelete(`/api/users/${userId}`);
+      await userAPI.deleteUser(userId);
       message.success('Kullanıcı silindi!');
       fetchUsers();
     } catch (error) {
@@ -71,43 +68,27 @@ const UsersTable = ({ businessId }) => {
 
   const handleSubmit = async (values) => {
     try {
-      const url = editingUser 
-        ? `${API_URL}/api/users/${editingUser.user_id}`
-        : `${API_URL}/api/users`;
-      
-      const method = editingUser ? 'PUT' : 'POST';
-      const body = editingUser 
-        ? { ...values, business_id: businessId }
-        : { ...values, business_id: businessId, password: '123456' }; // Varsayılan şifre
-
-      const res = await apiPut(url, body);
-
-      if (res.ok) {
-        message.success(editingUser ? 'Kullanıcı güncellendi!' : 'Kullanıcı oluşturuldu!');
-        setModalVisible(false);
-        fetchUsers();
+      if (editingUser) {
+        await userAPI.updateUser(editingUser.user_id, { ...values, business_id: businessId });
+        message.success('Kullanıcı güncellendi!');
       } else {
-        const data = await res.json();
-        message.error(data.error || 'İşlem başarısız!');
+        await userAPI.createUser({ ...values, business_id: businessId, password: '123456' });
+        message.success('Kullanıcı oluşturuldu!');
       }
+      setModalVisible(false);
+      fetchUsers();
     } catch (err) {
-      message.error('İşlem başarısız!');
+      message.error(err.message || 'İşlem başarısız!');
     }
   };
 
   const handlePasswordSubmit = async (values) => {
     try {
-      const res = await apiPut(`${API_URL}/api/users/${selectedUserId}/password`, { newPassword: values.newPassword });
-
-      if (res.ok) {
-        message.success('Şifre güncellendi!');
-        setPasswordModalVisible(false);
-      } else {
-        const data = await res.json();
-        message.error(data.error || 'Şifre güncellenemedi!');
-      }
+      await userAPI.updatePassword(selectedUserId, values.newPassword);
+      message.success('Şifre güncellendi!');
+      setPasswordModalVisible(false);
     } catch (err) {
-      message.error('Şifre güncellenemedi!');
+      message.error(err.message || 'Şifre güncellenemedi!');
     }
   };
 
@@ -155,34 +136,40 @@ const UsersTable = ({ businessId }) => {
       key: 'actions',
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => handleEdit(record)}
-            size="small"
-          >
-            Düzenle
-          </Button>
-          <Button 
-            icon={<KeyOutlined />} 
-            onClick={() => handlePasswordChange(record.user_id)}
-            size="small"
-          >
-            Şifre
-          </Button>
-          <Popconfirm
-            title="Bu kullanıcıyı silmek istediğinize emin misiniz?"
-            onConfirm={() => handleDelete(record.user_id)}
-            okText="Evet"
-            cancelText="Hayır"
-          >
+          {canPerformAction(currentUser, 'edit_user') && (
             <Button 
-              icon={<DeleteOutlined />} 
-              danger 
+              icon={<EditOutlined />} 
+              onClick={() => handleEdit(record)}
               size="small"
             >
-              Sil
+              Düzenle
             </Button>
-          </Popconfirm>
+          )}
+          {canPerformAction(currentUser, 'edit_user') && (
+            <Button 
+              icon={<KeyOutlined />} 
+              onClick={() => handlePasswordChange(record.user_id)}
+              size="small"
+            >
+              Şifre
+            </Button>
+          )}
+          {canPerformAction(currentUser, 'delete_user') && (
+            <Popconfirm
+              title="Bu kullanıcıyı silmek istediğinize emin misiniz?"
+              onConfirm={() => handleDelete(record.user_id)}
+              okText="Evet"
+              cancelText="Hayır"
+            >
+              <Button 
+                icon={<DeleteOutlined />} 
+                danger 
+                size="small"
+              >
+                Sil
+              </Button>
+            </Popconfirm>
+          )}
         </div>
       ),
     },
@@ -192,13 +179,15 @@ const UsersTable = ({ businessId }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h3>Kullanıcı Yönetimi</h3>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
-          onClick={handleCreate}
-        >
-          Yeni Kullanıcı
-        </Button>
+        {canPerformAction(currentUser, 'create_user') && (
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={handleCreate}
+          >
+            Yeni Kullanıcı
+          </Button>
+        )}
       </div>
 
       <Table

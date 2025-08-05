@@ -34,6 +34,7 @@ exports.getAllProuducts = async (req, res) => {
         console.log(error);
     }
 }
+
 exports.getAllProductsOrderBySiraId = async (req,res) => {
     try {
         const products = await Products.findAll({
