@@ -1,24 +1,22 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
 const app = express();
 
 // Veritabanı ve modeller
 const db = require('./db');
-const models = require('./models'); // ./models/index.js üzerinden
+const models = require('./models');
 
 // Router'lar
 const adminRouter = require('./routes/adminRoute');
 const tableQrMngRouter = require('./routes/table_qr_route');
 const branchRoute = require('./routes/branchRoute');
 const userRoute = require('./routes/userRoute');
+const authRoute = require('./routes/authRoute');
 
 // Middleware
 app.use(cors());
-// app.use(cors({
-//   origin: 'https://qrmenu-app-frontend.onrender.com', // Render'daki frontend adresi
-//   credentials: true // Eğer cookie vs. varsa
-// }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -26,11 +24,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Router kullanımı
+app.use('/api/auth', authRoute);
 app.use('/api/admin', adminRouter);
 app.use('/api/table_qr', tableQrMngRouter);
 app.use("/api/branches",branchRoute);
 app.use('/api/users', userRoute);
-// app.use('/api/auth', authRouter);
 
 // Veritabanı bağlantısı ve senkronizasyon
 (async () => {
@@ -38,7 +36,7 @@ app.use('/api/users', userRoute);
     await db.authenticate();
     console.log('✅ Veritabanına başarıyla bağlanıldı.');
 
-    await db.sync({ force: false }); // değişikliklere göre tabloyu günceller
+    await db.sync({ force: false });
     console.log('✅ Veritabanı senkronize edildi.');
 
     const PORT = process.env.PORT || 5000;

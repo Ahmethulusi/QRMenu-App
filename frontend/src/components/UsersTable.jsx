@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, KeyOutlined } from '@ant-design/icons';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api';
 
 const { Option } = Select;
 const API_URL = import.meta.env.VITE_API_URL;
@@ -19,8 +20,7 @@ const UsersTable = ({ businessId }) => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/users?business_id=${businessId}`);
-      const data = await res.json();
+      const data = await apiGet(`/api/users?business_id=${businessId}`);
 
       if (Array.isArray(data)) {
         setUsers(data);
@@ -56,19 +56,11 @@ const UsersTable = ({ businessId }) => {
 
   const handleDelete = async (userId) => {
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, {
-        method: 'DELETE',
-      });
-      
-      if (res.ok) {
-        message.success('Kullanıcı silindi!');
-        fetchUsers();
-      } else {
-        const data = await res.json();
-        message.error(data.error || 'Silme işlemi başarısız!');
-      }
-    } catch (err) {
-      message.error('Silme işlemi başarısız!');
+      await apiDelete(`/api/users/${userId}`);
+      message.success('Kullanıcı silindi!');
+      fetchUsers();
+    } catch (error) {
+      message.error(error.message || 'Silme işlemi başarısız');
     }
   };
 
@@ -88,11 +80,7 @@ const UsersTable = ({ businessId }) => {
         ? { ...values, business_id: businessId }
         : { ...values, business_id: businessId, password: '123456' }; // Varsayılan şifre
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const res = await apiPut(url, body);
 
       if (res.ok) {
         message.success(editingUser ? 'Kullanıcı güncellendi!' : 'Kullanıcı oluşturuldu!');
@@ -109,11 +97,7 @@ const UsersTable = ({ businessId }) => {
 
   const handlePasswordSubmit = async (values) => {
     try {
-      const res = await fetch(`${API_URL}/api/users/${selectedUserId}/password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: values.newPassword }),
-      });
+      const res = await apiPut(`${API_URL}/api/users/${selectedUserId}/password`, { newPassword: values.newPassword });
 
       if (res.ok) {
         message.success('Şifre güncellendi!');

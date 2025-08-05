@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { filterMenuItems, getCurrentUser } from '../utils/permissions';
 import {
   GiftFilled,
   UsergroupAddOutlined,
@@ -17,19 +18,28 @@ import {
   QrcodeOutlined,
   SettingFilled,
   MenuOutlined
-  // ProfileOutlined
 } from '@ant-design/icons';
-import { Menu, Avatar } from 'antd';
+import { Menu, Avatar, message } from 'antd';
 import '../css/Sidebar.css';
 
-const SidebarMenu = ({ setSelectedComponent }) => {
+const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
   const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
   
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Kullanıcı bilgisini al
+  const user = getCurrentUser();
+
+  // Menü öğelerini filtrele
+  useEffect(() => {
+    const filtered = filterMenuItems(items, user);
+    setFilteredItems(filtered);
+  }, [user]);
 
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
@@ -66,7 +76,41 @@ const SidebarMenu = ({ setSelectedComponent }) => {
     }
   }, [collapsed, isMobile, mobileMenuOpen]);
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
+    if (e.key === 'Logout') {
+      // Çıkış yapma işlemi
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+        
+        // LocalStorage'ı temizle
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        message.success('Çıkış başarılı!');
+        
+        // App.jsx'teki onLogout fonksiyonunu çağır
+        if (onLogout) {
+          onLogout();
+        }
+        
+        return;
+      } catch (error) {
+        console.error('Çıkış hatası:', error);
+        message.error('Çıkış yapılırken hata oluştu!');
+      }
+    }
+
     if (e.key !== 'productManagement') {
       setSelectedComponent(e.key);
       if (isMobile) {
@@ -82,8 +126,10 @@ const SidebarMenu = ({ setSelectedComponent }) => {
         'GeneralQR': '/qr/general',
         'QRDesigns': '/qr/designs',
         'Price Changing': '/price-change',
-        'Roles': '/users', // Bu satırı ekleyin
+        'Roles': '/users',
+        'Auth': '/auth',
         'Profile': '/profile',
+        'Logout': null, // Çıkış için route yok
       };
       
       const targetPath = navigationMap[e.key];
@@ -94,7 +140,6 @@ const SidebarMenu = ({ setSelectedComponent }) => {
   };
 
   const handleOpenChange = (keys) => {
-    // Allow nested menus to stay open - don't close parent when child opens
     setOpenKeys(keys);
   };
 
@@ -128,7 +173,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
           children: [
             { key: 'TableSections', label: 'Bölümler' },
             { key: 'Tables', label: 'Masalar ve QR Oluştur' },
-            { key: 'DesignSettings', label: 'QR Tasarım Ayarları' }, // opsiyonel
+            { key: 'DesignSettings', label: 'QR Tasarım Ayarları' },
           ],
         },
         {
@@ -154,7 +199,6 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       ],
     },
     { key: 'Price Changing', label: 'Fiyat Değişikliği',icon:<PoundCircleOutlined/> },
-    // { key: 'TablesAndQR', icon: <QrcodeOutlined />, label: 'Masa Yönetimi' },
     {
       key: 'UserManagement',
       icon: <UsergroupAddOutlined />,
@@ -170,8 +214,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
       label: 'Şube Yönetimi',
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },
-    // { key: 'GeneralSettings', label: 'Genel Ayarlar',icon:<SettingFilled/> },
-     {
+    {
       key: 'GeneralSettings',
       icon: <SettingFilled />,
       label: 'Genel Ayarlar',
@@ -207,7 +250,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
               mode="inline"
               theme="dark"
               inlineCollapsed={collapsed}
-              items={items}
+              items={filteredItems}
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
@@ -231,7 +274,7 @@ const SidebarMenu = ({ setSelectedComponent }) => {
             <Menu
               mode="inline"
               theme="dark"
-              items={items}
+              items={filteredItems}
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}

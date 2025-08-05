@@ -24,6 +24,22 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+// Manuel ilişkileri ekle
+if (db.Permission && db.RolePermission) {
+  db.Permission.hasMany(db.RolePermission, { foreignKey: 'permission_id' });
+  db.RolePermission.belongsTo(db.Permission, { foreignKey: 'permission_id' });
+}
+
+if (db.Business && db.RolePermission) {
+  db.Business.hasMany(db.RolePermission, { foreignKey: 'business_id' });
+  db.RolePermission.belongsTo(db.Business, { foreignKey: 'business_id' });
+}
+
+if (db.Branch && db.RolePermission) {
+  db.Branch.hasMany(db.RolePermission, { foreignKey: 'branch_id' });
+  db.RolePermission.belongsTo(db.Branch, { foreignKey: 'branch_id' });
+}
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
