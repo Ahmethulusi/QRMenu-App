@@ -1,41 +1,5 @@
 
-const QRCode = require('../models/QRCode'); // Sequelize setup'ı
-
-// exports.createQRCode = async (req, res) => {
-//   try {
-//     const {
-//       business_id,
-//       table_id,          // opsiyonel (siparişli QR'lar için)
-//       type,
-//       qr_url,
-//       file_path,
-//       logo_path,
-//       color,
-//       size
-//     } = req.body;
-
-//     const newQR = await QRCode.create({
-//       business_id,
-//       table_id: table_id || null,
-//       type,
-//       qr_url,
-//       file_path,
-//       logo_path,
-//       color,
-//       size
-//     });
-
-//     res.status(201).json(newQR);
-//   } catch (error) {
-//     console.error('QR oluşturma hatası:', error);
-//     res.status(500).json({ error: 'QR kodu oluşturulamadı' });
-//   }
-// };
-
-
-
-
-
+const QRCode = require('../models/QRCode');
 
 // List all QRs for a business, optionally filter by branch or table
 exports.getQRCodes = async (req, res) => {
