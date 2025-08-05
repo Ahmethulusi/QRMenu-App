@@ -3,11 +3,8 @@ const Jimp = require('jimp');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-// const QRCodeModel = require('../models/QRCode'); // kendi model dosyana göre değişebilir
-const QRCodeModel  = require('../models/QRCode');
-
-const { Business } = require('../models'); // İşletme modelini içe aktar
-
+const QRCodeModel = require('../models/QRCode');
+const { Business } = require('../models');
 
 
 exports.createQRCode = async (req, res) => {
@@ -43,9 +40,6 @@ exports.createQRCode = async (req, res) => {
       return res.status(400).json({ error: `ID'si ${parsedBusinessId} olan bir işletme bulunamadı.` });
     }
 
-    const fileName = `${uuidv4()}.png`;
-    const outputPath = path.join(__dirname, '..', 'public', 'qrcodes', fileName);
-
     const qrBuffer = await QRCode.toBuffer(qr_url, {
       color: {
         dark: color || '#000000',
@@ -58,7 +52,8 @@ exports.createQRCode = async (req, res) => {
     if (req.file) {
       try {
         const qrImage = await Jimp.read(qrBuffer);
-        const logoImage = await Jimp.read(path.resolve(req.file.path));
+        // Logo'yu direkt buffer'dan oku, dosya kaydetme
+        const logoImage = await Jimp.read(req.file.buffer);
         const logoSize = Math.round(parsedSize * parsedLogoPercent / 100);
         logoImage.resize(logoSize, logoSize);
         const x = (qrImage.bitmap.width - logoSize) / 2;
@@ -72,8 +67,12 @@ exports.createQRCode = async (req, res) => {
       finalImage = await Jimp.read(qrBuffer);
     }
 
-    await finalImage.writeAsync(outputPath);
-    const file_path = `/qrcodes/${fileName}`;
+    // QR'ı base64'e çevir, dosya kaydetme
+    const base64Image = await finalImage.getBufferAsync(Jimp.MIME_PNG);
+    const base64String = `data:image/png;base64,${base64Image.toString('base64')}`;
+    
+    // Dosya yolu yerine base64 kullan
+    const file_path = base64String;
 
     const qrRecord = await QRCodeModel.create({
       business_id: parsedBusinessId,
