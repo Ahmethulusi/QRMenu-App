@@ -11,30 +11,35 @@ import './css/content.css';
 function App() {
   const [selectedComponent, setSelectedComponent] = useState('Foods'); // Varsayılan olarak Foods
   const [user, setUser] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true); // Yeni state
 
-  // Token geçerliliğini kontrol eden fonksiyon
-  const validateToken = async () => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (!token || !savedUser) {
-      return;
-    }
+ // Token geçerliliğini kontrol eden fonksiyon
+const validateToken = async () => {
+  const token = localStorage.getItem('token');
+  const savedUser = localStorage.getItem('user');
+  
+  if (!token || !savedUser) {
+    setIsInitializing(false);
+    return;
+  }
 
-    try {
-      // Token'ın geçerliliğini backend'den kontrol et
-      const userData = await authAPI.getCurrentUser();
-      
-      // Backend'den gelen kullanıcı bilgilerini kullan
-      setUser(userData);
-    } catch (error) {
-      console.log('Token doğrulama hatası:', error.message);
-      // Token geçersiz, localStorage'ı temizle
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-    }
-  };
+  // Önce localStorage'dan kullanıcı bilgisini set et (hızlı)
+  setUser(JSON.parse(savedUser));
+  setIsInitializing(false);
+
+  // Sonra backend'den token geçerliliğini kontrol et (arka planda)
+  try {
+    const userData = await authAPI.getCurrentUser();
+    setUser(userData);
+  } catch (error) {
+    console.log('Token doğrulama hatası:', error.message);
+    // Token geçersiz, localStorage'ı temizle
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  }
+};
+
 
   useEffect(() => {
     validateToken();
@@ -53,6 +58,22 @@ function App() {
     // Çıkış yapıldığında selectedComponent'i sıfırla
     setSelectedComponent('Foods');
   };
+
+  // İlk yükleme sırasında kısa bir loading göster
+  if (isInitializing) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '16px',
+        color: '#666'
+      }}>
+        Yükleniyor...
+      </div>
+    );
+  }
 
   if (!user) {
     return <Login onLogin={handleLogin} />;
