@@ -186,14 +186,16 @@ exports.deleteProduct = async (req, res) => {
 
 // 4. Update updateProduct to allow updating business_id and branch assignments
 exports.updateProduct = async (req, res) => {
-    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks } = req.body;
+    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks, status, showcase } = req.body;
     try {
         // Güncellenecek alanları hazırla
         const updateData = {
             product_name: newName,
             price: newPrice,
             description: newDescription,
-            business_id: newBusiness_id
+            business_id: newBusiness_id,
+            is_available: status,
+            is_selected: showcase
         };
 
         // category_id sadece geçerli bir değer varsa ekle

@@ -46,6 +46,7 @@ const Product_Table = () => {
             description: item.description,
             price: item.price,
             category: item.Category.category_name,
+            category_id: item.category_id, // Kategori ID'sini ekle
             status:item.is_available,
             showcase:item.is_selected,
           };
@@ -146,15 +147,19 @@ const Product_Table = () => {
   
   const showEditModal = (record) => {
     console.log("Edit record:", record); // Debug için
+    
+    // Kategori ID'sini bulmak için data array'inden ürünü bul
+    const originalProduct = data.find(item => item.id === record.id);
+    
     setIsEditModalVisible(true);
     setRecordToEdit({
       product_id: record.id,
       product_name: record.name,
       description: record.description,
       price: record.price,
-      category_id: record.category,
-      status: record.status,
-      showcase: record.showcase,
+      category_id: originalProduct ? originalProduct.category_id : null, // Kategori ID'sini doğru şekilde al
+      is_available: record.status, // Boolean değer olarak
+      is_selected: record.showcase, // Boolean değer olarak
       image_url: record.image && record.image.props && record.image.props.children && 
                 record.image.props.children.props ? 
                 record.image.props.children.props.src : null
