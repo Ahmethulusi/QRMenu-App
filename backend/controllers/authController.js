@@ -144,7 +144,10 @@ exports.checkRole = (roles) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = req.user;
+    const userId = req.user.user_id;
+    
+    // Veritabanından kullanıcı bilgilerini al
+    const user = await User.findByPk(userId);
     
     if (!user) {
       return res.status(401).json({ error: 'Kullanıcı bulunamadı' });

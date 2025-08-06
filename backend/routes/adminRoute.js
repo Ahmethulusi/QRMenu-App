@@ -56,6 +56,7 @@ router.put('/products/yeniSira', adminController.updateProductsBySiraId);
 router.post('/products/create', upload.single('resim'), adminController.createProduct);
 router.delete('/products/:id', adminController.deleteProduct);
 router.put('/products/update', adminController.updateProduct);
+router.put('/products/updateImage', upload.single('resim'), adminController.updateProductImage);
 
 // Ürün görüntüleme işlemleri - geçici olarak yetki kontrolü kaldırıldı
 router.get('/productsByBusiness/:business_id', adminController.getProductsByBusiness);

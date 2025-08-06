@@ -188,15 +188,23 @@ exports.deleteProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
     const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks } = req.body;
     try {
-        const product = await Products.update({
+        // Güncellenecek alanları hazırla
+        const updateData = {
             product_name: newName,
             price: newPrice,
             description: newDescription,
-            category_id: newCategory_id,
             business_id: newBusiness_id
-        }, {
+        };
+
+        // category_id sadece geçerli bir değer varsa ekle
+        if (newCategory_id !== null && newCategory_id !== undefined) {
+            updateData.category_id = newCategory_id;
+        }
+
+        const product = await Products.update(updateData, {
             where: { product_id: id }
         });
+
         // Update branch assignments if provided
         if (Array.isArray(branch_ids)) {
             const BranchProduct = require('../models/BranchProduct');
@@ -641,4 +649,45 @@ res.status(statusCode).json({
       error: error.message
     });
   }
+};
+
+// Resim güncelleme fonksiyonu
+exports.updateProductImage = async (req, res) => {
+    try {
+        const { product_id, removeImage } = req.body;
+        const imageFile = req.file;
+
+        let imageUrl = null;
+
+        // Eğer resim kaldırılacaksa
+        if (removeImage === 'true') {
+            imageUrl = null;
+        }
+        // Eğer yeni resim yüklenecekse
+        else if (imageFile) {
+            imageUrl = imageFile.filename;
+        }
+        // Eğer hiçbir değişiklik yoksa mevcut resmi koru
+        else {
+            // Mevcut ürünü bul ve resmini koru
+            const existingProduct = await Products.findByPk(product_id);
+            if (existingProduct) {
+                imageUrl = existingProduct.image_url;
+            }
+        }
+
+        // Ürünü güncelle
+        await Products.update(
+            { image_url: imageUrl },
+            { where: { product_id: product_id } }
+        );
+
+        res.json({ 
+            message: 'Ürün resmi başarıyla güncellendi',
+            image_url: imageUrl 
+        });
+    } catch (error) {
+        console.error('Resim güncelleme hatası:', error);
+        res.status(500).json({ error: 'Resim güncellenirken bir hata oluştu' });
+    }
 };

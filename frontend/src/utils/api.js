@@ -86,7 +86,34 @@ export const authAPI = {
   },
 
   getCurrentUser: async () => {
-    return apiCall('/api/auth/me');
+    const token = getToken();
+    
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        throw new Error('Token geçersiz');
+      }
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Bir hata oluştu');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Token doğrulama hatası:', error);
+      throw error;
+    }
   },
 };
 

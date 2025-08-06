@@ -11,6 +11,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
   const [status, setStatus] = useState('true');
   const [showcase, setShowcase] = useState('false');
   const [loading, setLoading] = useState(false);
+  const [imageRemoved, setImageRemoved] = useState(false);
 
   // Record değiştiğinde form alanlarını doldur
   useEffect(() => {
@@ -27,23 +28,28 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       });
       setStatus(record.is_available ? 'true' : 'false');
       setShowcase(record.is_selected ? 'true' : 'false');
+      setImageRemoved(false);
       
       // Eğer resim varsa göster
       if (record.image_url) {
         // URL'den ana sunucu kısmını kaldır çünkü zaten tam URL geliyor
         const imageUrl = record.image_url.replace(`${API_URL}`, '');
         setFile({ preview: `${API_URL}${imageUrl}` });
+      } else {
+        setFile(null);
       }
     }
   }, [record, form]);
 
   const handleRemove = () => {
     setFile(null);
+    setImageRemoved(true);
   };
 
   const onCancel_handler = () => {
     form.resetFields();
     setFile(null);
+    setImageRemoved(false);
     onCancel();
   };
 
@@ -52,6 +58,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       file,
       preview: URL.createObjectURL(file)
     });
+    setImageRemoved(false);
   };
 
   const handleOk = async () => {
@@ -59,7 +66,14 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       setLoading(true);
       const values = await form.validateFields();
 
-      const response = await fetch(`${API_URL}/api/admin/products/update`, {
+      // category_id'nin null olmamasını kontrol et
+      if (!values.category) {
+        message.error('Lütfen bir kategori seçin!');
+        return;
+      }
+
+      // Önce ürün bilgilerini güncelle
+      const productResponse = await fetch(`${API_URL}/api/admin/products/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -76,8 +90,30 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
         }),
       });
 
-      if (!response.ok) {
+      if (!productResponse.ok) {
         throw new Error('Ürün güncellenirken bir hata oluştu');
+      }
+
+      // Sonra resim güncellemesi yap
+      const formData = new FormData();
+      formData.append('product_id', record.product_id);
+      
+      if (imageRemoved) {
+        formData.append('removeImage', 'true');
+      } else if (file && file.file) {
+        formData.append('resim', file.file);
+      }
+
+      // Sadece resim değişikliği varsa resim güncelleme isteği gönder
+      if (imageRemoved || (file && file.file)) {
+        const imageResponse = await fetch(`${API_URL}/api/admin/products/updateImage`, {
+          method: 'PUT',
+          body: formData,
+        });
+
+        if (!imageResponse.ok) {
+          throw new Error('Resim güncellenirken bir hata oluştu');
+        }
       }
 
       message.success('Ürün başarıyla güncellendi!');
@@ -91,8 +127,6 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     }
   };
 
-
-  
   return (
     <Modal
       title="Ürün Düzenle"

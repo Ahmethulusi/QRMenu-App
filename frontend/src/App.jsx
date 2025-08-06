@@ -4,6 +4,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Menu from './components/Menu';
 import Content from './components/Content';
 import Login from './components/Login';
+import { authAPI } from './utils/api';
 import './css/App.css';
 import './css/content.css';
 
@@ -12,15 +13,35 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgisini al
-    const savedUser = localStorage.getItem('user');
+  // Token geçerliliğini kontrol eden fonksiyon
+  const validateToken = async () => {
     const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
     
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
+    if (!token || !savedUser) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    try {
+      // Token'ın geçerliliğini backend'den kontrol et
+      const userData = await authAPI.getCurrentUser();
+      
+      // Backend'den gelen kullanıcı bilgilerini kullan
+      setUser(userData);
+    } catch (error) {
+      console.log('Token doğrulama hatası:', error.message);
+      // Token geçersiz, localStorage'ı temizle
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    validateToken();
   }, []);
 
   const handleLogin = (userData) => {
