@@ -339,6 +339,51 @@ exports.getLastCategory = async (req, res) => {
     }
   };
 
+// Kategori güncelleme endpoint'i
+exports.updateCategory = async (req, res) => {
+  try {
+    const { category_id } = req.params;
+    const { category_name, removeImage } = req.body;
+    const imageFile = req.file;
+
+    let imageUrl = null;
+
+    // Eğer resim kaldırılacaksa
+    if (removeImage === 'true') {
+      imageUrl = null;
+    }
+    // Eğer yeni resim yüklenecekse
+    else if (imageFile) {
+      imageUrl = imageFile.filename;
+    }
+    // Eğer hiçbir değişiklik yoksa mevcut resmi koru
+    else {
+      // Mevcut kategoriyi bul ve resmini koru
+      const existingCategory = await Category.findByPk(category_id);
+      if (existingCategory) {
+        imageUrl = existingCategory.image_url;
+      }
+    }
+
+    // Kategoriyi güncelle
+    await Category.update(
+      { 
+        category_name: category_name,
+        image_url: imageUrl 
+      },
+      { where: { category_id: category_id } }
+    );
+
+    res.json({ 
+      message: 'Kategori başarıyla güncellendi',
+      image_url: imageUrl 
+    });
+  } catch (error) {
+    console.error('Kategori güncelleme hatası:', error);
+    res.status(500).json({ error: 'Kategori güncellenirken bir hata oluştu' });
+  }
+};
+
   
 
 
@@ -692,4 +737,32 @@ exports.updateProductImage = async (req, res) => {
         console.error('Resim güncelleme hatası:', error);
         res.status(500).json({ error: 'Resim güncellenirken bir hata oluştu' });
     }
+};
+
+// Kategori sıralama endpoint'i
+exports.updateCategoriesSira = async (req, res) => {
+  try {
+    const { categories } = req.body;
+
+    if (!categories || !Array.isArray(categories)) {
+      return res.status(400).json({ error: 'Kategoriler listesi gerekli' });
+    }
+
+    // Her kategori için sira_id'yi güncelle
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      await Category.update(
+        { sira_id: i + 1 },
+        { where: { category_id: category.category_id } }
+      );
+    }
+
+    res.json({ 
+      message: 'Kategori sıralaması başarıyla güncellendi',
+      updatedCount: categories.length 
+    });
+  } catch (error) {
+    console.error('Kategori sıralama hatası:', error);
+    res.status(500).json({ error: 'Kategori sıralaması güncellenirken bir hata oluştu' });
+  }
 };

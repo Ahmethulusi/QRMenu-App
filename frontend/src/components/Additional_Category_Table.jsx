@@ -68,10 +68,10 @@ const columns = [
     key: 'x',
     width: '30%',
     render: (record) => (
-      <div className='action-buttons-container'>
+      <div className='action-buttons-container' style={{ display: 'flex', gap: '5px' }}>
         <Button style={{ color: 'blue' }} onClick={() => handleAddSubCategory(record.id)}><PlusOutlined/> Add</Button>
         <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}><EditOutlined/> Edit</Button>
-        <Button style={{ color: 'red' , marginLeft: '20px' }} onClick={() => handleDelete(record.id)}><DeleteTwoTone/> Delete</Button>
+        <Button style={{ color: 'red' }} onClick={() => handleDelete(record.id)}><DeleteTwoTone/> Delete</Button>
       </div>
     ),
   },
@@ -146,8 +146,8 @@ const columns = [
   };
 
   const handleEditOk = () => {
+    fetchCategories(); // Kategorileri yeniden fetch et
     setIsEditModalVisible(false);
-    // Güncellenen verileri yeniden fetch et veya güncelle
   };
 
   return (

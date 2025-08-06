@@ -9,6 +9,7 @@ import PriceChangingPage from '../components/PriceChange';
 // import EditableTable from '../components/EditableTable';
 import HomePage from '../components/HomePage';
 import ProfileScreen from '../components/ProfileScreen';
+import CategorySortTable from '../components/CategorySort';
 import TablesPage from '../components/TablesPage';
 import NonOrderableQR from '../components/Non_OrderableQR';
 import QRDesignsTable from '../components/QRDesignsTable';
@@ -22,7 +23,7 @@ function Content({ selectedComponent }) {
     case 'Form':
       return <Form />;
 
-    case 'Foods':
+    case 'Products':
       return <ProductTable />;
 
     case 'Categories':
@@ -41,7 +42,10 @@ function Content({ selectedComponent }) {
       return <ProfileScreen />;
     case 'TablesAndQR':
       return <TablesPage />;
-    
+
+    case 'CategorySort':
+      return <CategorySortTable />;
+
     case 'GeneralQR':
       return <NonOrderableQR />;
 

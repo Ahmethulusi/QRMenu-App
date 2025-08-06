@@ -1,30 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Upload, message } from 'antd';
+import { Modal, Form, Input, Upload, message, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
   const [form] = Form.useForm();
-  const [file, setFile] = useState(null); // Yeni dosya yükleme
-  const [previewImage, setPreviewImage] = useState(null); // Önceki dosyanın önizlemesi
+  const [file, setFile] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (category) {
       form.setFieldsValue({
         name: category.name,
       });
-      setPreviewImage(category.imageUrl); // Mevcut resmi önizleme için ayarla
+      setImageRemoved(false);
+      
+      // Eğer resim varsa göster
+      if (category.imageUrl) {
+        setFile({ preview: `${API_URL}/images/${category.imageUrl}` });
+      } else {
+        setFile(null);
+      }
     }
   }, [category, form]);
 
+  const handleRemove = () => {
+    setFile(null);
+    setImageRemoved(true);
+  };
+
   const handleUpload = ({ file }) => {
-    setFile(file.originFileObj); // Yüklenen dosyayı kaydet
+    setFile({
+      file,
+      preview: URL.createObjectURL(file)
+    });
+    setImageRemoved(false);
   };
 
   const handleOkClick = async () => {
     try {
+      setLoading(true);
       const values = await form.validateFields();
+
       if (!values.name) {
         message.error('Kategori ismi boş olamaz!');
         return;
@@ -32,11 +51,13 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
 
       const formData = new FormData();
       formData.append('category_name', values.name);
-      if (file) {
-        formData.append('resim', file); // Yeni dosyayı ekle
+      formData.append('category_id', category.id);
+      
+      if (imageRemoved) {
+        formData.append('removeImage', 'true');
+      } else if (file && file.file) {
+        formData.append('resim', file.file);
       }
-
-      formData.append('category_id', category.id); // Kategori ID'sini ekle
 
       const response = await fetch(`${API_URL}/api/admin/categories/update/${category.id}`, {
         method: 'PUT',
@@ -47,15 +68,24 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
         throw new Error('Kategori güncellenemedi!');
       }
 
-      form.resetFields();
-      setFile(null);
-      setPreviewImage(null); // Form temizleme işlemi 
+      message.success('Kategori başarıyla güncellendi!');
+      form.resetFields(); // Form'u temizle
+      setFile(null); // Dosya state'ini temizle
+      setImageRemoved(false); // Image removed state'ini temizle
       onOk();
-      message.success('Kategori güncellendi!');
     } catch (error) {
       console.error('Güncelleme hatası:', error);
       message.error('Kategori güncellenirken bir hata oluştu!');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    form.resetFields(); // Form'u temizle
+    setFile(null); // Dosya state'ini temizle
+    setImageRemoved(false); // Image removed state'ini temizle
+    onCancel();
   };
 
   return (
@@ -63,9 +93,10 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
       title="Kategoriyi Düzenle"
       visible={visible}
       onOk={handleOkClick}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       okText="Güncelle"
       cancelText="İptal"
+      confirmLoading={loading}
     >
       <Form form={form} layout="vertical">
         <Form.Item
@@ -76,39 +107,32 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
           <Input placeholder="Kategori ismini girin" />
         </Form.Item>
 
-        <Form.Item label="Mevcut Resim">
-          {previewImage ? (
-            <img
-              src={`${API_URL}/images/${previewImage}`} // Backend'den gelen resim yolu
-              alt="Mevcut Resim"
-              style={{ width: '50%', marginBottom: '10px' }}
-            />
-          ) : (
-            <div>Resim yok</div>
-          )}
-        </Form.Item>
-
-        <Form.Item label="Yeni Resim Yükle" name="upload">
-          <Upload
-            accept="image/*"
-            listType="picture-card"
-            beforeUpload={() => false} // Otomatik yükleme yapma
-            onChange={handleUpload}
-            showUploadList={false}
-          >
-            {file ? (
-              <img
-                src={URL.createObjectURL(file)}
-                alt="Yeni Resim"
-                style={{ width: '100%' }}
+        <Form.Item label="Resim Yükle" name="upload">
+          {file ? (
+            <>
+              <img 
+                src={file.preview} 
+                style={{ width: '120px', height: '120px', objectFit: 'cover' }} 
+                alt="Category"
               />
-            ) : (
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Resim Yükle</div>
-              </div>
-            )}
-          </Upload>
+              <Button type="primary" onClick={handleRemove} style={{ marginLeft: '10px', marginTop: '10px' }}>
+                Resimi Kaldır
+              </Button>
+            </>
+          ) : (
+            <>
+              <Upload
+                accept="image/*"
+                beforeUpload={() => false}
+                onChange={info => handleUpload(info)}
+                showUploadList={false}
+              >
+                <Button style={{ width: '120px', height: '120px' }} icon={<PlusOutlined />}>
+                  Resim Yükle
+                </Button>
+              </Upload>
+            </>
+          )}
         </Form.Item>
       </Form>
     </Modal>

@@ -46,10 +46,10 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     const path = location.pathname;
     
     // URL'den component adını belirle
-    let componentName = 'Foods'; // Varsayılan
+    let componentName = 'Products'; // Varsayılan
     
     if (path === '/products' || path === '/') {
-      componentName = 'Foods';
+      componentName = 'Products';
     } else if (path === '/products/sort') {
       componentName = 'Sort';
     } else if (path === '/categories') {
@@ -153,7 +153,7 @@ const handleClick = async (e) => {
     
     // Navigation mapping
     const navigationMap = {
-      'Foods': '/products',
+      'Products': '/products',
       'Sort': '/products/sort',
       'Categories': '/categories',
       'Branches': '/branches',
@@ -184,8 +184,10 @@ const handleClick = async (e) => {
       icon: <ProductOutlined />,
       label: 'Ürün Yönetimi',
       children: [
-        { key: 'Foods', label: 'Ürünler' },
-        { key: 'Sort', label: 'Ürün Sıralama' },
+        { key: 'Products', label: 'Ürünler' },
+        { key: 'Sort', label: 'Sıralama' },
+        { key: 'Price Changing', label: 'Toplu Fiyat Değişikliği'},
+
       ],
     },
     {
@@ -194,7 +196,7 @@ const handleClick = async (e) => {
       label: 'Kategori Yönetimi',
       children: [
         { key: 'Categories', label: 'Ana Kategoriler' },
-        { key: 'Sort', label: 'Kategori Sıralama' },
+        { key: 'CategorySort', label: 'Kategori Sıralama' },
       ],
     },
     {
@@ -233,7 +235,6 @@ const handleClick = async (e) => {
         { key: 'Labels', label: 'Etiketler' },
       ],
     },
-    { key: 'Price Changing', label: 'Fiyat Değişikliği',icon:<PoundCircleOutlined/> },
     {
       key: 'UserManagement',
       icon: <UsergroupAddOutlined />,
@@ -289,7 +290,7 @@ const handleClick = async (e) => {
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
-              defaultSelectedKeys={['Foods']}
+              defaultSelectedKeys={['Products']}
               className="scrollable-menu"
             />
           </div>
@@ -313,7 +314,7 @@ const handleClick = async (e) => {
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
-              defaultSelectedKeys={['Foods']}
+              defaultSelectedKeys={['Products']}
               className="mobile-menu-content"
             />
           </div>

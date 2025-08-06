@@ -68,16 +68,13 @@ const columns = [
     render: () => <DragHandle />,
   },
   {
-    title: 'Product Name',
-    dataIndex: 'product_name',
+    title: 'Category Name',
+    dataIndex: 'category_name',
   },
   {
-    title: 'Description',
-    dataIndex: 'description',
-  },
-  {
-    title: 'Price',
-    dataIndex: 'price',
+    title: 'Parent Category',
+    dataIndex: 'parent_category_name',
+    render: (text) => text || 'Ana Kategori',
   },
   {
     title: 'Sıra ID',
@@ -106,7 +103,7 @@ const Row = (props) => {
   );
 };
 
-const DragAndDropTable = () => {
+const CategorySortTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,10 +117,21 @@ const DragAndDropTable = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/productsBySiraid`);
+      const response = await fetch(`${API_URL}/api/admin/categories`);
       if (!response.ok) throw new Error('Network response was not ok');
       const result = await response.json();
-      setData(result);
+      
+      const sortedData = result.sort((a, b) => (a.sira_id || 0) - (b.sira_id || 0));
+      
+      const categoriesWithParentNames = sortedData.map(category => {
+        const parentCategory = result.find(cat => cat.category_id === category.parent_id);
+        return {
+          ...category,
+          parent_category_name: parentCategory ? parentCategory.category_name : null
+        };
+      });
+      
+      setData(categoriesWithParentNames);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -134,8 +142,8 @@ const DragAndDropTable = () => {
   const onDragEnd = ({ active, over }) => {
     if (active.id !== over?.id) {
       setData((prevState) => {
-        const activeIndex = prevState.findIndex((record) => record.product_id === active?.id);
-        const overIndex = prevState.findIndex((record) => record.product_id === over?.id);
+        const activeIndex = prevState.findIndex((record) => record.category_id === active?.id);
+        const overIndex = prevState.findIndex((record) => record.category_id === over?.id);
         const newData = arrayMove(prevState, activeIndex, overIndex);
         setIsModified(true);
         return newData;
@@ -171,14 +179,20 @@ const DragAndDropTable = () => {
     try {
       setSaving(true);
       
-      const response = await fetch(`${API_URL}/api/admin/products/yeniSira`, {
+      const updatedData = data.map((category, index) => ({
+        ...category,
+        sira_id: index + 1
+      }));
+
+      const response = await fetch(`${API_URL}/api/admin/categories/updateSira`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: data }),
+        body: JSON.stringify({ categories: updatedData }),
       });
+      
       if (!response.ok) throw new Error('Network response was not ok');
       
-      await fetchData();
+      setData(updatedData);
       setIsModified(false);
     } catch (error) {
       setError(error.message);
@@ -206,22 +220,22 @@ const DragAndDropTable = () => {
         </div>
 
         <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          {data.map((product, index) => (
+          {data.map((category, index) => (
             <Card 
-              key={product.product_id} 
+              key={category.category_id} 
               style={{ marginBottom: '8px' }}
               bodyStyle={{ padding: '12px' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                    {product.product_name}
+                    {category.category_name}
                   </div>
                   <div style={{ color: '#666', fontSize: '14px' }}>
-                    {product.description || 'Açıklama yok'}
+                    {category.parent_category_name || 'Ana Kategori'}
                   </div>
                   <div style={{ color: '#999', fontSize: '12px' }}>
-                    Fiyat: {product.price} TL | Sıra: {product.sira_id || 'Belirtilmemiş'}
+                    Sıra: {category.sira_id || 'Belirtilmemiş'}
                   </div>
                 </div>
                 <MobileSortButtons
@@ -253,13 +267,13 @@ const DragAndDropTable = () => {
       </div>
 
       <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={onDragEnd}>
-        <SortableContext items={data.map((item) => item.product_id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={data.map((item) => item.category_id)} strategy={verticalListSortingStrategy}>
           <Table
-            rowKey="product_id"
+            rowKey="category_id"
             components={{ body: { row: Row } }}
             columns={columns}
             dataSource={data}
-            scroll={{x: 900, y: 400 }}
+            scroll={{ x: 900, y: 400 }}
             loading={saving}
             pagination={{
               pageSizeOptions: ['5', '10', '20', '50'],
@@ -275,4 +289,4 @@ const DragAndDropTable = () => {
   );
 };
 
-export default DragAndDropTable;
+export default CategorySortTable; 

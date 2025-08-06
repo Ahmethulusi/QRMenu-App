@@ -69,11 +69,15 @@ router.get('/products', adminController.getAllProuducts);
 router.post('/categories/create-sub', adminController.createSubCategory);
 router.post('/categories/create', upload.single('resim'), adminController.createCategory);
 router.delete('/categories/:id', adminController.deleteCategory);
+router.put('/categories/update/:category_id', upload.single('resim'), adminController.updateCategory);
 
 // Kategori görüntüleme işlemleri - geçici olarak yetki kontrolü kaldırıldı
 router.get('/categories/subs/:id', adminController.getSubCategoriesByParentId);
 router.get('/categories/last', adminController.getLastCategory);
 router.get('/categories/:id', adminController.getCategoryById);
 router.get('/categories', adminController.getCategories);
+
+// Kategori sıralama endpoint'i
+router.put('/categories/updateSira', adminController.updateCategoriesSira);
 
 module.exports = router;
