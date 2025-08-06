@@ -41,6 +41,38 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     setFilteredItems(filtered);
   }, [user]);
 
+  // URL'den hangi sayfada olduğumuzu anla ve selectedComponent'i ayarla
+  useEffect(() => {
+    const path = location.pathname;
+    
+    // URL'den component adını belirle
+    let componentName = 'Foods'; // Varsayılan
+    
+    if (path === '/products' || path === '/') {
+      componentName = 'Foods';
+    } else if (path === '/products/sort') {
+      componentName = 'Sort';
+    } else if (path === '/categories') {
+      componentName = 'Categories';
+    } else if (path === '/branches') {
+      componentName = 'Branches';
+    } else if (path === '/qr/general') {
+      componentName = 'GeneralQR';
+    } else if (path === '/qr/designs') {
+      componentName = 'QRDesigns';
+    } else if (path === '/price-change') {
+      componentName = 'Price Changing';
+    } else if (path === '/users') {
+      componentName = 'Roles';
+    } else if (path === '/auth') {
+      componentName = 'Auth';
+    } else if (path === '/profile') {
+      componentName = 'Profile';
+    }
+    
+    setSelectedComponent(componentName);
+  }, [location.pathname, setSelectedComponent]);
+
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
   const toggleMobileMenu = () => {
