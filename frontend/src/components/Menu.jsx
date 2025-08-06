@@ -76,68 +76,71 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     }
   }, [collapsed, isMobile, mobileMenuOpen]);
 
-  const handleClick = async (e) => {
-    if (e.key === 'Logout') {
-      // Çıkış yapma işlemi
-      try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const token = localStorage.getItem('token');
-        
-        if (token) {
-          await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-        }
-        
-        // LocalStorage'ı temizle
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        message.success('Çıkış başarılı!');
-        
-        // App.jsx'teki onLogout fonksiyonunu çağır
-        if (onLogout) {
-          onLogout();
-        }
-        
-        return;
-      } catch (error) {
-        console.error('Çıkış hatası:', error);
-        message.error('Çıkış yapılırken hata oluştu!');
-      }
-    }
+// ... existing code ...
 
-    if (e.key !== 'productManagement') {
-      setSelectedComponent(e.key);
-      if (isMobile) {
-        setMobileMenuOpen(false);
+const handleClick = async (e) => {
+  if (e.key === 'Logout') {
+    // Çıkış yapma işlemi
+    try {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
       }
       
-      // Navigation mapping
-      const navigationMap = {
-        'Foods': '/products',
-        'Sort': '/products/sort',
-        'Categories': '/categories',
-        'Branches': '/branches',
-        'GeneralQR': '/qr/general',
-        'QRDesigns': '/qr/designs',
-        'Price Changing': '/price-change',
-        'Roles': '/users',
-        'Auth': '/auth',
-        'Profile': '/profile',
-        'Logout': null, // Çıkış için route yok
-      };
+      // LocalStorage'ı temizle
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       
-      const targetPath = navigationMap[e.key];
-      if (targetPath) {
-        navigate(targetPath);
+      message.success('Çıkış başarılı!');
+      
+      // App.jsx'teki onLogout fonksiyonunu çağır
+      if (onLogout) {
+        onLogout();
       }
+      
+      return;
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+      message.error('Çıkış yapılırken hata oluştu!');
     }
-  };
+  }
+
+  if (e.key !== 'productManagement') {
+    setSelectedComponent(e.key);
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
+    
+    // Navigation mapping
+    const navigationMap = {
+      'Foods': '/products',
+      'Sort': '/products/sort',
+      'Categories': '/categories',
+      'Branches': '/branches',
+      'GeneralQR': '/qr/general',
+      'QRDesigns': '/qr/designs',
+      'Price Changing': '/price-change',
+      'Roles': '/users',
+      'Auth': '/auth',
+      'Profile': '/profile',
+      'Logout': null, // Çıkış için route yok
+    };
+    
+    const targetPath = navigationMap[e.key];
+    if (targetPath) {
+      navigate(targetPath);
+    }
+  }
+};
+
 
   const handleOpenChange = (keys) => {
     setOpenKeys(keys);

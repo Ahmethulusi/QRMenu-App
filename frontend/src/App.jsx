@@ -9,9 +9,8 @@ import './css/App.css';
 import './css/content.css';
 
 function App() {
-  const [selectedComponent, setSelectedComponent] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState('Foods'); // Varsayılan olarak Foods
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   // Token geçerliliğini kontrol eden fonksiyon
   const validateToken = async () => {
@@ -19,7 +18,6 @@ function App() {
     const savedUser = localStorage.getItem('user');
     
     if (!token || !savedUser) {
-      setLoading(false);
       return;
     }
 
@@ -35,8 +33,6 @@ function App() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -46,17 +42,17 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // Giriş yapıldığında selectedComponent'i sıfırla
+    setSelectedComponent('Foods');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    // Çıkış yapıldığında selectedComponent'i sıfırla
+    setSelectedComponent('Foods');
   };
-
-  if (loading) {
-    return <div>Yükleniyor...</div>;
-  }
 
   if (!user) {
     return <Login onLogin={handleLogin} />;
@@ -74,31 +70,31 @@ function App() {
             <Route path="/" element={<Navigate to="/products" replace />} />
             
             {/* Ürün Yönetimi */}
-            <Route path="/products" element={<Content selectedComponent="Foods" />} />
-            <Route path="/products/sort" element={<Content selectedComponent="Sort" />} />
+            <Route path="/products" element={<Content selectedComponent={selectedComponent} />} />
+            <Route path="/products/sort" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Kategori Yönetimi */}
-            <Route path="/categories" element={<Content selectedComponent="Categories" />} />
+            <Route path="/categories" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Şube Yönetimi */}
-            <Route path="/branches" element={<Content selectedComponent="Branches" />} />
+            <Route path="/branches" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* QR Yönetimi */}
-            <Route path="/qr/general" element={<Content selectedComponent="GeneralQR" />} />
-            <Route path="/qr/designs" element={<Content selectedComponent="QRDesigns" />} />
+            <Route path="/qr/general" element={<Content selectedComponent={selectedComponent} />} />
+            <Route path="/qr/designs" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Fiyat Değişikliği */}
-            <Route path="/price-change" element={<Content selectedComponent="Price Changing" />} />
+            <Route path="/price-change" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Kullanıcı Yönetimi */}
-            <Route path="/users" element={<Content selectedComponent="Roles" />} />
-            <Route path="/auth" element={<Content selectedComponent="Auth" />} />
+            <Route path="/users" element={<Content selectedComponent={selectedComponent} />} />
+            <Route path="/auth" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Profil */}
-            <Route path="/profile" element={<Content selectedComponent="Profile" />} />
+            <Route path="/profile" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* Çıkış Yap */}
-            <Route path="/logout" element={<Content selectedComponent="Logout" />} />
+            <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />
             
             {/* 404 - Bilinmeyen route'lar için */}
             <Route path="*" element={<div>Sayfa bulunamadı!</div>} />
