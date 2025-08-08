@@ -4,8 +4,9 @@ const express = require('express');
 const router = express.Router();
 const Branch = require('../models/Branch');
 const BranchProduct = require('../models/BranchProduct');
-const Product = require('../models/Products');
+const Products = require('../models/Products');
 const Business = require('../models/Business');
+const Category = require('../models/Category');
 const Sequelize = require('../db');
 
 
@@ -20,7 +21,7 @@ exports.getProductsByBranchId = async (req, res) => {
       where: { branch_id: branchId },
       include: [
         {
-          model: Product, // İlişkili Product modelini dahil et
+          model: Products, // İlişkili Product modelini dahil et
           attributes: ['product_name'], // Sadece product_name'i çekmek için attributes belirtildi
         },
       ],
@@ -33,7 +34,7 @@ exports.getProductsByBranchId = async (req, res) => {
     const formattedProducts = branchProducts.map(bp => ({
       branch_id: bp.branch_id,
       product_id: bp.product_id,
-      product_name: bp.Product ? bp.Product.product_name : null, // Product ilişkisi null olabilir ihtimaline karşı kontrol
+      product_name: bp.Products ? bp.Products.product_name : null, // Product ilişkisi null olabilir ihtimaline karşı kontrol
       price: bp.price,
       stock: bp.stock,
     }));
@@ -60,7 +61,7 @@ exports.getBusinessDetailsWithProducts = async (req, res) => {
               model: BranchProduct,
               include: [
                 {
-                  model: Product,
+                  model: Products,
                   attributes: ['product_id', 'product_name', 'description', 'price'],
                 },
               ],
@@ -194,7 +195,7 @@ exports.getBranchById = async (req, res) => {
 //       where: { branch_id: branchId },
 //       include: [
 //         {
-//           model: Product, // İlişkili Product modelini dahil et
+//           model: Products, // İlişkili Product modelini dahil et
 //           attributes: ['id', 'product_name', 'description', 'price', 'image_url'], // Product'tan istediğiniz alanlar
 //         },
 //       ],
@@ -223,7 +224,7 @@ exports.createBranchProduct = async (req, res) => {
 
     // Şube ve ürünün gerçekten var olup olmadığını kontrol et
     const branchExists = await Branch.findByPk(branch_id);
-    const productExists = await Product.findByPk(product_id);
+    const productExists = await Products.findByPk(product_id);
 
     if (!branchExists) {
       return res.status(404).json({ error: `Belirtilen şube (ID: ${branch_id}) bulunamadı.` });
@@ -281,7 +282,7 @@ exports.AddProductToBranch= async (req, res) => {
     for (const product_id of product_ids) {
       try {
         // Ürünün business'a ait olduğunu kontrol et
-        const product = await Product.findOne({
+        const product = await Products.findOne({
           where: { product_id: product_id },
           transaction
         });
@@ -398,7 +399,7 @@ exports.getAvailableProductsForBranch = async (req, res) => {
     const existingProductIds = branchProducts.map(bp => bp.product_id);
 
     // İşletmeye ait tüm ürünleri al, ancak şubede olmayanları filtrele
-    const allProducts = await Product.findAll({
+    const allProducts = await Products.findAll({
       where: { business_id: businessId },
       attributes: ['product_id', 'product_name', 'description', 'price', 'image_url']
     });
@@ -435,7 +436,9 @@ exports.deleteBranchProduct = async (req, res) => {
 // Yeni endpoint: Tüm ürünleri ve seçili şubedeki durumlarını getir
 exports.getBranchProductMatrix = async (req, res) => {
   try {
+    console.log('🔄 Matrix verisi getiriliyor...');
     const { businessId } = req.params;
+    console.log('📦 Business ID:', businessId);
 
     if (!businessId) {
       return res.status(400).json({ error: 'businessId parametresi gerekli' });
@@ -447,13 +450,23 @@ exports.getBranchProductMatrix = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
+    console.log(`📦 ${branches.length} şube bulundu`);
+    if (branches.length > 0) {
+      console.log('📦 İlk şube örneği:', {
+        id: branches[0].id,
+        name: branches[0].name,
+        business_id: branches[0].business_id
+      });
+    }
+
     // Tüm ürünleri ve kategorileri al
-    const allProducts = await Product.findAll({
+    const allProducts = await Products.findAll({
       where: { business_id: businessId },
       include: [
         {
-          model: require('../models/Category'),
-          attributes: ['category_name'],
+          model: Category,
+          as: 'category',
+          attributes: ['category_id', 'category_name']
         },
       ],
       order: [
@@ -461,6 +474,15 @@ exports.getBranchProductMatrix = async (req, res) => {
         ['product_id', 'ASC'],
       ],
     });
+
+    console.log('📦 Tüm ürünler:', allProducts.length);
+    if (allProducts.length > 0) {
+      console.log('📦 İlk ürün örneği:', {
+        product_id: allProducts[0].product_id,
+        product_name: allProducts[0].product_name,
+        category: allProducts[0].category ? allProducts[0].category.category_name : 'Yok'
+      });
+    }
 
     // Her şube için ürün durumlarını al
     const branchesWithProducts = [];
@@ -471,19 +493,21 @@ exports.getBranchProductMatrix = async (req, res) => {
         where: { branch_id: branch.id },
         include: [
           {
-            model: Product,
+            model: Products,
+            as: 'Product', // Alias ekledik
             include: [
               {
-                model: require('../models/Category'),
-                attributes: ['category_name'],
+                model: Category,
+                as: 'category',
+                attributes: ['category_id', 'category_name']
               },
             ],
             attributes: ['product_id', 'product_name', 'price'],
           },
         ],
         order: [
-          [Product, 'category_id', 'ASC'],
-          [Product, 'product_id', 'ASC'],
+          [Products, 'category_id', 'ASC'],
+          [Products, 'product_id', 'ASC'],
         ],
       });
 
@@ -494,7 +518,8 @@ exports.getBranchProductMatrix = async (req, res) => {
       const categories = {};
       
       allProducts.forEach(product => {
-        const categoryName = product.Category.category_name;
+        // Category null kontrolü ekle
+        const categoryName = product.category ? product.category.category_name : 'Kategori Yok';
         if (!categories[categoryName]) {
           categories[categoryName] = [];
         }
@@ -507,7 +532,7 @@ exports.getBranchProductMatrix = async (req, res) => {
           product_name: product.product_name,
           list_price: product.price,
           branch_price: branchProduct ? branchProduct.price : null,
-          available: branchProduct ? branchProduct.is_available : false, // Sadece available kullan, stock kaldır
+          available: branchProduct ? branchProduct.is_available : false,
         });
       });
 
@@ -526,7 +551,7 @@ exports.getBranchProductMatrix = async (req, res) => {
       product_id: product.product_id,
       product_name: product.product_name,
       list_price: product.price,
-      category_name: product.Category.category_name,
+      category_name: product.category ? product.category.category_name : 'Kategori Yok',
       category_id: product.category_id,
     }));
 

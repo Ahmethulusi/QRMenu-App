@@ -73,14 +73,22 @@ export const filterMenuItems = (items, user) => {
 const canViewMenu = (user, menuKey) => {
   const menuPermissions = {
     'Foods': canAccess(user, 'products', 'read'),
+    'Products': canAccess(user, 'products', 'read'),
+    'Sort': canAccess(user, 'products', 'read'),
     'Categories': canAccess(user, 'categories', 'read'),
+    'CategorySort': canAccess(user, 'categories', 'read'),
     'Branches': canAccess(user, 'branches', 'read'),
     'Roles': canAccess(user, 'users', 'read'),
     'Auth': canAccess(user, 'users', 'read'), // Yetkilendirmeler için users read yetkisi
     'QRDesigns': canAccess(user, 'qr', 'read'),
     'GeneralQR': canAccess(user, 'qr', 'read'),
     'Tables': canAccess(user, 'tables', 'read'),
+    'TableSections': canAccess(user, 'tables', 'read'),
+    'DesignSettings': canAccess(user, 'qr', 'read'),
+    'NonOrderableQR': canAccess(user, 'qr', 'read'),
+    'OrderableQR': canAccess(user, 'tables', 'read'),
     'Price Changing': canAccess(user, 'products', 'update'),
+    'Profile': true, // Profil her zaman görünür
     'Logout': true, // Çıkış Yap her zaman görünür
   };
   

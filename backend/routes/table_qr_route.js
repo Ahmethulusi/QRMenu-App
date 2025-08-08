@@ -7,7 +7,7 @@ const path = require('path');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/logos'); // hedef klasör
+    cb(null, 'public/logos');
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
@@ -26,20 +26,10 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 router.post('/', upload.single('logo'), qrCodeGenerator.createQRCode);
-
-// Tüm QR'ları getir
 router.get('/', qrCodeController.getAllQRCodes);
-
-// ID'ye göre QR getir
 router.get('/:id', qrCodeController.getQRCodeById);
-
-// QR sil
 router.delete('/:id', qrCodeController.deleteQRCode);
-
-// Nonorderable QR'ları listele
 router.get('/nonorderable-list/:businessId', qrCodeGenerator.getNonOrderableQRCodesByBusiness);
-
-// Bir QR'ı aktif yap
 router.put('/:id/activate', qrCodeGenerator.activateQRCode);
 
 module.exports = router;

@@ -1,46 +1,103 @@
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const sequelize = require('../db'); // db.js'deki Sequelize instance'ını kullanıyoruz
+const sequelize = require('../db');
+const Permission = require('./Permission');
+const RolePermission = require('./RolePermission');
+const User = require('./User');
+const Business = require('./Business');
+const Branch = require('./Branch');
+const Category = require('./Category');
+const Products = require('./Products');
+const BranchProduct = require('./BranchProduct');
+const Section = require('./Section');
+const QRCode = require('./QRCode');
+const Table = require('./Table');
 
-const db = {};
-const basename = path.basename(__filename);
-
-// models klasöründeki tüm dosyaları al
-fs.readdirSync(__dirname)
-  .filter(file =>
-    file !== basename &&
-    file.endsWith('.js')
-  )
-  .forEach(file => {
-    const model = require(path.join(__dirname, file));
-    db[model.name] = model;
-  });
-
-// ilişkileri kur
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+// Permission - RolePermission association'ları
+RolePermission.belongsTo(Permission, {
+  foreignKey: 'permission_id',
+  as: 'permission'
 });
 
-// Manuel ilişkileri ekle
-if (db.Permission && db.RolePermission) {
-  db.Permission.hasMany(db.RolePermission, { foreignKey: 'permission_id' });
-  db.RolePermission.belongsTo(db.Permission, { foreignKey: 'permission_id' });
-}
+Permission.hasMany(RolePermission, {
+  foreignKey: 'permission_id',
+  as: 'rolePermissions'
+});
 
-if (db.Business && db.RolePermission) {
-  db.Business.hasMany(db.RolePermission, { foreignKey: 'business_id' });
-  db.RolePermission.belongsTo(db.Business, { foreignKey: 'business_id' });
-}
+// User - Business association'ları
+User.belongsTo(Business, {
+  foreignKey: 'business_id',
+  as: 'business'
+});
 
-if (db.Branch && db.RolePermission) {
-  db.Branch.hasMany(db.RolePermission, { foreignKey: 'branch_id' });
-  db.RolePermission.belongsTo(db.Branch, { foreignKey: 'branch_id' });
-}
+Business.hasMany(User, {
+  foreignKey: 'business_id',
+  as: 'users'
+});
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// Branch - Business association'ları
+Branch.belongsTo(Business, {
+  foreignKey: 'business_id',
+  as: 'business'
+});
 
-module.exports = db;
+Business.hasMany(Branch, {
+  foreignKey: 'business_id',
+  as: 'branches'
+});
+
+// Products - Category association'ları
+Products.belongsTo(Category, {
+  foreignKey: 'category_id',
+  as: 'category'
+});
+
+Category.hasMany(Products, {
+  foreignKey: 'category_id',
+  as: 'products'
+});
+
+// BranchProduct association'ları
+BranchProduct.belongsTo(Products, {
+  foreignKey: 'product_id',
+  as: 'Product'
+});
+
+Products.hasMany(BranchProduct, {
+  foreignKey: 'product_id',
+  as: 'BranchProducts'
+});
+
+BranchProduct.belongsTo(Branch, {
+  foreignKey: 'branch_id',
+  as: 'Branch'
+});
+
+Branch.hasMany(BranchProduct, {
+  foreignKey: 'branch_id',
+  as: 'BranchProducts'
+});
+
+// Section - Category association'ları
+Section.belongsTo(Category, {
+  foreignKey: 'category_id',
+  as: 'category'
+});
+
+Category.hasMany(Section, {
+  foreignKey: 'category_id',
+  as: 'sections'
+});
+
+module.exports = {
+  sequelize,
+  Permission,
+  RolePermission,
+  User,
+  Business,
+  Branch,
+  Category,
+  Products,
+  BranchProduct,
+  Section,
+  QRCode,
+  Table
+};

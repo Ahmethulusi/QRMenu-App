@@ -72,7 +72,12 @@ const ProductPriceTable = () => {
   // Ürünleri API'den çekme
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/products`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/admin/products`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Ürünler alınamadı!');
       }

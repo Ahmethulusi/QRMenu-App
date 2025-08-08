@@ -66,17 +66,19 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       setLoading(true);
       const values = await form.validateFields();
 
-      // category_id'nin null olmamasını kontrol et
       if (!values.category) {
         message.error('Lütfen bir kategori seçin!');
         return;
       }
+
+      const token = localStorage.getItem('token');
 
       // Önce ürün bilgilerini güncelle
       const productResponse = await fetch(`${API_URL}/api/admin/products/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           id: record.product_id,
@@ -108,6 +110,9 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       if (imageRemoved || (file && file.file)) {
         const imageResponse = await fetch(`${API_URL}/api/admin/products/updateImage`, {
           method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           body: formData,
         });
 

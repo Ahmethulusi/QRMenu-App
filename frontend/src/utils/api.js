@@ -25,10 +25,15 @@ export const apiCall = async (endpoint, options = {}) => {
     },
   };
 
+  console.log(`🔄 API çağrısı: ${API_URL}${endpoint}`);
+  console.log('📋 Headers:', defaultHeaders);
+
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
+    console.log(`📡 Response status: ${response.status}`);
     
     if (response.status === 401) {
+      console.log('❌ 401 Unauthorized - Token geçersiz');
       // Token geçersiz, kullanıcıyı logout yap
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -37,14 +42,17 @@ export const apiCall = async (endpoint, options = {}) => {
     }
 
     const data = await response.json();
+    console.log('📦 Response data:', data);
     
     if (!response.ok) {
-      throw new Error(data.error || 'Bir hata oluştu');
+      console.error(`❌ API Hatası: ${response.status} - ${data.error || 'Bilinmeyen hata'}`);
+      throw new Error(data.error || `HTTP ${response.status}: Bir hata oluştu`);
     }
 
     return data;
   } catch (error) {
-    console.error('API çağrısı hatası:', error);
+    console.error('❌ API çağrısı hatası:', error);
+    console.error('❌ Error details:', error.message);
     throw error;
   }
 };
@@ -166,4 +174,150 @@ export const getCurrentUser = () => {
 // Token kontrolü
 export const isAuthenticated = () => {
   return !!getToken();
+};
+
+// Yetki kontrolü API'si
+export const checkPermissionAPI = async (resource, action, businessId = null, branchId = null) => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        resource,
+        action,
+        business_id: businessId,
+        branch_id: branchId
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return result.hasPermission;
+    }
+    return false;
+  } catch (error) {
+    console.error('Yetki kontrolü hatası:', error);
+    return false;
+  }
+};
+
+// Kullanıcı yetkilerini getir
+export const getUserPermissionsAPI = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/user`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return result.permissions;
+    }
+    return [];
+  } catch (error) {
+    console.error('Yetki getirme hatası:', error);
+    return [];
+  }
+};
+
+// Tüm yetkileri getir
+export const getAllPermissionsAPI = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/all`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return result.permissions;
+    }
+    return [];
+  } catch (error) {
+    console.error('Yetki listeleme hatası:', error);
+    return [];
+  }
+};
+
+// Rol yetkilerini getir (is_active alanı ile)
+export const getRolePermissionsAPI = async (role, businessId = null) => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/role/${role}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Yetkiler alınamadı');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Yetki getirme hatası:', error);
+    throw error;
+  }
+};
+
+// Yetki güncelleme (is_active mantığı ile)
+export const updateRolePermissionsAPI = async (role, permissions, businessId = null) => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        role,
+        permissions,
+        business_id: businessId
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Yetki güncelleme başarısız');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Yetki güncelleme hatası:', error);
+    throw error;
+  }
+};
+
+// Test yetki güncelleme
+export const testUpdateRolePermissionsAPI = async (role, permissions, businessId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/permissions/test-update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        role,
+        permissions,
+        business_id: businessId
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return result;
+    }
+    
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Yetki güncelleme başarısız');
+  } catch (error) {
+    console.error('Yetki güncelleme hatası:', error);
+    throw error;
+  }
 };

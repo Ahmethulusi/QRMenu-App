@@ -1,32 +1,38 @@
 const User = require('../models/User');
-const { Business } = require('../models');
+const Business = require('../models/Business');
 const bcrypt = require('bcrypt');
 
 // Tüm kullanıcıları getir
 exports.getAllUsers = async (req, res) => {
   try {
-    const { business_id } = req.query;
+    console.log('🔄 Tüm kullanıcılar getiriliyor...');
     
-    if (!business_id) {
-      return res.status(400).json({ error: 'business_id gerekli' });
-    }
-
     const users = await User.findAll({
-      where: { business_id },
       include: [
         {
           model: Business,
-          as: 'Business',
-          attributes: ['name'],
+          as: 'business',
+          attributes: ['id', 'name'] // business_name yerine name kullanıyoruz
         }
-      ],
-      order: [['user_id', 'DESC']],
+      ]
     });
-
+    
+    console.log(`✅ ${users.length} kullanıcı bulundu`);
+    if (users.length > 0) {
+      console.log('📦 İlk kullanıcı örneği:', {
+        user_id: users[0].user_id,
+        name: users[0].name,
+        email: users[0].email,
+        role: users[0].role,
+        business: users[0].business ? users[0].business.name : 'Yok'
+      });
+    }
+    
     res.json(users);
   } catch (error) {
-    console.error('Kullanıcılar alınamadı:', error);
-    res.status(500).json({ error: 'Kullanıcılar alınamadı' });
+    console.error('❌ Kullanıcı getirme hatası:', error);
+    console.error('❌ Hata detayı:', error.message);
+    res.status(500).json({ error: 'Kullanıcılar alınamadı: ' + error.message });
   }
 };
 

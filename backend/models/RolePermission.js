@@ -21,19 +21,24 @@ const RolePermission = sequelize.define('RolePermission', {
   },
   business_id: {
     type: DataTypes.INTEGER,
-    allowNull: true, // null = tüm işletmeler (süper admin için)
+    allowNull: true,
     references: {
       model: 'businesses',
-      key: 'id',
+      key: 'business_id',
     },
   },
   branch_id: {
     type: DataTypes.INTEGER,
-    allowNull: true, // null = tüm şubeler
+    allowNull: true,
     references: {
       model: 'branches',
-      key: 'id',
+      key: 'branch_id',
     },
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
   },
 }, {
   tableName: 'role_permissions',

@@ -14,6 +14,7 @@ const tableQrMngRouter = require('./routes/table_qr_route');
 const branchRoute = require('./routes/branchRoute');
 const userRoute = require('./routes/userRoute');
 const authRoute = require('./routes/authRoute');
+const permissionRoute = require('./routes/permissionRoute');
 
 // Middleware
 app.use(cors());
@@ -29,6 +30,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/table_qr', tableQrMngRouter);
 app.use("/api/branches",branchRoute);
 app.use('/api/users', userRoute);
+app.use('/api/permissions', permissionRoute);
 
 // Veritabanı bağlantısı ve senkronizasyon
 (async () => {

@@ -30,7 +30,13 @@ const Product_Table = () => {
     }
 
     try {
+      console.log('🔄 Ürünler getiriliyor...');
       const datas = await apiGet('/api/admin/products');
+      console.log('✅ API yanıtı:', datas);
+
+      if (!datas || !Array.isArray(datas)) {
+        throw new Error('API geçersiz veri döndürdü');
+      }
 
       const formattedData = datas.map((item, index) => {
         const imageUrl = item.image_url ? `${API_URL}/images/${item.image_url}` : null;
@@ -48,13 +54,14 @@ const Product_Table = () => {
           name: item.product_name,
           description: item.description,
           price: item.price,
-          category: item.Category.category_name,
+          category: item.Category ? item.Category.category_name : 'Kategori Yok',
           category_id: item.category_id, // Kategori ID'sini ekle
           status: item.is_available,
           showcase: item.is_selected,
         };
       });
 
+      console.log('✅ Formatlanmış veri:', formattedData);
       setData(formattedData);
 
       // uploadCategoriesToModal(datas);
@@ -62,13 +69,14 @@ const Product_Table = () => {
       const filteredNames = uniqueNames.map(name => ({ text: name, value: name }));
       setNameFilters(filteredNames);  // Filtreleri ayarla
 
-      const uniqueCategories = [...new Set(datas.map(item => item.Category.category_name))];
+      const uniqueCategories = [...new Set(datas.map(item => item.Category ? item.Category.category_name : 'Kategori Yok'))];
       const filteredCategories = uniqueCategories.map(category => ({ text: category, value: category }));
       setCategoryFilters(filteredCategories);  // Filtreleri ayarla
 
     } catch (error) {
-      console.error('Bir hata oluştu', error);
-      setError('Veriler alınamadı. Lütfen tekrar deneyin.');
+      console.error('❌ Ürünler getirilirken hata:', error);
+      console.error('❌ Hata detayı:', error.message);
+      setError(`Veriler alınamadı: ${error.message}`);
     } finally {
       setLoading(false);
       setRefreshing(false);

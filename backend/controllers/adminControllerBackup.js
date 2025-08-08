@@ -1,5 +1,6 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
+const Business = require('../models/Business');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
@@ -20,25 +21,24 @@ exports.updateImageUrl = async (req, res) => {
 }
 
 
+// Tüm ürünleri getir
 exports.getAllProuducts = async (req, res) => {
-    try {
-        const db = require('../models');
-        const products = await Products.findAll({
-            include: [
-                { model: db.Category },
-                { model: db.Business },
-                { 
-                    model: db.Branch, 
-                    through: { attributes: ['price'] } 
-                }
-            ]
-        });
-        res.json(products);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'An error occurred while fetching products.' });
-    }
-}
+  try {
+    const products = await Products.findAll({
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['category_id', 'category_name'] // name yerine category_name
+        }
+      ]
+    });
+    res.json(products);
+  } catch (error) {
+    console.error('❌ Ürün getirme hatası:', error);
+    res.status(500).json({ error: 'Ürünler alınamadı' });
+  }
+};
 exports.getAllProductsOrderBySiraId = async (req,res) => {
     try {
         const products = await Products.findAll({

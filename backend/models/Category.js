@@ -29,7 +29,10 @@ const Category = sequelize.define('Category', {
 });
 
 Category.associate = models => {
-  Category.hasMany(models.Product, { foreignKey: 'category_id' });
+  Category.hasMany(models.Product, { 
+    foreignKey: 'category_id',
+    as: 'products' // Alias ekledik
+  });
 };
 
 module.exports = Category;

@@ -25,7 +25,10 @@ const Branch = sequelize.define('Branch', {
 
 Branch.associate = models => {
   Branch.belongsTo(models.Business, { foreignKey: 'business_id',targetKey:"id"});
-  Branch.hasMany(models.BranchProduct, { foreignKey: 'branch_id' }); // bu satır eksik olabilir
+  Branch.hasMany(models.BranchProduct, { 
+    foreignKey: 'branch_id',
+    as: 'BranchProducts' // Alias ekledik
+  }); 
   Branch.hasMany(models.Section, { foreignKey: 'branch_id'});
   Branch.hasMany(models.QRCode, { foreignKey: 'branch_id'});
 };

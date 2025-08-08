@@ -4,129 +4,96 @@ const sequelize = require('./db');
 
 async function seedPermissions() {
   try {
-    console.log('🔄 Varsayılan yetkiler oluşturuluyor...');
+    console.log(' Yetkiler ekleniyor...');
 
     // Temel yetkileri oluştur
     const permissions = [
       // Ürün yetkileri
-      { name: 'products_read', description: 'Ürünleri görüntüleme', resource: 'products', action: 'read' },
-      { name: 'products_create', description: 'Ürün oluşturma', resource: 'products', action: 'create' },
-      { name: 'products_update', description: 'Ürün güncelleme', resource: 'products', action: 'update' },
-      { name: 'products_delete', description: 'Ürün silme', resource: 'products', action: 'delete' },
+      { resource: 'products', action: 'read', description: 'Ürünleri görüntüleme', name: 'products_read' },
+      { resource: 'products', action: 'create', description: 'Ürün oluşturma', name: 'products_create' },
+      { resource: 'products', action: 'update', description: 'Ürün güncelleme', name: 'products_update' },
+      { resource: 'products', action: 'delete', description: 'Ürün silme', name: 'products_delete' },
       
       // Kategori yetkileri
-      { name: 'categories_read', description: 'Kategorileri görüntüleme', resource: 'categories', action: 'read' },
-      { name: 'categories_create', description: 'Kategori oluşturma', resource: 'categories', action: 'create' },
-      { name: 'categories_update', description: 'Kategori güncelleme', resource: 'categories', action: 'update' },
-      { name: 'categories_delete', description: 'Kategori silme', resource: 'categories', action: 'delete' },
+      { resource: 'categories', action: 'read', description: 'Kategorileri görüntüleme', name: 'categories_read' },
+      { resource: 'categories', action: 'create', description: 'Kategori oluşturma', name: 'categories_create' },
+      { resource: 'categories', action: 'update', description: 'Kategori güncelleme', name: 'categories_update' },
+      { resource: 'categories', action: 'delete', description: 'Kategori silme', name: 'categories_delete' },
       
       // Kullanıcı yetkileri
-      { name: 'users_read', description: 'Kullanıcıları görüntüleme', resource: 'users', action: 'read' },
-      { name: 'users_create', description: 'Kullanıcı oluşturma', resource: 'users', action: 'create' },
-      { name: 'users_update', description: 'Kullanıcı güncelleme', resource: 'users', action: 'update' },
-      { name: 'users_delete', description: 'Kullanıcı silme', resource: 'users', action: 'delete' },
+      { resource: 'users', action: 'read', description: 'Kullanıcıları görüntüleme', name: 'users_read' },
+      { resource: 'users', action: 'create', description: 'Kullanıcı oluşturma', name: 'users_create' },
+      { resource: 'users', action: 'update', description: 'Kullanıcı güncelleme', name: 'users_update' },
+      { resource: 'users', action: 'delete', description: 'Kullanıcı silme', name: 'users_delete' },
       
       // Şube yetkileri
-      { name: 'branches_read', description: 'Şubeleri görüntüleme', resource: 'branches', action: 'read' },
-      { name: 'branches_create', description: 'Şube oluşturma', resource: 'branches', action: 'create' },
-      { name: 'branches_update', description: 'Şube güncelleme', resource: 'branches', action: 'update' },
-      { name: 'branches_delete', description: 'Şube silme', resource: 'branches', action: 'delete' },
+      { resource: 'branches', action: 'read', description: 'Şubeleri görüntüleme', name: 'branches_read' },
+      { resource: 'branches', action: 'create', description: 'Şube oluşturma', name: 'branches_create' },
+      { resource: 'branches', action: 'update', description: 'Şube güncelleme', name: 'branches_update' },
+      { resource: 'branches', action: 'delete', description: 'Şube silme', name: 'branches_delete' },
       
-      // QR yetkileri
-      { name: 'qr_read', description: 'QR kodları görüntüleme', resource: 'qr', action: 'read' },
-      { name: 'qr_create', description: 'QR kodu oluşturma', resource: 'qr', action: 'create' },
-      { name: 'qr_update', description: 'QR kodu güncelleme', resource: 'qr', action: 'update' },
-      { name: 'qr_delete', description: 'QR kodu silme', resource: 'qr', action: 'delete' },
+      // QR kod yetkileri
+      { resource: 'qr', action: 'read', description: 'QR kodları görüntüleme', name: 'qr_read' },
+      { resource: 'qr', action: 'create', description: 'QR kod oluşturma', name: 'qr_create' },
       
-      // Masa yetkileri
-      { name: 'tables_read', description: 'Masaları görüntüleme', resource: 'tables', action: 'read' },
-      { name: 'tables_create', description: 'Masa oluşturma', resource: 'tables', action: 'create' },
-      { name: 'tables_update', description: 'Masa güncelleme', resource: 'tables', action: 'update' },
-      { name: 'tables_delete', description: 'Masa silme', resource: 'tables', action: 'delete' },
-      
-      // Kampanya yetkileri
-      { name: 'campaigns_read', description: 'Kampanyaları görüntüleme', resource: 'campaigns', action: 'read' },
-      { name: 'campaigns_create', description: 'Kampanya oluşturma', resource: 'campaigns', action: 'create' },
-      { name: 'campaigns_update', description: 'Kampanya güncelleme', resource: 'campaigns', action: 'update' },
-      { name: 'campaigns_delete', description: 'Kampanya silme', resource: 'campaigns', action: 'delete' },
+      // Yetki yönetimi yetkileri
+      { resource: 'permissions', action: 'read', description: 'Yetkileri görüntüleme', name: 'permissions_read' },
+      { resource: 'permissions', action: 'update', description: 'Yetki güncelleme', name: 'permissions_update' }
     ];
 
-    // Yetkileri veritabanına ekle
+    // Yetkileri ekle
     for (const permission of permissions) {
       await Permission.findOrCreate({
-        where: { name: permission.name },
+        where: { resource: permission.resource, action: permission.action },
         defaults: permission
       });
     }
 
-    console.log('✅ Varsayılan yetkiler oluşturuldu!');
+    console.log('✅ Temel yetkiler eklendi');
 
-    // Rol yetkilerini oluştur
-    console.log('🔄 Rol yetkileri oluşturuluyor...');
+    // Tüm yetkileri al
+    const allPermissions = await Permission.findAll();
+    const roles = ['super_admin', 'admin', 'manager'];
 
-    const rolePermissions = [
-      // Admin yetkileri (tüm işletme yetkileri)
-      { role: 'admin', permission_name: 'products_read', business_id: null },
-      { role: 'admin', permission_name: 'products_create', business_id: null },
-      { role: 'admin', permission_name: 'products_update', business_id: null },
-      { role: 'admin', permission_name: 'products_delete', business_id: null },
-      { role: 'admin', permission_name: 'categories_read', business_id: null },
-      { role: 'admin', permission_name: 'categories_create', business_id: null },
-      { role: 'admin', permission_name: 'categories_update', business_id: null },
-      { role: 'admin', permission_name: 'categories_delete', business_id: null },
-      { role: 'admin', permission_name: 'users_read', business_id: null },
-      { role: 'admin', permission_name: 'users_create', business_id: null },
-      { role: 'admin', permission_name: 'users_update', business_id: null },
-      { role: 'admin', permission_name: 'users_delete', business_id: null },
-      { role: 'admin', permission_name: 'branches_read', business_id: null },
-      { role: 'admin', permission_name: 'branches_create', business_id: null },
-      { role: 'admin', permission_name: 'branches_update', business_id: null },
-      { role: 'admin', permission_name: 'branches_delete', business_id: null },
-      { role: 'admin', permission_name: 'qr_read', business_id: null },
-      { role: 'admin', permission_name: 'qr_create', business_id: null },
-      { role: 'admin', permission_name: 'qr_update', business_id: null },
-      { role: 'admin', permission_name: 'qr_delete', business_id: null },
-      { role: 'admin', permission_name: 'campaigns_read', business_id: null },
-      { role: 'admin', permission_name: 'campaigns_create', business_id: null },
-      { role: 'admin', permission_name: 'campaigns_update', business_id: null },
-      { role: 'admin', permission_name: 'campaigns_delete', business_id: null },
+    console.log('🔄 Tüm roller için tüm yetkiler oluşturuluyor...');
 
-      // Manager yetkileri (sadece görüntüleme ve masa yönetimi)
-      { role: 'manager', permission_name: 'products_read', business_id: null },
-      { role: 'manager', permission_name: 'branches_read', business_id: null },
-      { role: 'manager', permission_name: 'qr_read', business_id: null },
-      { role: 'manager', permission_name: 'tables_read', business_id: null },
-      { role: 'manager', permission_name: 'tables_create', business_id: null },
-      { role: 'manager', permission_name: 'tables_update', business_id: null },
-      { role: 'manager', permission_name: 'tables_delete', business_id: null },
-    ];
-
-    // Rol yetkilerini veritabanına ekle
-    for (const rolePerm of rolePermissions) {
-      const permission = await Permission.findOne({
-        where: { name: rolePerm.permission_name }
-      });
-
-      if (permission) {
-        await RolePermission.findOrCreate({
-          where: {
-            role: rolePerm.role,
-            permission_id: permission.id,
-            business_id: rolePerm.business_id
-          },
-          defaults: {
-            role: rolePerm.role,
-            permission_id: permission.id,
-            business_id: rolePerm.business_id
+    // Her rol için tüm yetkileri oluştur (upsert kullan)
+    for (const role of roles) {
+      for (const permission of allPermissions) {
+        // Varsayılan yetki durumları
+        let isActive = false;
+        
+        // Super Admin: Tüm yetkiler aktif
+        if (role === 'super_admin') {
+          isActive = true;
+        }
+        // Admin: Tüm yetkiler aktif
+        else if (role === 'admin') {
+          isActive = true;
+        }
+        // Manager: Sadece okuma yetkileri aktif
+        else if (role === 'manager') {
+          if (permission.action === 'read') {
+            isActive = true;
           }
+        }
+
+        // Upsert kullan (varsa güncelle, yoksa oluştur)
+        await RolePermission.upsert({
+          role: role,
+          permission_id: permission.id,
+          business_id: null,
+          branch_id: null,
+          is_active: isActive
         });
       }
     }
 
-    console.log('✅ Rol yetkileri oluşturuldu!');
+    console.log('✅ Tüm roller için tüm yetkiler oluşturuldu');
+    console.log('✅ Yetki sistemi kurulumu tamamlandı!');
 
   } catch (error) {
-    console.error('❌ Yetki oluşturma hatası:', error);
+    console.error('❌ Yetki ekleme hatası:', error);
   } finally {
     await sequelize.close();
   }

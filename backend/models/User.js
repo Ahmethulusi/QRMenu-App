@@ -39,7 +39,11 @@ const User = sequelize.define('User', {
 });
 
 User.associate = models => {
-  User.belongsTo(models.Business, { foreignKey: 'business_id', targetKey: 'id' });
+  User.belongsTo(models.Business, { 
+    foreignKey: 'business_id', 
+    targetKey: 'id',
+    as: 'business'
+  });
 };
 
 module.exports = User;

@@ -4,6 +4,7 @@ import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'reac
 import Menu from './components/Menu';
 import Content from './components/Content';
 import Login from './components/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 import { authAPI } from './utils/api';
 import './css/App.css';
 import './css/content.css';
@@ -91,25 +92,61 @@ function AppContent() {
           <Route path="/" element={<Navigate to="/products" replace />} />
           
           {/* Ürün Yönetimi */}
-          <Route path="/products" element={<Content selectedComponent={selectedComponent} />} />
-          <Route path="/products/sort" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/products" element={
+            <ProtectedRoute requiredResource="products" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
+          <Route path="/products/sort" element={
+            <ProtectedRoute requiredResource="products" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* Kategori Yönetimi */}
-          <Route path="/categories" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/categories" element={
+            <ProtectedRoute requiredResource="categories" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* Şube Yönetimi */}
-          <Route path="/branches" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/branches" element={
+            <ProtectedRoute requiredResource="branches" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* QR Yönetimi */}
-          <Route path="/qr/general" element={<Content selectedComponent={selectedComponent} />} />
-          <Route path="/qr/designs" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/qr/general" element={
+            <ProtectedRoute requiredResource="qr" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
+          <Route path="/qr/designs" element={
+            <ProtectedRoute requiredResource="qr" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* Fiyat Değişikliği */}
-          <Route path="/price-change" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/price-change" element={
+            <ProtectedRoute requiredResource="products" requiredAction="update">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* Kullanıcı Yönetimi */}
-          <Route path="/users" element={<Content selectedComponent={selectedComponent} />} />
-          <Route path="/auth" element={<Content selectedComponent={selectedComponent} />} />
+          <Route path="/users" element={
+            <ProtectedRoute requiredResource="users" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
+          <Route path="/auth" element={
+            <ProtectedRoute requiredResource="users" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
           
           {/* Profil */}
           <Route path="/profile" element={<Content selectedComponent={selectedComponent} />} />

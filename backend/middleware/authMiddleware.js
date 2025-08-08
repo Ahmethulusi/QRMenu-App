@@ -11,64 +11,66 @@ const authenticateToken = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ error: 'Token gerekli' });
+      console.log('❌ Token bulunamadı');
+      return res.status(401).json({ error: 'Token bulunamadı' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    // JWT_SECRET için fallback ekle
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, jwtSecret);
     const user = await User.findByPk(decoded.user_id);
-    
+
     if (!user) {
-      return res.status(401).json({ error: 'Geçersiz token' });
+      console.log('❌ Kullanıcı bulunamadı');
+      return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
     }
 
     req.user = user;
+    console.log(`✅ Kullanıcı doğrulandı: ${user.username} (${user.role})`);
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Geçersiz token' });
+    console.error('❌ Token doğrulama hatası:', error);
+    res.status(401).json({ error: 'Geçersiz token' });
   }
 };
 
-// Basit rol bazlı yetki kontrolü (şimdilik)
+// Yetki kontrolü
 const checkPermission = (resource, action) => {
   return async (req, res, next) => {
     try {
       const user = req.user;
-      
+
       // Süper admin her şeyi yapabilir
       if (user.role === 'super_admin') {
         return next();
       }
 
-      // Rol bazlı yetki kontrolü
-      const permissions = {
-        admin: {
-          products: ['read', 'create', 'update', 'delete'],
-          categories: ['read', 'create', 'update', 'delete'],
-          users: ['read', 'create', 'update', 'delete'],
-          branches: ['read', 'create', 'update', 'delete'],
-          qr: ['read', 'create', 'update', 'delete'],
-          campaigns: ['read', 'create', 'update', 'delete'],
-        },
-        manager: {
-          products: ['read'],
-          branches: ['read'],
-          qr: ['read'],
-          tables: ['read', 'create', 'update', 'delete'],
-        }
-      };
+      // Yetkiyi bul
+      const permission = await Permission.findOne({
+        where: { resource, action }
+      });
 
-      const hasPermission = permissions[user.role]?.[resource]?.includes(action);
-      
-      if (!hasPermission) {
-        return res.status(403).json({ 
-          error: 'Bu işlem için yetkiniz yok' 
-        });
+      if (!permission) {
+        return res.status(403).json({ error: 'Yetki bulunamadı' });
+      }
+
+      // Rol yetkisini kontrol et
+      const rolePermission = await RolePermission.findOne({
+        where: {
+          role: user.role,
+          permission_id: permission.id,
+          is_active: true
+        }
+      });
+
+      if (!rolePermission) {
+        return res.status(403).json({ error: 'Bu işlem için yetkiniz yok' });
       }
 
       next();
     } catch (error) {
       console.error('Yetki kontrolü hatası:', error);
-      return res.status(500).json({ error: 'Yetki kontrolü hatası' });
+      res.status(500).json({ error: 'Yetki kontrolü hatası' });
     }
   };
 };
@@ -78,34 +80,30 @@ const checkBusinessPermission = (resource, action) => {
   return async (req, res, next) => {
     try {
       const user = req.user;
-      const businessId = req.params.business_id || req.body.business_id;
-      
+      const businessId = req.params.businessId || req.body.business_id;
+
       // Süper admin her şeyi yapabilir
       if (user.role === 'super_admin') {
         return next();
       }
 
       // Admin sadece kendi işletmesini yönetebilir
-      if (user.role === 'admin' && user.business_id !== parseInt(businessId)) {
-        return res.status(403).json({ 
-          error: 'Bu işletme için yetkiniz yok' 
-        });
+      if (user.role === 'admin' && user.business_id !== businessId) {
+        return res.status(403).json({ error: 'Bu işletme için yetkiniz yok' });
       }
 
       // Manager sadece kendi şubesini yönetebilir
       if (user.role === 'manager') {
-        const branchId = req.params.branch_id || req.body.branch_id;
-        if (!branchId || user.branch_id !== parseInt(branchId)) {
-          return res.status(403).json({ 
-            error: 'Bu şube için yetkiniz yok' 
-          });
+        const branchId = req.params.branchId || req.body.branch_id;
+        if (user.branch_id !== branchId) {
+          return res.status(403).json({ error: 'Bu şube için yetkiniz yok' });
         }
       }
 
       next();
     } catch (error) {
       console.error('İşletme yetki kontrolü hatası:', error);
-      return res.status(500).json({ error: 'Yetki kontrolü hatası' });
+      res.status(500).json({ error: 'İşletme yetki kontrolü hatası' });
     }
   };
 };

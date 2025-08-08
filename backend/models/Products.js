@@ -65,12 +65,20 @@ const Product = sequelize.define('Product', {
 });
 
 Product.associate = models => {
-  Product.belongsTo(models.Category, { foreignKey: 'category_id' });
+  Product.belongsTo(models.Category, { 
+    foreignKey: 'category_id',
+    as: 'category' // Alias ekledik
+  });
   Product.belongsTo(models.Business, { foreignKey: 'business_id' ,targetKey:'id'});
   Product.belongsToMany(models.Branch, {
     through: models.BranchProduct,
     foreignKey: 'product_id',
     otherKey: 'branch_id',
+    as: 'Branches' // Alias ekledik
+  });
+  Product.hasMany(models.BranchProduct, { 
+    foreignKey: 'product_id',
+    as: 'BranchProducts' // Alias ekledik
   });
 };
 

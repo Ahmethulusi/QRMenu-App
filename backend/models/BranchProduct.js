@@ -25,7 +25,10 @@ const BranchProduct = sequelize.define('BranchProduct', {
 
 BranchProduct.associate = models => {
   BranchProduct.belongsTo(models.Branch, { foreignKey: 'branch_id' });
-  BranchProduct.belongsTo(models.Product, { foreignKey: 'product_id' });
+  BranchProduct.belongsTo(models.Product, { 
+    foreignKey: 'product_id',
+    as: 'Product' // Alias ekledik
+  });
 };
 
 module.exports = BranchProduct;

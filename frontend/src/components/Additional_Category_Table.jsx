@@ -36,9 +36,15 @@ const App = () => {
       cancelText: 'İptal',
       onOk: async () => {
         try {
+          const token = localStorage.getItem('token');
+          
           const res = await fetch(`${API_URL}/api/admin/categories/${categoryId}`, {
             method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           });
+          
           if (res.ok) {
             message.success('Kategori silindi!');
             fetchCategories();
@@ -79,10 +85,18 @@ const columns = [
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/categories`);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_URL}/api/admin/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
+      
       const categoriesJson = await response.json();
       const formattedData = categoriesJson.map((category) => ({
         id: category.category_id,

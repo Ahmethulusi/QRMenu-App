@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { filterMenuItems, getCurrentUser } from '../utils/permissions';
+import { filterMenuItems, getCurrentUser, canAccess } from '../utils/permissions';
 import {
   GiftFilled,
   UsergroupAddOutlined,
@@ -108,71 +108,99 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     }
   }, [collapsed, isMobile, mobileMenuOpen]);
 
-// ... existing code ...
+  const handleClick = async (e) => {
+    if (e.key === 'Logout') {
+      // Çıkış yapma işlemi
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+        
+        // LocalStorage'ı temizle
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        message.success('Çıkış başarılı!');
+        
+        // App.jsx'teki onLogout fonksiyonunu çağır
+        if (onLogout) {
+          onLogout();
+        }
+        
+        return;
+      } catch (error) {
+        console.error('Çıkış hatası:', error);
+        message.error('Çıkış yapılırken hata oluştu!');
+      }
+    }
 
-const handleClick = async (e) => {
-  if (e.key === 'Logout') {
-    // Çıkış yapma işlemi
-    try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        await fetch(`${API_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-      
-      // LocalStorage'ı temizle
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      message.success('Çıkış başarılı!');
-      
-      // App.jsx'teki onLogout fonksiyonunu çağır
-      if (onLogout) {
-        onLogout();
-      }
-      
+    // Yetki kontrolü
+    const user = getCurrentUser();
+    if (!user) {
+      message.error('Kullanıcı bilgisi bulunamadı!');
       return;
-    } catch (error) {
-      console.error('Çıkış hatası:', error);
-      message.error('Çıkış yapılırken hata oluştu!');
     }
-  }
 
-  if (e.key !== 'productManagement') {
-    setSelectedComponent(e.key);
-    if (isMobile) {
-      setMobileMenuOpen(false);
-    }
-    
-    // Navigation mapping
-    const navigationMap = {
-      'Products': '/products',
-      'Sort': '/products/sort',
-      'Categories': '/categories',
-      'Branches': '/branches',
-      'GeneralQR': '/qr/general',
-      'QRDesigns': '/qr/designs',
-      'Price Changing': '/price-change',
-      'Roles': '/users',
-      'Auth': '/auth',
-      'Profile': '/profile',
-      'Logout': null, // Çıkış için route yok
+    // Menü öğesi için yetki kontrolü
+    const menuPermissions = {
+      'Products': canAccess(user, 'products', 'read'),
+      'Sort': canAccess(user, 'products', 'read'),
+      'Categories': canAccess(user, 'categories', 'read'),
+      'CategorySort': canAccess(user, 'categories', 'read'),
+      'Branches': canAccess(user, 'branches', 'read'),
+      'GeneralQR': canAccess(user, 'qr', 'read'),
+      'QRDesigns': canAccess(user, 'qr', 'read'),
+      'Price Changing': canAccess(user, 'products', 'update'),
+      'Roles': canAccess(user, 'users', 'read'),
+      'Auth': canAccess(user, 'users', 'read'),
+      'Profile': true, // Profil her zaman erişilebilir
     };
-    
-    const targetPath = navigationMap[e.key];
-    if (targetPath) {
-      navigate(targetPath);
-    }
-  }
-};
 
+    if (e.key !== 'productManagement' && e.key !== 'CategoryManagement' && 
+        e.key !== 'TablesAndQRManagement' && e.key !== 'CampaingsAndIngredients' && 
+        e.key !== 'UserManagement' && e.key !== 'GeneralSettings') {
+      
+      // Yetki kontrolü
+      if (!menuPermissions[e.key]) {
+        message.error('Bu sayfaya erişim yetkiniz yok!');
+        return;
+      }
+
+      setSelectedComponent(e.key);
+      if (isMobile) {
+        setMobileMenuOpen(false);
+      }
+      
+      // Navigation mapping
+      const navigationMap = {
+        'Products': '/products',
+        'Sort': '/products/sort',
+        'Categories': '/categories',
+        'Branches': '/branches',
+        'GeneralQR': '/qr/general',
+        'QRDesigns': '/qr/designs',
+        'Price Changing': '/price-change',
+        'Roles': '/users',
+        'Auth': '/auth',
+        'Profile': '/profile',
+        'Logout': null, // Çıkış için route yok
+      };
+      
+      const targetPath = navigationMap[e.key];
+      if (targetPath) {
+        navigate(targetPath);
+      }
+    }
+  };
 
   const handleOpenChange = (keys) => {
     setOpenKeys(keys);
@@ -187,7 +215,6 @@ const handleClick = async (e) => {
         { key: 'Products', label: 'Ürünler' },
         { key: 'Sort', label: 'Sıralama' },
         { key: 'Price Changing', label: 'Toplu Fiyat Değişikliği'},
-
       ],
     },
     {

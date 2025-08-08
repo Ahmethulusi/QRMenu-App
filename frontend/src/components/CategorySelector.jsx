@@ -15,7 +15,12 @@ const CategorySelect = () => {
   // Kategorileri yükle
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/categories`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/admin/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -46,10 +51,12 @@ const CategorySelect = () => {
     setLoading(true);
     
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/categories/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ category_name: name.trim() }),
       });

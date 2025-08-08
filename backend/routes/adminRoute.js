@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminControllerBackup');
+const { authenticateToken, checkPermission } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
-const xlsx = require('xlsx');
-// const { authenticateToken } = require('../middleware/authMiddleware'); // Geçici olarak kaldırıldı
 
-// Multer setup
+// Multer setup (mevcut kod)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if(file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -41,10 +40,10 @@ const upload = multer({
   }
 });
 
-// Excel upload - geçici olarak yetki kontrolü kaldırıldı
+// Excel upload
 router.post('/uploadExcel', upload.single('excel'), adminController.uploadExcel);
 
-// Ürün işlemleri - geçici olarak yetki kontrolü kaldırıldı
+// Ürün işlemleri
 router.put('/products/updateShowcase/:productId', adminController.updateShowcase);
 router.put('/products/updateStatus/:productId', adminController.updateStatus);
 router.post('/products/updateImageUrl', upload.single('resim'), adminController.updateImageUrl);
@@ -52,30 +51,59 @@ router.put('/products/updatePrice', adminController.updateProductPrices);
 router.put('/products/bulk-update-prices', adminController.bulkCreatePrices);
 router.put('/products/yeniSira', adminController.updateProductsBySiraId);
 
-// Ürün CRUD işlemleri - geçici olarak yetki kontrolü kaldırıldı
+// Ürün CRUD işlemleri
 router.post('/products/create', upload.single('resim'), adminController.createProduct);
 router.delete('/products/:id', adminController.deleteProduct);
 router.put('/products/update', adminController.updateProduct);
 router.put('/products/updateImage', upload.single('resim'), adminController.updateProductImage);
 
-// Ürün görüntüleme işlemleri - geçici olarak yetki kontrolü kaldırıldı
-router.get('/productsByBusiness/:business_id', adminController.getProductsByBusiness);
-router.get('/products/:id', adminController.getProductById);
-router.get('/productsByCategory/:category_id', adminController.getProductsByCategory);
-router.get('/productsBySiraid', adminController.getAllProductsOrderBySiraId);
-router.get('/products', adminController.getAllProuducts);
+// Ürün görüntüleme işlemleri - YETKİ KONTROLÜ EKLE
+router.get('/productsByBusiness/:business_id', 
+  authenticateToken, 
+  checkPermission('products', 'read'), 
+  adminController.getProductsByBusiness
+);
 
-// Kategori işlemleri - geçici olarak yetki kontrolü kaldırıldı
+router.get('/products/:id', 
+  authenticateToken, 
+  checkPermission('products', 'read'), 
+  adminController.getProductById
+);
+
+router.get('/productsByCategory/:category_id', 
+  authenticateToken, 
+  checkPermission('products', 'read'), 
+  adminController.getProductsByCategory
+);
+
+router.get('/productsBySiraid', 
+  authenticateToken, 
+  checkPermission('products', 'read'), 
+  adminController.getAllProductsOrderBySiraId
+);
+
+router.get('/products', 
+  authenticateToken, 
+  checkPermission('products', 'read'), 
+  adminController.getAllProuducts
+);
+
+// Kategori işlemleri
 router.post('/categories/create-sub', adminController.createSubCategory);
 router.post('/categories/create', upload.single('resim'), adminController.createCategory);
 router.delete('/categories/:id', adminController.deleteCategory);
 router.put('/categories/update/:category_id', upload.single('resim'), adminController.updateCategory);
 
-// Kategori görüntüleme işlemleri - geçici olarak yetki kontrolü kaldırıldı
+// Kategori görüntüleme işlemleri - ZATEN VAR
+router.get('/categories', 
+  authenticateToken, 
+  checkPermission('categories', 'read'), 
+  adminController.getCategories
+);
+
 router.get('/categories/subs/:id', adminController.getSubCategoriesByParentId);
 router.get('/categories/last', adminController.getLastCategory);
 router.get('/categories/:id', adminController.getCategoryById);
-router.get('/categories', adminController.getCategories);
 
 // Kategori sıralama endpoint'i
 router.put('/categories/updateSira', adminController.updateCategoriesSira);
