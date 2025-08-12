@@ -17,6 +17,7 @@ import BranchTable from '../components/BranchTable';
 import BranchProductMatrix from '../components/BranchProductMatrix';
 import UsersTable from '../components/UsersTable';
 import PermissionsTable from '../components/PermissionsTable';
+import NoPermission from '../components/NoPermission';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -50,6 +51,9 @@ function Content({ selectedComponent }) {
 
   // Component bazlı yetki kontrolü - dinamik yetkilerle
   const checkComponentPermission = (requiredResource, requiredAction) => {
+    // Super admin her şeyi yapabilir
+    if (user && user.role === 'super_admin') return true;
+    
     if (!permissions || !Array.isArray(permissions)) return false;
     return permissions.some(perm => 
       perm.resource === requiredResource && perm.action === requiredAction
@@ -66,31 +70,46 @@ function Content({ selectedComponent }) {
 
     case 'Products':
       if (!checkComponentPermission('products', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Ürünler sayfasına erişim yetkiniz yok"
+          subTitle="Ürünleri görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <ProductTable />;
 
     case 'Categories':
       if (!checkComponentPermission('categories', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Kategoriler sayfasına erişim yetkiniz yok"
+          subTitle="Kategorileri görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <Categories />;
 
     case 'Menus':
       if (!checkComponentPermission('products', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Menüler sayfasına erişim yetkiniz yok"
+          subTitle="Menüleri görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <Menus />;
 
     case 'Price Changing':
       if (!checkComponentPermission('products', 'update')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Fiyat değişikliği sayfasına erişim yetkiniz yok"
+          subTitle="Ürün fiyatlarını değiştirmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <PriceChangingPage />;
 
     case 'Sort':
       if (!checkComponentPermission('products', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Sıralama sayfasına erişim yetkiniz yok"
+          subTitle="Ürün sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <Sort2 />;
 
@@ -99,49 +118,73 @@ function Content({ selectedComponent }) {
 
     case 'TablesAndQR':
       if (!checkComponentPermission('tables', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Masa ve QR sayfasına erişim yetkiniz yok"
+          subTitle="Masaları ve QR kodlarını yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <TablesPage />;
 
     case 'CategorySort':
       if (!checkComponentPermission('categories', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Kategori sıralama sayfasına erişim yetkiniz yok"
+          subTitle="Kategori sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <CategorySortTable />;
 
     case 'GeneralQR':
-      if (!checkComponentPermission('qr', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+      if (!checkComponentPermission('qrcodes', 'read')) {
+        return <NoPermission 
+          title="Genel QR sayfasına erişim yetkiniz yok"
+          subTitle="Genel QR kodları oluşturmak için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <NonOrderableQR />;
 
     case 'Branches':
       if (!checkComponentPermission('branches', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Şubeler sayfasına erişim yetkiniz yok"
+          subTitle="Şubeleri yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <BranchProductMatrix businessId={1} />;
     
     case 'Users':
       if (!checkComponentPermission('users', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Kullanıcılar sayfasına erişim yetkiniz yok"
+          subTitle="Kullanıcıları yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <UsersTable businessId={1} />;
       
     case 'Roles':
       if (!checkComponentPermission('users', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Roller sayfasına erişim yetkiniz yok"
+          subTitle="Kullanıcı rollerini yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <UsersTable businessId={1} />;
       
     case 'QRDesigns':
-      if (!checkComponentPermission('qr', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+      if (!checkComponentPermission('qrcodes', 'read')) {
+        return <NoPermission 
+          title="QR Tasarımları sayfasına erişim yetkiniz yok"
+          subTitle="QR tasarımlarını görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <QRDesignsTable businessId={1} />;
     
     case 'Auth':
       if (!checkComponentPermission('users', 'read')) {
-        return <div>Bu sayfaya erişim yetkiniz yok.</div>;
+        return <NoPermission 
+          title="Yetkilendirmeler sayfasına erişim yetkiniz yok"
+          subTitle="Kullanıcı yetkilerini yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
       }
       return <PermissionsTable businessId={1} />;
     
