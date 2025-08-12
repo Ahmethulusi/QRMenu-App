@@ -8,86 +8,101 @@ export const getCurrentUser = () => {
   return userStr ? JSON.parse(userStr) : null;
 };
 
-// API'den yetki kontrolü yap
-export const checkPermission = async (resource, action) => {
+// API'den kullanıcının yetkilerini getir
+export const getUserPermissions = async () => {
   try {
-    const user = getCurrentUser();
-    if (!user) return false;
+    const token = localStorage.getItem('token');
+    if (!token) return [];
 
-    const response = await fetch(`${API_URL}/api/permissions/check`, {
-      method: 'POST',
+    const response = await fetch(`${API_URL}/api/permissions/user`, {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        resource,
-        action,
-        business_id: user.business_id,
-        branch_id: user.branch_id
-      })
+        'Authorization': `Bearer ${token}`
+      }
     });
 
     if (response.ok) {
-      const result = await response.json();
-      return result.hasPermission;
+      const data = await response.json();
+      return data.permissions || [];
     }
-    return false;
+    return [];
+  } catch (error) {
+    console.error('Yetki getirme hatası:', error);
+    return [];
+  }
+};
+
+// Dinamik yetki kontrolü - API'den gelen yetkilere göre
+export const canAccess = async (resource, action) => {
+  try {
+    const permissions = await getUserPermissions();
+    return permissions.some(perm => 
+      perm.resource === resource && perm.action === action
+    );
   } catch (error) {
     console.error('Yetki kontrolü hatası:', error);
     return false;
   }
 };
 
-// Menü öğelerini filtrele
-export const filterMenuItems = (items, user) => {
-  if (!user) return items;
-
-  // Süper admin her şeyi görebilir
-  if (user.role === 'super_admin') return items;
-
-  return items.filter(item => {
-    // Çıkış Yap her zaman görünür
-    if (item.key === 'Logout') return true;
-    
-    // Ana menü kontrolü
-    if (item.children) {
-      const filteredChildren = item.children.map(child => {
-        if (child.children) {
-          const filteredSubChildren = child.children.filter(subChild => 
-            canViewMenu(user, subChild.key)
-          );
-          return filteredSubChildren.length > 0 ? { ...child, children: filteredSubChildren } : null;
-        }
-        return canViewMenu(user, child.key) ? child : null;
-      }).filter(Boolean);
-      
-      return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
-    }
-    
-    return canViewMenu(user, item.key);
-  }).filter(Boolean);
+// Senkron yetki kontrolü için - önceden yüklenmiş yetkilerle
+export const canAccessSync = (permissions, resource, action) => {
+  if (!permissions || !Array.isArray(permissions)) return false;
+  return permissions.some(perm => 
+    perm.resource === resource && perm.action === action
+  );
 };
 
-// Rol bazlı menü kontrolü
-const canViewMenu = (user, menuKey) => {
+// Menü öğelerini filtrele - dinamik yetkilerle
+export const filterMenuItems = async (items) => {
+  try {
+    const permissions = await getUserPermissions();
+    
+    return items.filter(item => {
+      // Çıkış Yap her zaman görünür
+      if (item.key === 'Logout') return true;
+      
+      // Ana menü kontrolü
+      if (item.children) {
+        const filteredChildren = item.children.map(child => {
+          if (child.children) {
+            const filteredSubChildren = child.children.filter(subChild => 
+              canViewMenu(permissions, subChild.key)
+            );
+            return filteredSubChildren.length > 0 ? { ...child, children: filteredSubChildren } : null;
+          }
+          return canViewMenu(permissions, child.key) ? child : null;
+        }).filter(Boolean);
+        
+        return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
+      }
+      
+      return canViewMenu(permissions, item.key);
+    }).filter(Boolean);
+  } catch (error) {
+    console.error('Menü filtreleme hatası:', error);
+    return items; // Hata durumunda tüm menüyü göster
+  }
+};
+
+// Rol bazlı menü kontrolü - dinamik yetkilerle
+const canViewMenu = (permissions, menuKey) => {
   const menuPermissions = {
-    'Foods': canAccess(user, 'products', 'read'),
-    'Products': canAccess(user, 'products', 'read'),
-    'Sort': canAccess(user, 'products', 'read'),
-    'Categories': canAccess(user, 'categories', 'read'),
-    'CategorySort': canAccess(user, 'categories', 'read'),
-    'Branches': canAccess(user, 'branches', 'read'),
-    'Roles': canAccess(user, 'users', 'read'),
-    'Auth': canAccess(user, 'users', 'read'), // Yetkilendirmeler için users read yetkisi
-    'QRDesigns': canAccess(user, 'qr', 'read'),
-    'GeneralQR': canAccess(user, 'qr', 'read'),
-    'Tables': canAccess(user, 'tables', 'read'),
-    'TableSections': canAccess(user, 'tables', 'read'),
-    'DesignSettings': canAccess(user, 'qr', 'read'),
-    'NonOrderableQR': canAccess(user, 'qr', 'read'),
-    'OrderableQR': canAccess(user, 'tables', 'read'),
-    'Price Changing': canAccess(user, 'products', 'update'),
+    'Foods': canAccessSync(permissions, 'products', 'read'),
+    'Products': canAccessSync(permissions, 'products', 'read'),
+    'Sort': canAccessSync(permissions, 'products', 'read'),
+    'Categories': canAccessSync(permissions, 'categories', 'read'),
+    'CategorySort': canAccessSync(permissions, 'categories', 'read'),
+    'Branches': canAccessSync(permissions, 'branches', 'read'),
+    'Roles': canAccessSync(permissions, 'users', 'read'),
+    'Auth': canAccessSync(permissions, 'users', 'read'),
+    'QRDesigns': canAccessSync(permissions, 'qrcodes', 'read'),
+    'GeneralQR': canAccessSync(permissions, 'qrcodes', 'read'),
+    'Tables': canAccessSync(permissions, 'tables', 'read'),
+    'TableSections': canAccessSync(permissions, 'tables', 'read'),
+    'DesignSettings': canAccessSync(permissions, 'qrcodes', 'update'),
+    'NonOrderableQR': canAccessSync(permissions, 'qrcodes', 'read'),
+    'OrderableQR': canAccessSync(permissions, 'tables', 'read'),
+    'Price Changing': canAccessSync(permissions, 'products', 'update'),
     'Profile': true, // Profil her zaman görünür
     'Logout': true, // Çıkış Yap her zaman görünür
   };
@@ -95,53 +110,29 @@ const canViewMenu = (user, menuKey) => {
   return menuPermissions[menuKey] || false;
 };
 
-// Rol bazlı yetki kontrolü
-export const canAccess = (user, resource, action) => {
-  if (!user) return false;
-  
-  // Süper admin her şeyi yapabilir
-  if (user.role === 'super_admin') return true;
-  
-  // Rol bazlı yetki kontrolü
-  const permissions = {
-    admin: {
-      products: ['read', 'create', 'update', 'delete'],
-      categories: ['read', 'create', 'update', 'delete'],
-      users: ['read', 'create', 'update', 'delete'],
-      branches: ['read', 'create', 'update', 'delete'],
-      qr: ['read', 'create', 'update', 'delete'],
-      campaigns: ['read', 'create', 'update', 'delete'],
-    },
-    manager: {
-      products: ['read'],
-      branches: ['read'],
-      qr: ['read'],
-      tables: ['read', 'create', 'update', 'delete'],
-    }
-  };
-  
-  return permissions[user.role]?.[resource]?.includes(action) || false;
-};
+// Buton ve işlem yetkileri - dinamik yetkilerle
+export const canPerformAction = async (action) => {
+  try {
+    const permissions = await getUserPermissions();
+    
+    const actionPermissions = {
+      'create_product': canAccessSync(permissions, 'products', 'create'),
+      'edit_product': canAccessSync(permissions, 'products', 'update'),
+      'delete_product': canAccessSync(permissions, 'products', 'delete'),
+      'create_category': canAccessSync(permissions, 'categories', 'create'),
+      'edit_category': canAccessSync(permissions, 'categories', 'update'),
+      'delete_category': canAccessSync(permissions, 'categories', 'delete'),
+      'create_user': canAccessSync(permissions, 'users', 'create'),
+      'edit_user': canAccessSync(permissions, 'users', 'update'),
+      'delete_user': canAccessSync(permissions, 'users', 'delete'),
+      'create_branch': canAccessSync(permissions, 'branches', 'create'),
+      'edit_branch': canAccessSync(permissions, 'branches', 'update'),
+      'delete_branch': canAccessSync(permissions, 'branches', 'delete'),
+    };
 
-// Buton ve işlem yetkileri
-export const canPerformAction = (user, action) => {
-  if (!user) return false;
-  if (user.role === 'super_admin') return true;
-
-  const actionPermissions = {
-    'create_product': canAccess(user, 'products', 'create'),
-    'edit_product': canAccess(user, 'products', 'update'),
-    'delete_product': canAccess(user, 'products', 'delete'),
-    'create_category': canAccess(user, 'categories', 'create'),
-    'edit_category': canAccess(user, 'categories', 'update'),
-    'delete_category': canAccess(user, 'categories', 'delete'),
-    'create_user': canAccess(user, 'users', 'create'),
-    'edit_user': canAccess(user, 'users', 'update'),
-    'delete_user': canAccess(user, 'users', 'delete'),
-    'create_branch': canAccess(user, 'branches', 'create'),
-    'edit_branch': canAccess(user, 'branches', 'update'),
-    'delete_branch': canAccess(user, 'branches', 'delete'),
-  };
-
-  return actionPermissions[action] || false;
+    return actionPermissions[action] || false;
+  } catch (error) {
+    console.error('İşlem yetkisi kontrolü hatası:', error);
+    return false;
+  }
 };

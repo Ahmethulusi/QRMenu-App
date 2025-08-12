@@ -123,6 +123,13 @@ exports.getQRCodes = async (req, res) => {
 exports.getNonOrderableQRCodesByBusiness = async (req, res) => {
   const { businessId } = req.params;
   try {
+    console.log('🔄 Nonorderable QR kodları getiriliyor...');
+    
+    // Önce Branch modelini kontrol edelim
+    const Branch = require('../models/Branch');
+    console.log('✅ Branch modeli yüklendi');
+    
+    // Şube adını da getirmek için include ekleyelim
     const qrCodes = await QRCodeModel.findAll({
       where: {
         business_id: businessId,
@@ -130,17 +137,26 @@ exports.getNonOrderableQRCodesByBusiness = async (req, res) => {
       },
       include: [
         {
-          model: require('../models/Branch'),
+          model: Branch,
           as: 'Branch',
           attributes: ['name'],
         }
       ],
       order: [['id', 'DESC']],
     });
+    
+    console.log(`✅ ${qrCodes.length} QR kodu bulundu`);
     res.json(qrCodes);
   } catch (error) {
-    console.error("QR kodları alınamadı:", error);
-    res.status(500).json({ error: 'QR kodları alınamadı' });
+    console.error("❌ QR kodları alınamadı:", error);
+    
+    // Hata detayını loglayalım
+    if (error.name === 'SequelizeEagerLoadingError') {
+      console.error('🔴 EagerLoading hatası - Model ilişkileri kontrol edilmeli');
+      console.error('Hata detayı:', error.message);
+    }
+    
+    res.status(500).json({ error: 'QR kodları alınamadı', details: error.message });
   }
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { filterMenuItems, getCurrentUser, canAccess } from '../utils/permissions';
+import { getCurrentUser } from '../utils/permissions';
 import {
   GiftFilled,
   UsergroupAddOutlined,
@@ -27,19 +27,12 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
   
   const navigate = useNavigate();
   const location = useLocation();
 
   // Kullanıcı bilgisini al
   const user = getCurrentUser();
-
-  // Menü öğelerini filtrele
-  useEffect(() => {
-    const filtered = filterMenuItems(items, user);
-    setFilteredItems(filtered);
-  }, [user]);
 
   // URL'den hangi sayfada olduğumuzu anla ve selectedComponent'i ayarla
   useEffect(() => {
@@ -143,62 +136,29 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       }
     }
 
-    // Yetki kontrolü
-    const user = getCurrentUser();
-    if (!user) {
-      message.error('Kullanıcı bilgisi bulunamadı!');
-      return;
+    setSelectedComponent(e.key);
+    if (isMobile) {
+      setMobileMenuOpen(false);
     }
-
-    // Menü öğesi için yetki kontrolü
-    const menuPermissions = {
-      'Products': canAccess(user, 'products', 'read'),
-      'Sort': canAccess(user, 'products', 'read'),
-      'Categories': canAccess(user, 'categories', 'read'),
-      'CategorySort': canAccess(user, 'categories', 'read'),
-      'Branches': canAccess(user, 'branches', 'read'),
-      'GeneralQR': canAccess(user, 'qr', 'read'),
-      'QRDesigns': canAccess(user, 'qr', 'read'),
-      'Price Changing': canAccess(user, 'products', 'update'),
-      'Roles': canAccess(user, 'users', 'read'),
-      'Auth': canAccess(user, 'users', 'read'),
-      'Profile': true, // Profil her zaman erişilebilir
+    
+    // Navigation mapping
+    const navigationMap = {
+      'Products': '/products',
+      'Sort': '/products/sort',
+      'Categories': '/categories',
+      'Branches': '/branches',
+      'GeneralQR': '/qr/general',
+      'QRDesigns': '/qr/designs',
+      'Price Changing': '/price-change',
+      'Roles': '/users',
+      'Auth': '/auth',
+      'Profile': '/profile',
+      'Logout': null, // Çıkış için route yok
     };
-
-    if (e.key !== 'productManagement' && e.key !== 'CategoryManagement' && 
-        e.key !== 'TablesAndQRManagement' && e.key !== 'CampaingsAndIngredients' && 
-        e.key !== 'UserManagement' && e.key !== 'GeneralSettings') {
-      
-      // Yetki kontrolü
-      if (!menuPermissions[e.key]) {
-        message.error('Bu sayfaya erişim yetkiniz yok!');
-        return;
-      }
-
-      setSelectedComponent(e.key);
-      if (isMobile) {
-        setMobileMenuOpen(false);
-      }
-      
-      // Navigation mapping
-      const navigationMap = {
-        'Products': '/products',
-        'Sort': '/products/sort',
-        'Categories': '/categories',
-        'Branches': '/branches',
-        'GeneralQR': '/qr/general',
-        'QRDesigns': '/qr/designs',
-        'Price Changing': '/price-change',
-        'Roles': '/users',
-        'Auth': '/auth',
-        'Profile': '/profile',
-        'Logout': null, // Çıkış için route yok
-      };
-      
-      const targetPath = navigationMap[e.key];
-      if (targetPath) {
-        navigate(targetPath);
-      }
+    
+    const targetPath = navigationMap[e.key];
+    if (targetPath) {
+      navigate(targetPath);
     }
   };
 
@@ -206,6 +166,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     setOpenKeys(keys);
   };
 
+  // Basit statik menü yapısı
   const items = [
     {
       key: 'productManagement',
@@ -214,8 +175,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       children: [
         { key: 'Products', label: 'Ürünler' },
         { key: 'Sort', label: 'Sıralama' },
-        { key: 'Price Changing', label: 'Toplu Fiyat Değişikliği'},
-      ],
+        { key: 'Price Changing', label: 'Toplu Fiyat Değişikliği' }
+      ]
     },
     {
       key: 'CategoryManagement',
@@ -223,8 +184,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       label: 'Kategori Yönetimi',
       children: [
         { key: 'Categories', label: 'Ana Kategoriler' },
-        { key: 'CategorySort', label: 'Kategori Sıralama' },
-      ],
+        { key: 'CategorySort', label: 'Kategori Sıralama' }
+      ]
     },
     {
       key: 'TablesAndQRManagement',
@@ -237,58 +198,35 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
           children: [
             { key: 'TableSections', label: 'Bölümler' },
             { key: 'Tables', label: 'Masalar ve QR Oluştur' },
-            { key: 'DesignSettings', label: 'QR Tasarım Ayarları' },
-          ],
+            { key: 'DesignSettings', label: 'QR Tasarım Ayarları' }
+          ]
         },
         {
           key: 'NonOrderableQR',
           label: 'Siparişsiz QR',
           children: [
             { key: 'GeneralQR', label: 'Tekil QR Oluştur' },
-            { key: 'QRDesigns', label: 'QR Tasarımları' },
-          ],
-        },
-      ],
+            { key: 'QRDesigns', label: 'QR Tasarımları' }
+          ]
+        }
+      ]
     },
     {
-      key: 'CampaingsAndIngredients',
-      icon: <GiftFilled />,
-      label: 'Kampanya ve Bileşenler',
-      children: [
-        {key:'DaySMenu', label:'Günün Menüsü'},
-        { key: 'Campaigns', label: 'Kampanyalar' },
-        {key:'DiscountedProducts',label:'İndirimli Ürünler'},
-        { key: 'Ingredients', label: 'İçerikler (Malzemeler)' },
-        { key: 'Labels', label: 'Etiketler' },
-      ],
+      key: 'Branches',
+      icon: <UsergroupAddOutlined />,
+      label: 'Şube Yönetimi'
     },
     {
       key: 'UserManagement',
       icon: <UsergroupAddOutlined />,
       label: 'Kullanıcı Yönetimi',
       children: [
-        { key: 'Roles', label: 'Kullanıcılar ve Roller ' },
-        { key: 'Auth', label: 'Yetkilendirmeler' },
-      ],
+        { key: 'Roles', label: 'Kullanıcılar ve Roller' },
+        { key: 'Auth', label: 'Yetkilendirmeler' }
+      ]
     },
-    {
-      key: 'Branches',
-      icon: <UsergroupAddOutlined />,
-      label: 'Şube Yönetimi',
-    },
-    { key: 'Profile', icon: <UserOutlined />, label: 'Profil ' },
-    {
-      key: 'GeneralSettings',
-      icon: <SettingFilled />,
-      label: 'Genel Ayarlar',
-      children: [
-        { key: 'Settings', label: 'Ayarlar' },
-        { key: 'ThemeSettings', label: 'Tema Ayarları' },
-        { key: 'Subscription', label: 'Abonelik Ayarları' },
-        { key: 'Language', label: 'Dil Ayarları' },
-      ],
-    },
-    { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' },
+    { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
+    { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' }
   ];
    
   return (
@@ -304,6 +242,12 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       {!isMobile && (
         <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
           <div className="sidebar-header">
+            <div className="user-info">
+              <Avatar size="small" icon={<UserOutlined />} />
+              {!collapsed && (
+                <span className="user-email">{user?.email || 'Kullanıcı'}</span>
+              )}
+            </div>
             <span onClick={toggleCollapsed} className="collapse-btn">
               {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
@@ -313,7 +257,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
               mode="inline"
               theme="dark"
               inlineCollapsed={collapsed}
-              items={filteredItems}
+              items={items}
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
@@ -328,7 +272,10 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       {isMobile && (
         <div className={`mobile-bottom-sheet ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-header">
-            <span>Menü</span>
+            <div className="mobile-user-info">
+              <Avatar size="small" icon={<UserOutlined />} />
+              <span className="mobile-user-email">{user?.email || 'Kullanıcı'}</span>
+            </div>
             <span onClick={toggleMobileMenu} className="close-btn">
               ✕
             </span>
@@ -337,7 +284,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
             <Menu
               mode="inline"
               theme="dark"
-              items={filteredItems}
+              items={items}
               onClick={handleClick}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminControllerBackup');
-const { authenticateToken, checkPermission } = require('../middleware/authMiddleware');
+const { authenticateToken } = require('../middleware/authMiddleware');
+const { hasPermission } = require('../controllers/permissionController');
 const multer = require('multer');
 const path = require('path');
 
@@ -41,71 +42,160 @@ const upload = multer({
 });
 
 // Excel upload
-router.post('/uploadExcel', upload.single('excel'), adminController.uploadExcel);
+router.post('/uploadExcel', 
+  authenticateToken, 
+  hasPermission('system', 'settings'), 
+  upload.single('excel'), 
+  adminController.uploadExcel
+);
 
 // Ürün işlemleri
-router.put('/products/updateShowcase/:productId', adminController.updateShowcase);
-router.put('/products/updateStatus/:productId', adminController.updateStatus);
-router.post('/products/updateImageUrl', upload.single('resim'), adminController.updateImageUrl);
-router.put('/products/updatePrice', adminController.updateProductPrices);
-router.put('/products/bulk-update-prices', adminController.bulkCreatePrices);
-router.put('/products/yeniSira', adminController.updateProductsBySiraId);
+router.put('/products/updateShowcase/:productId', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateShowcase
+);
+router.put('/products/updateStatus/:productId', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateStatus
+);
+router.post('/products/updateImageUrl', 
+  authenticateToken, 
+  hasPermission('products', 'image_upload'), 
+  upload.single('resim'), 
+  adminController.updateImageUrl
+);
+router.put('/products/updatePrice', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateProductPrices
+);
+router.put('/products/bulk-update-prices', 
+  authenticateToken, 
+  hasPermission('products', 'bulk_update'), 
+  adminController.bulkCreatePrices
+);
+router.put('/products/yeniSira', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateProductsBySiraId
+);
 
 // Ürün CRUD işlemleri
-router.post('/products/create', upload.single('resim'), adminController.createProduct);
-router.delete('/products/:id', adminController.deleteProduct);
-router.put('/products/update', adminController.updateProduct);
-router.put('/products/updateImage', upload.single('resim'), adminController.updateProductImage);
+router.post('/products/create', 
+  authenticateToken, 
+  hasPermission('products', 'create'), 
+  upload.single('resim'), 
+  adminController.createProduct
+);
+router.delete('/products/:id', 
+  authenticateToken, 
+  hasPermission('products', 'delete'), 
+  adminController.deleteProduct
+);
+router.put('/products/update', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateProduct
+);
+router.put('/products/updateImage', 
+  authenticateToken, 
+  hasPermission('products', 'image_upload'), 
+  upload.single('resim'), 
+  adminController.updateProductImage
+);
 
-// Ürün görüntüleme işlemleri - YETKİ KONTROLÜ EKLE
+// Ürün görüntüleme işlemleri
 router.get('/productsByBusiness/:business_id', 
   authenticateToken, 
-  checkPermission('products', 'read'), 
+  hasPermission('products', 'read'), 
   adminController.getProductsByBusiness
 );
 
 router.get('/products/:id', 
   authenticateToken, 
-  checkPermission('products', 'read'), 
+  hasPermission('products', 'read'), 
   adminController.getProductById
 );
 
 router.get('/productsByCategory/:category_id', 
   authenticateToken, 
-  checkPermission('products', 'read'), 
+  hasPermission('products', 'read'), 
   adminController.getProductsByCategory
 );
 
 router.get('/productsBySiraid', 
   authenticateToken, 
-  checkPermission('products', 'read'), 
+  hasPermission('products', 'read'), 
   adminController.getAllProductsOrderBySiraId
 );
 
 router.get('/products', 
   authenticateToken, 
-  checkPermission('products', 'read'), 
+  hasPermission('products', 'read'), 
   adminController.getAllProuducts
 );
 
 // Kategori işlemleri
-router.post('/categories/create-sub', adminController.createSubCategory);
-router.post('/categories/create', upload.single('resim'), adminController.createCategory);
-router.delete('/categories/:id', adminController.deleteCategory);
-router.put('/categories/update/:category_id', upload.single('resim'), adminController.updateCategory);
+router.post('/categories/create-sub', 
+  authenticateToken, 
+  hasPermission('categories', 'create'), 
+  adminController.createSubCategory
+);
+router.post('/categories/create', 
+  authenticateToken, 
+  hasPermission('categories', 'create'), 
+  upload.single('resim'), 
+  adminController.createCategory
+);
+router.delete('/categories/:id', 
+  authenticateToken, 
+  hasPermission('categories', 'delete'), 
+  adminController.deleteCategory
+);
+router.put('/categories/update/:category_id', 
+  authenticateToken, 
+  hasPermission('categories', 'update'), 
+  upload.single('resim'), 
+  adminController.updateCategory
+);
 
-// Kategori görüntüleme işlemleri - ZATEN VAR
+// Kategori görüntüleme işlemleri
 router.get('/categories', 
   authenticateToken, 
-  checkPermission('categories', 'read'), 
+  hasPermission('categories', 'read'), 
   adminController.getCategories
 );
 
-router.get('/categories/subs/:id', adminController.getSubCategoriesByParentId);
-router.get('/categories/last', adminController.getLastCategory);
-router.get('/categories/:id', adminController.getCategoryById);
+// Kategori listesi - CategorySelector için
+router.get('/categories/list', 
+  authenticateToken, 
+  hasPermission('categories', 'read'), 
+  adminController.getCategoriesList
+);
+
+router.get('/categories/subs/:id', 
+  authenticateToken, 
+  hasPermission('categories', 'read'), 
+  adminController.getSubCategoriesByParentId
+);
+router.get('/categories/last', 
+  authenticateToken, 
+  hasPermission('categories', 'read'), 
+  adminController.getLastCategory
+);
+router.get('/categories/:id', 
+  authenticateToken, 
+  hasPermission('categories', 'read'), 
+  adminController.getCategoryById
+);
 
 // Kategori sıralama endpoint'i
-router.put('/categories/updateSira', adminController.updateCategoriesSira);
+router.put('/categories/updateSira', 
+  authenticateToken, 
+  hasPermission('categories', 'update'), 
+  adminController.updateCategoriesSira
+);
 
 module.exports = router;

@@ -12,22 +12,47 @@ const QRDesignsTable = ({ businessId }) => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/table_qr/nonorderable-list/${businessId}`);
-      const data = await res.json();
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
 
-      console.log("Gelen QR verisi:", data);
+      console.log('🔄 QR kodları getiriliyor...');
+      const res = await fetch(`${API_URL}/api/table_qr/nonorderable-list/${businessId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          message.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (res.status === 403) {
+          message.error('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${res.status}: ${res.statusText}`);
+        }
+        return;
+      }
+
+      const data = await res.json();
+      console.log("✅ Gelen QR verisi:", data);
 
       if (Array.isArray(data)) {
         setQrList(data);
+        console.log(`✅ ${data.length} QR kodu başarıyla yüklendi`);
       } else {
         message.error('Beklenmeyen veri formatı!');
         console.error('Veri:', data);
       }
     } catch (err) {
-      message.error('QR kodları alınamadı!');
-      console.error(err);
+      console.error('❌ QR kodları alınamadı:', err);
+      message.error(`QR kodları alınamadı: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -36,32 +61,71 @@ const QRDesignsTable = ({ businessId }) => {
 
   const handleActivate = async (id) => {
     try {
-      await fetch(`${API_URL}/api/table_qr/${id}/activate`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/table_qr/${id}/activate`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ business_id: businessId }),
       });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          message.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (res.status === 403) {
+          message.error('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return;
+      }
+
       message.success('QR aktif edildi!');
       fetchQRCodes();
     } catch (err) {
-      message.error('Aktiflik güncellenemedi!');
+      console.error('❌ Aktiflik güncellenemedi:', err);
+      message.error(`Aktiflik güncellenemedi: ${err.message}`);
     }
   };
 
   const handleDelete = async (id) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
       const res = await fetch(`${API_URL}/api/table_qr/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+
       if (res.ok) {
         message.success('QR silindi!');
         fetchQRCodes();
       } else {
-        const data = await res.json();
-        message.error(data.error || 'Silme işlemi başarısız!');
+        if (res.status === 401) {
+          message.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (res.status === 403) {
+          message.error('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          const data = await res.json();
+          message.error(data.error || 'Silme işlemi başarısız!');
+        }
       }
     } catch (err) {
-      message.error('Silme işlemi başarısız!');
+      console.error('❌ Silme işlemi başarısız:', err);
+      message.error(`Silme işlemi başarısız: ${err.message}`);
     }
   };
 

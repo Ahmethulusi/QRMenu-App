@@ -19,9 +19,11 @@ const Product_Table = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Modalın görünürlük durumu
   const [recordToEdit, setRecordToEdit] = useState(null); // Düzenlenecek kayıt bilgileri
   const [refreshing, setRefreshing] = useState(false); // Sadece tablo yenileme için
+  const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
 
   useEffect(() => {
     fetchData();
+    fetchUserPermissions();
   }, []);
 
   const fetchData = async (showLoading = true) => {
@@ -33,6 +35,8 @@ const Product_Table = () => {
       console.log('🔄 Ürünler getiriliyor...');
       const datas = await apiGet('/api/admin/products');
       console.log('✅ API yanıtı:', datas);
+                     console.log('🔍 İlk ürün detayı:', datas[0]);
+               console.log('🔍 İlk ürün kategorisi:', datas[0]?.category);
 
       if (!datas || !Array.isArray(datas)) {
         throw new Error('API geçersiz veri döndürdü');
@@ -48,13 +52,17 @@ const Product_Table = () => {
               <img src={imageUrl} style={{ width: '50px', height: '50px', cursor: 'pointer' }} />
             </Popover>
           ) : (
-            <UploadImageButton productId={item.product_id} onUploadSuccess={() => refreshTable()} />
+            hasPermission('products', 'image_upload') ? (
+              <UploadImageButton productId={item.product_id} onUploadSuccess={() => refreshTable()} />
+            ) : (
+              <span style={{ color: 'gray', fontSize: '12px' }}>Resim Yok</span>
+            )
           ),
           id: item.product_id,
           name: item.product_name,
           description: item.description,
           price: item.price,
-          category: item.Category ? item.Category.category_name : 'Kategori Yok',
+                         category: item.category ? item.category.category_name : 'Kategori Yok',
           category_id: item.category_id, // Kategori ID'sini ekle
           status: item.is_available,
           showcase: item.is_selected,
@@ -69,7 +77,9 @@ const Product_Table = () => {
       const filteredNames = uniqueNames.map(name => ({ text: name, value: name }));
       setNameFilters(filteredNames);  // Filtreleri ayarla
 
-      const uniqueCategories = [...new Set(datas.map(item => item.Category ? item.Category.category_name : 'Kategori Yok'))];
+            const uniqueCategories = [...new Set(datas.map(item =>
+        item.category ? item.category.category_name : 'Kategori Yok'
+      ))];
       const filteredCategories = uniqueCategories.map(category => ({ text: category, value: category }));
       setCategoryFilters(filteredCategories);  // Filtreleri ayarla
 
@@ -81,6 +91,34 @@ const Product_Table = () => {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  // Kullanıcı yetkilerini getir
+  const fetchUserPermissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/permissions/user`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserPermissions(data.permissions);
+        console.log('✅ Kullanıcı yetkileri yüklendi:', data.permissions);
+      }
+    } catch (error) {
+      console.error('❌ Yetkiler yüklenirken hata:', error);
+    }
+  };
+
+  // Yetki kontrol fonksiyonları
+  const hasPermission = (resource, action) => {
+    if (!userPermissions) return false;
+    return userPermissions.some(perm => perm.resource === resource && perm.action === action);
   };
 
   // Sadece tabloyu yenilemek için
@@ -101,7 +139,16 @@ const Product_Table = () => {
         )
       );    
     } catch (error) {
-      message.error('Bir hata oluştu: ' + error.message);
+      console.error('Showcase güncelleme hatası:', error);
+      
+      // Yetki hatası kontrolü
+      if (error.status === 403) {
+        message.error('Vitrin durumu güncellenemedi: Bu işlem için yetkiniz bulunmuyor!');
+      } else if (error.status === 401) {
+        message.error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın!');
+      } else {
+        message.error(`Vitrin durumu güncellenemedi: ${error.message || 'Bilinmeyen hata'}`);
+      }
     }
   };
 
@@ -112,7 +159,15 @@ const Product_Table = () => {
       message.success('Ürün başarıyla silindi!');
     } catch (error) {
       console.error('Silme işlemi başarısız:', error);
-      message.error('Ürün silinemedi!');
+      
+      // Yetki hatası kontrolü
+      if (error.status === 403) {
+        message.error('Bu işlem için yetkiniz bulunmuyor!');
+      } else if (error.status === 401) {
+        message.error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın!');
+      } else {
+        message.error(`Ürün silinemedi: ${error.message || 'Bilinmeyen hata'}`);
+      }
     }
   };
 
@@ -128,7 +183,16 @@ const Product_Table = () => {
         )
       );
     } catch (error) {
-      message.error('Bir hata oluştu: ' + error.message);
+      console.error('Status güncelleme hatası:', error);
+      
+      // Yetki hatası kontrolü
+      if (error.status === 403) {
+        message.error('Ürün durumu güncellenemedi: Bu işlem için yetkiniz bulunmuyor!');
+      } else if (error.status === 401) {
+        message.error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın!');
+      } else {
+        message.error(`Ürün durumu güncellenemedi: ${error.message || 'Bilinmeyen hata'}`);
+      }
     }
   };
 
@@ -225,20 +289,24 @@ const Product_Table = () => {
       width: '16%',
       render: (record) => (
         <div className='action-buttons-container'>
-          <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
-            <EditOutlined /> Edit
-          </Button>
-          
-          <Popconfirm
-            title="Bu ürünü silmek istediğinize emin misiniz?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Evet"
-            cancelText="Hayır"
-          >
-            <Button style={{ color: 'red' }}>
-              <DeleteTwoTone /> Delete
+          {hasPermission('products', 'update') && (
+            <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
+              <EditOutlined /> Edit
             </Button>
-          </Popconfirm>
+          )}
+          
+          {hasPermission('products', 'delete') && (
+            <Popconfirm
+              title="Bu ürünü silmek istediğinize emin misiniz?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Evet"
+              cancelText="Hayır"
+            >
+              <Button style={{ color: 'red' }}>
+                <DeleteTwoTone /> Delete
+              </Button>
+            </Popconfirm>
+          )}
         </div>
       ),
     },
@@ -249,10 +317,18 @@ const Product_Table = () => {
       width: '8%',
       render: (status, record) => (
         <div className='status-container'>        
-          {status ? (
-            <Switch checked={true} onClick={() => handleStatusToggle(record.id, false)} />
+          {hasPermission('products', 'update') ? (
+            <>
+              {status ? (
+                <Switch checked={true} onClick={() => handleStatusToggle(record.id, false)} />
+              ) : (
+                <Switch checked={false} onClick={() => handleStatusToggle(record.id, true)} />
+              )}
+            </>
           ) : (
-            <Switch checked={false} onClick={() => handleStatusToggle(record.id, true)} />
+            <span style={{ color: status ? 'green' : 'red' }}>
+              {status ? 'Aktif' : 'Pasif'}
+            </span>
           )}
         </div>
       ),
@@ -265,20 +341,28 @@ const Product_Table = () => {
       render: (showcase, record) => {
         return (
           <div className="showcase-icon">
-            {showcase ? (
-              <EyeFilled
-                onClick={() => handleShowcaseToggle(record.id, false)}
-                style={{ fontSize: '20px', cursor: 'pointer' }}
-              />
+            {hasPermission('products', 'update') ? (
+              <>
+                {showcase ? (
+                  <EyeFilled
+                    onClick={() => handleShowcaseToggle(record.id, false)}
+                    style={{ fontSize: '20px', cursor: 'pointer' }}
+                  />
+                ) : (
+                  <EyeInvisibleFilled
+                    onClick={() => handleShowcaseToggle(record.id, true)}
+                    style={{
+                      fontSize: '20px',
+                      cursor: 'pointer',
+                      color: 'gray'
+                    }}
+                  />
+                )}
+              </>
             ) : (
-              <EyeInvisibleFilled
-                onClick={() => handleShowcaseToggle(record.id, true)}
-                style={{
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  color: 'gray'
-                }}
-              />
+              <span style={{ color: showcase ? 'green' : 'gray' }}>
+                {showcase ? 'Vitrin' : 'Normal'}
+              </span>
             )}
           </div>
         );
@@ -292,11 +376,15 @@ const Product_Table = () => {
 
   return (
     <div className='table-content'>
-      <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px', position: 'relative' }}>
-        <PlusOutlined/> Yeni
-      </Button>
+      {hasPermission('products', 'create') && (
+        <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px', position: 'relative' }}>
+          <PlusOutlined/> Yeni
+        </Button>
+      )}
 
-      <ExcelImportButton onSuccess={refreshTable} />
+      {hasPermission('system', 'settings') && (
+        <ExcelImportButton onSuccess={refreshTable} />
+      )}
 
       {/* ModalForm'u burada kullanıyoruz */}
       <CreateFormModal
@@ -351,7 +439,14 @@ const UploadImageButton = ({ productId, onUploadSuccess }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Resim yüklemede bir hata oluştu');
+        // HTTP status koduna göre hata mesajı
+        if (response.status === 403) {
+          throw new Error('Bu işlem için yetkiniz bulunmuyor!');
+        } else if (response.status === 401) {
+          throw new Error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın!');
+        } else {
+          throw new Error(`Resim yüklemede bir hata oluştu (${response.status})`);
+        }
       }
 
       const data = await response.json();
@@ -359,7 +454,15 @@ const UploadImageButton = ({ productId, onUploadSuccess }) => {
       onUploadSuccess();
     } catch (error) {
       console.error('Resim yüklemede bir hata oluştu', error);
-      message.error('Resim yükleme başarısız!');
+      
+      // Yetki hatası kontrolü
+      if (error.message.includes('yetkiniz bulunmuyor')) {
+        message.error('Resim yüklenemedi: Bu işlem için yetkiniz bulunmuyor!');
+      } else if (error.message.includes('Oturum süreniz dolmuş')) {
+        message.error('Resim yüklenemedi: Oturum süreniz dolmuş, lütfen tekrar giriş yapın!');
+      } else {
+        message.error(`Resim yüklenemedi: ${error.message}`);
+      }
     }
   };
 

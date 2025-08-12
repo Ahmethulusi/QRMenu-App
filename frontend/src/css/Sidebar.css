@@ -134,7 +134,7 @@
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 16px;
   background-color: #001529;
   color: white;
@@ -142,12 +142,28 @@
   flex-shrink: 0;
 }
 
-.sidebar-header {
-  height: 60px;
+/* Kullanıcı bilgisi */
+.user-info {
   display: flex;
-  align-items: center;         /* dikey ortalama */
-  justify-content: center;     /* yatay ortalama */
-  background-color: #001529;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 12px;
+  max-width: 120px;
+  overflow: hidden;
+}
+
+/* Collapsed durumunda kullanıcı bilgisi */
+.sidebar-container.collapsed .user-info {
+  max-width: 40px;
+  justify-content: center;
+}
+
+.user-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
 }
 
 .collapse-btn {
@@ -257,6 +273,24 @@
   color: white;
   font-size: 18px;
   font-weight: 500;
+}
+
+/* Mobile kullanıcı bilgisi */
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 14px;
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.mobile-user-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .close-btn {

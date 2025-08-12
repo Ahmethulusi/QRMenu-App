@@ -87,6 +87,28 @@ Category.hasMany(Section, {
   as: 'sections'
 });
 
+// QRCode - Branch association'ları
+QRCode.belongsTo(Branch, {
+  foreignKey: 'branch_id',
+  as: 'Branch'
+});
+
+Branch.hasMany(QRCode, {
+  foreignKey: 'branch_id',
+  as: 'qrcodes'
+});
+
+// QRCode - Table association'ları
+QRCode.belongsTo(Table, {
+  foreignKey: 'table_id',
+  as: 'Table'
+});
+
+Table.hasMany(QRCode, {
+  foreignKey: 'table_id',
+  as: 'qrcodes'
+});
+
 module.exports = {
   sequelize,
   Permission,

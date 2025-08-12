@@ -1,6 +1,5 @@
 const { Permission, RolePermission } = require('../models');
 const User = require('../models/User');
-const { Op } = require('sequelize');
 
 // Yetki kontrolü
 exports.checkPermission = async (req, res) => {
@@ -8,8 +7,11 @@ exports.checkPermission = async (req, res) => {
     const { resource, action, business_id, branch_id } = req.body;
     const user = req.user;
 
+    console.log(`🔍 Yetki kontrolü: ${user.role} - ${resource}:${action}`);
+
     // Süper admin her şeyi yapabilir
     if (user.role === 'super_admin') {
+      console.log('✅ Süper admin - her şeyi yapabilir');
       return res.json({ hasPermission: true });
     }
 
@@ -19,34 +21,35 @@ exports.checkPermission = async (req, res) => {
     });
 
     if (!permission) {
+      console.log('❌ Yetki bulunamadı:', { resource, action });
       return res.json({ hasPermission: false });
     }
 
-    // Rol yetkisini kontrol et
+    // Rol yetkisini kontrol et (business_id ve branch_id'yi dikkate alma)
     const rolePermission = await RolePermission.findOne({
       where: {
         role: user.role,
         permission_id: permission.id,
-        [Op.or]: [
-          { business_id: business_id || user.business_id },
-          { business_id: null }
-        ]
+        is_active: true
       }
     });
 
     if (!rolePermission) {
+      console.log('❌ Rol yetkisi bulunamadı veya pasif:', { role: user.role, permission_id: permission.id });
       return res.json({ hasPermission: false });
     }
 
-    // Manager için şube kontrolü
-    if (user.role === 'manager' && branch_id) {
+    // Manager için şube kontrolü (eğer şube bazlı yetki varsa)
+    if (user.role === 'manager' && branch_id && user.branch_id) {
       const hasBranchPermission = user.branch_id === branch_id;
+      console.log(`🔍 Manager şube kontrolü: ${user.branch_id} === ${branch_id} = ${hasBranchPermission}`);
       return res.json({ hasPermission: hasBranchPermission });
     }
 
+    console.log('✅ Yetki var:', { role: user.role, permission: permission.name });
     res.json({ hasPermission: true });
   } catch (error) {
-    console.error('Yetki kontrolü hatası:', error);
+    console.error('❌ Yetki kontrolü hatası:', error);
     res.status(500).json({ error: 'Yetki kontrolü hatası' });
   }
 };
@@ -66,17 +69,17 @@ exports.getUserPermissions = async (req, res) => {
     const rolePermissions = await RolePermission.findAll({
       where: {
         role: user.role,
-        [Op.or]: [
-          { business_id: user.business_id },
-          { business_id: null }
-        ]
+        is_active: true // Sadece aktif yetkileri getir
       },
-      include: [Permission]
+      include: [{
+        model: Permission,
+        as: 'permission' // Alias'ı belirt
+      }]
     });
 
     const permissions = rolePermissions.map(rp => ({
-      resource: rp.Permission.resource,
-      action: rp.Permission.action
+      resource: rp.permission.resource, // Alias ile erişim
+      action: rp.permission.action // Alias ile erişim
     }));
 
     res.json({ permissions });
@@ -222,7 +225,7 @@ exports.testPermission = async (req, res) => {
       branch_id: 1
     };
 
-    console.log(` Test: ${role} rolü - ${resource}:${action}`);
+    console.log(`🔍 Test: ${role} rolü - ${resource}:${action}`);
 
     // Süper admin kontrolü
     if (testUser.role === 'super_admin') {
@@ -244,22 +247,19 @@ exports.testPermission = async (req, res) => {
       });
     }
 
-    // Rol yetkisini kontrol et
+    // Rol yetkisini kontrol et (yeni sistem)
     const rolePermission = await RolePermission.findOne({
       where: {
         role: testUser.role,
         permission_id: permission.id,
-        [Op.or]: [
-          { business_id: testUser.business_id },
-          { business_id: null }
-        ]
+        is_active: true
       }
     });
 
     if (!rolePermission) {
       return res.json({ 
         hasPermission: false, 
-        message: 'Bu rol için yetki yok' 
+        message: 'Bu rol için yetki yok veya pasif' 
       });
     }
 
@@ -275,15 +275,58 @@ exports.testPermission = async (req, res) => {
       rolePermission: {
         id: rolePermission.id,
         role: rolePermission.role,
-        business_id: rolePermission.business_id,
-        branch_id: rolePermission.branch_id
+        is_active: rolePermission.is_active
       }
     });
 
   } catch (error) {
-    console.error('Test hatası:', error);
+    console.error('❌ Test hatası:', error);
     res.status(500).json({ error: 'Test hatası' });
   }
+};
+
+// Middleware için yetki kontrol fonksiyonu
+exports.hasPermission = (resource, action) => {
+  return async (req, res, next) => {
+    try {
+      const user = req.user;
+      
+      // Süper admin her şeyi yapabilir
+      if (user.role === 'super_admin') {
+        return next();
+      }
+
+      // Yetkiyi bul
+      const permission = await Permission.findOne({
+        where: { resource, action }
+      });
+
+      if (!permission) {
+        return res.status(403).json({ error: 'Yetki bulunamadı' });
+      }
+
+      // Rol yetkisini kontrol et
+      const rolePermission = await RolePermission.findOne({
+        where: {
+          role: user.role,
+          permission_id: permission.id,
+          is_active: true
+        }
+      });
+
+      if (!rolePermission) {
+        return res.status(403).json({ 
+          error: 'Bu işlem için yetkiniz bulunmuyor',
+          requiredPermission: `${resource}:${action}`
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error('❌ Middleware yetki kontrolü hatası:', error);
+      res.status(500).json({ error: 'Yetki kontrolü hatası' });
+    }
+  };
 }; 
 
 // Debug endpoint'i

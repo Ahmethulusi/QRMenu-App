@@ -52,9 +52,6 @@ const QRCode = sequelize.define('QRCode', {
   timestamps: false,
 });
 
-QRCode.associate = models => {
-  QRCode.belongsTo(models.Branch, { foreignKey: 'branch_id',targetKey:"id" });// Siparişsiz Sistem
-  QRCode.belongsTo(models.Table, { foreignKey: 'table_id' ,targetKey:"id"});//  Siparişli Sistem
-};
+// İlişkiler artık models/index.js'te tanımlanıyor
 
 module.exports = QRCode;

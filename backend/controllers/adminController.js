@@ -28,11 +28,13 @@ exports.getAllProuducts = async (req, res) => {
             include: [
                 { 
                     model: db.Category,
-                    attributes: ['category_id', 'category_name']
+                    attributes: ['category_id', 'category_name'],
+                    as: 'category' // Alias'ı 'category' olarak ayarla (model'deki ile eşleşmeli)
                 },
                 { 
                     model: db.Business,
-                    attributes: ['name'] // business_name yerine name kullanıyoruz
+                    attributes: ['name'],
+                    as: 'Business' // Alias ekleyelim
                 },
                 { 
                     model: db.Branch, 
@@ -47,9 +49,10 @@ exports.getAllProuducts = async (req, res) => {
             console.log('📦 İlk ürün örneği:', {
                 product_id: products[0].product_id,
                 product_name: products[0].product_name,
-                category: products[0].Category ? products[0].Category.category_name : 'Yok',
+                category: products[0].category ? products[0].category.category_name : 'Yok',
                 business: products[0].Business ? products[0].Business.name : 'Yok'
             });
+            console.log('🔍 İlk ürün raw data:', JSON.stringify(products[0], null, 2));
         }
         
         res.json(products);
@@ -390,6 +393,22 @@ exports.getCategories = async (req, res) => {
         res.json(categories);
     } catch (error) {
         console.error('Kategori listeleme hatası:', error);
+        res.status(500).json({ error: "Kategoriler alınamadı" });
+    }
+}
+
+// Sadece kategori listesi için (yetki kontrolü olmadan)
+exports.getCategoriesList = async (req, res) => {
+    try {
+        console.log('🔄 Kategori listesi getiriliyor (yetki kontrolü olmadan)');
+        const categories = await Category.findAll({
+            attributes: ['category_id', 'category_name'],
+            order: [['sira_id', 'ASC']]
+        });
+        console.log(`✅ ${categories.length} kategori bulundu`);
+        res.json(categories);
+    } catch (error) {
+        console.error('❌ Kategori listesi hatası:', error);
         res.status(500).json({ error: "Kategoriler alınamadı" });
     }
 }

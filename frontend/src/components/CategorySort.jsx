@@ -117,8 +117,34 @@ const CategorySortTable = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/categories`);
-      if (!response.ok) throw new Error('Network response was not ok');
+      console.log('🔄 Kategori sıralama verileri getiriliyor...');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ Token bulunamadı');
+        setError('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      console.log('✅ Token bulundu, API çağrısı yapılıyor...');
+
+      const response = await fetch(`${API_URL}/api/admin/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (response.status === 403) {
+          setError('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        return;
+      }
+      
       const result = await response.json();
       
       const sortedData = result.sort((a, b) => (a.sira_id || 0) - (b.sira_id || 0));
@@ -184,14 +210,34 @@ const CategorySortTable = () => {
         sira_id: index + 1
       }));
 
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/admin/categories/updateSira`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ categories: updatedData }),
       });
       
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (response.status === 403) {
+          setError('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        return;
+      }
       
+      console.log('✅ Kategori sıralaması başarıyla kaydedildi');
       setData(updatedData);
       setIsModified(false);
     } catch (error) {

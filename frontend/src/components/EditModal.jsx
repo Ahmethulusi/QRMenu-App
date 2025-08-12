@@ -163,7 +163,22 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <CategorySelector />
+            <Form.Item
+              label="Kategori"
+              name="category"
+              rules={[{ required: true, message: 'Lütfen kategori seçiniz!' }]}
+            >
+              <CategorySelector 
+                selectedCategoryId={record?.category_id}
+                onCategoryChange={(categoryId) => {
+                  console.log('🔄 EditModal - Kategori değişti:', categoryId);
+                  console.log('🔄 Form önceki değeri:', form.getFieldValue('category'));
+                  form.setFieldsValue({ category: categoryId });
+                  console.log('🔄 Form yeni değeri:', form.getFieldValue('category'));
+                  console.log('🔄 Form tüm değerleri:', form.getFieldsValue());
+                }}
+              />
+            </Form.Item>
           </Col>
         </Row>
 

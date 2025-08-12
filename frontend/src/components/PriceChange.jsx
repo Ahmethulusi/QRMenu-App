@@ -64,34 +64,90 @@ const ProductPriceTable = () => {
   const [percentageChange, setPercentageChange] = useState(''); // Yüzdelik değişim
   const [modifiedData, setModifiedData] = useState([]); // Toplu fiyat güncelleme için
   const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Seçili satırların key'leri için state
+  const [loading, setLoading] = useState(false); // Loading state ekleyelim
+  const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
 
   useEffect(() => {
     fetchProducts();
+    fetchUserPermissions();
   }, []);
+
+  // Kullanıcı yetkilerini getir
+  const fetchUserPermissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/permissions/user`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserPermissions(data.permissions);
+        console.log('✅ Kullanıcı yetkileri yüklendi:', data.permissions);
+      }
+    } catch (error) {
+      console.error('❌ Yetkiler yüklenirken hata:', error);
+    }
+  };
+
+  // Yetki kontrol fonksiyonları
+  const hasPermission = (resource, action) => {
+    if (!userPermissions) return false;
+    return userPermissions.some(perm => perm.resource === resource && perm.action === action);
+  };
 
   // Ürünleri API'den çekme
   const fetchProducts = async () => {
     try {
+      setLoading(true);
+      console.log('🔄 Ürünler getiriliyor...');
       const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
+      console.log('✅ Token bulundu, API çağrısı yapılıyor...');
       const response = await fetch(`${API_URL}/api/admin/products`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
       if (!response.ok) {
-        throw new Error('Ürünler alınamadı!');
+        if (response.status === 401) {
+          message.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (response.status === 403) {
+          message.error('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        return;
       }
+
       const products = await response.json();
+      console.log('✅ API yanıtı:', products);
+
+      if (!products || !Array.isArray(products)) {
+        throw new Error('API geçersiz veri döndürdü');
+      }
 
       // Veriyi Ant Design Tablosuna uygun hale getirme
       const formattedData = products.map((product) => ({
         key: product.product_id,
         id: product.product_id,
         name: product.product_name,
-        category: product.Category.category_name,
+        category: product.category ? product.category.category_name : 'Kategori Yok',
         currentPrice: product.price,
         newPrice: '',
       }));
+
+      console.log('📦 Formatlanmış veri:', formattedData);
 
       // Filtreleri ayarlama
       const uniqueNames = [...new Set(formattedData.map((item) => item.name))];
@@ -108,9 +164,12 @@ const ProductPriceTable = () => {
       setFilteredCategories(categoryFilters);
 
       setData(formattedData);
+      console.log(`✅ ${formattedData.length} ürün başarıyla yüklendi`);
     } catch (error) {
-      console.error('Fetch Hatası:', error);
-      message.error('Ürünler alınırken bir hata oluştu!');
+      console.error('❌ Fetch Hatası:', error);
+      message.error(`Ürünler alınırken bir hata oluştu: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,16 +213,30 @@ const ProductPriceTable = () => {
 
   const updateProductPrice = async (productId, newPrice) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/admin/products/updatePrice`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ price: parseFloat(newPrice), product_id: productId }),
       });
 
       if (!response.ok) {
-        throw new Error('Fiyat güncellenemedi!');
+        if (response.status === 401) {
+          message.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (response.status === 403) {
+          message.error('Bu işlem için yetkiniz bulunmuyor.');
+        } else {
+          throw new Error('Fiyat güncellenemedi!');
+        }
+        return;
       }
     } catch (error) {
       message.error('Fiyat güncellenirken bir hata oluştu!');
@@ -301,6 +374,12 @@ const ProductPriceTable = () => {
       key: 'operation',
       render: (_, record) => {
         const editable = isEditing(record);
+        
+        // Yetki kontrolü
+        if (!hasPermission('products', 'update')) {
+          return <span style={{ color: '#999' }}>Düzenleme yetkisi yok</span>;
+        }
+        
         return editable ? (
           <span>
             <Button
@@ -318,7 +397,7 @@ const ProductPriceTable = () => {
         ) : (
           <Button
             disabled={editingKey !== ''}
-            onClick={() => edit(record)}
+            onClick={() => edit(record.key)}
             type="link"
             icon={<EditOutlined />}
           >
@@ -351,37 +430,54 @@ const ProductPriceTable = () => {
   return (
     <div>
       <Form form={form} component={false}>
-        <Input
-          placeholder="Yüzdelik Fiyat Değişikliği (%)"
-          value={percentageChange}
-          onChange={(e) => setPercentageChange(e.target.value)}
-          style={{ width: '20%', marginRight: '8px' }}
-        />
-        <Button 
-          type="primary" 
-          onClick={applyPriceChange}
-          disabled={selectedRowKeys.length === 0}
-        >
-          Uygula ({selectedRowKeys.length} ürün seçili)
-        </Button>
-        <Button
-          type="primary"
-          onClick={saveAll}
-          style={{ marginLeft: '10px', backgroundColor: 'green', color: 'white' }}
-          disabled={selectedRowKeys.length === 0}
-        >
-          Kaydet
-        </Button>
-        <Button
-          type="primary"
-          onClick={cancelBulkPriceChange}
-          style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
-        >
-          Vazgeç
-        </Button>
+        {hasPermission('products', 'update') ? (
+          <>
+            <Input
+              placeholder="Yüzdelik Fiyat Değişikliği (%)"
+              value={percentageChange}
+              onChange={(e) => setPercentageChange(e.target.value)}
+              style={{ width: '20%', marginRight: '8px' }}
+            />
+            <Button 
+              type="primary" 
+              onClick={applyPriceChange}
+              disabled={selectedRowKeys.length === 0}
+            >
+              Uygula ({selectedRowKeys.length} ürün seçili)
+            </Button>
+            <Button
+              type="primary"
+              onClick={saveAll}
+              style={{ marginLeft: '10px', backgroundColor: 'green', color: 'white' }}
+              disabled={selectedRowKeys.length === 0}
+            >
+              Kaydet
+            </Button>
+            <Button
+              type="primary"
+              onClick={cancelBulkPriceChange}
+              style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
+            >
+              Vazgeç
+            </Button>
+          </>
+        ) : (
+          <div style={{ 
+            padding: '20px', 
+            textAlign: 'center', 
+            backgroundColor: '#f5f5f5', 
+            borderRadius: '8px',
+            marginBottom: '20px'
+          }}>
+            <h3 style={{ color: '#ff4d4f' }}>⚠️ Yetki Uyarısı</h3>
+            <p>Bu sayfada fiyat değişikliği yapmak için yetkiniz bulunmuyor.</p>
+            <p>Sadece ürünleri görüntüleyebilirsiniz.</p>
+          </div>
+        )}
 
         <Table
-          rowSelection={rowSelection}
+          loading={loading}
+          rowSelection={hasPermission('products', 'update') ? rowSelection : undefined}
           scroll={{ x: 900, y: 350 }}  
           style={{marginTop: '20px',height: '400px'}}
           components={{

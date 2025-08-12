@@ -69,7 +69,11 @@ Product.associate = models => {
     foreignKey: 'category_id',
     as: 'category' // Alias ekledik
   });
-  Product.belongsTo(models.Business, { foreignKey: 'business_id' ,targetKey:'id'});
+  Product.belongsTo(models.Business, { 
+    foreignKey: 'business_id', 
+    targetKey: 'id',
+    as: 'Business' // Alias ekleyelim
+  });
   Product.belongsToMany(models.Branch, {
     through: models.BranchProduct,
     foreignKey: 'product_id',

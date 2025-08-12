@@ -238,6 +238,22 @@ exports.getCategories = async (req, res) => {
     }
 }
 
+// Sadece kategori listesi için (yetki kontrolü olmadan) - CategorySelector için
+exports.getCategoriesList = async (req, res) => {
+    try {
+        console.log('🔄 Kategori listesi getiriliyor (yetki kontrolü olmadan)');
+        const categories = await Category.findAll({
+            attributes: ['category_id', 'category_name'],
+            order: [['sira_id', 'ASC']]
+        });
+        console.log(`✅ ${categories.length} kategori bulundu`);
+        res.json(categories);
+    } catch (error) {
+        console.error('❌ Kategori listesi hatası:', error);
+        res.status(500).json({ error: "Kategoriler alınamadı" });
+    }
+}
+
 // Kategori silme endpointi
 exports.deleteCategory = async (req, res) => {
   const { id } = req.params;

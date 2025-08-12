@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sort2 from '../components/Sort2';
 import Menus from '../components/FoodMenus';
 // import Categories from '../components/Categories';
@@ -17,16 +17,48 @@ import BranchTable from '../components/BranchTable';
 import BranchProductMatrix from '../components/BranchProductMatrix';
 import UsersTable from '../components/UsersTable';
 import PermissionsTable from '../components/PermissionsTable';
-import { getCurrentUser, canAccess } from '../utils/permissions';
+import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
   const user = getCurrentUser();
+  const [permissions, setPermissions] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Component bazlı yetki kontrolü
+  // Component yüklendiğinde yetkileri getir
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/permissions/user`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setPermissions(data.permissions || []);
+        }
+      } catch (error) {
+        console.error('Yetki getirme hatası:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  // Component bazlı yetki kontrolü - dinamik yetkilerle
   const checkComponentPermission = (requiredResource, requiredAction) => {
-    if (!user) return false;
-    return canAccess(user, requiredResource, requiredAction);
+    if (!permissions || !Array.isArray(permissions)) return false;
+    return permissions.some(perm => 
+      perm.resource === requiredResource && perm.action === requiredAction
+    );
   };
+
+  if (loading) {
+    return <div>Yükleniyor...</div>;
+  }
 
   switch (selectedComponent) {
     case 'Form':

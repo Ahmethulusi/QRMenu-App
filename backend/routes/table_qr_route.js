@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const qrCodeController = require('../controllers/table_qr_mngController.js');
 const qrCodeGenerator = require('../controllers/qrcode_generator.js');
+const { authenticateToken } = require('../middleware/authMiddleware');
+const { hasPermission } = require('../controllers/permissionController');
 const multer = require('multer');
 const path = require('path');
 
@@ -25,11 +27,41 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-router.post('/', upload.single('logo'), qrCodeGenerator.createQRCode);
-router.get('/', qrCodeController.getAllQRCodes);
-router.get('/:id', qrCodeController.getQRCodeById);
-router.delete('/:id', qrCodeController.deleteQRCode);
-router.get('/nonorderable-list/:businessId', qrCodeGenerator.getNonOrderableQRCodesByBusiness);
-router.put('/:id/activate', qrCodeGenerator.activateQRCode);
+// QR kod oluşturma
+router.post('/', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'create'), 
+  upload.single('logo'), 
+  qrCodeGenerator.createQRCode
+);
+
+// QR kod görüntüleme
+router.get('/', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'read'), 
+  qrCodeController.getAllQRCodes
+);
+router.get('/:id', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'read'), 
+  qrCodeController.getQRCodeById
+);
+router.get('/nonorderable-list/:businessId', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'read'), 
+  qrCodeGenerator.getNonOrderableQRCodesByBusiness
+);
+
+// QR kod yönetimi
+router.put('/:id/activate', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'update'), 
+  qrCodeGenerator.activateQRCode
+);
+router.delete('/:id', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'delete'), 
+  qrCodeController.deleteQRCode
+);
 
 module.exports = router;
