@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message ,InputNumber, Col,Row,Select,Radio, AutoComplete} from 'antd';
 import { PlusOutlined,UploadOutlined } from '@ant-design/icons';
-import CategorySelector from './CategorySelector'
+import CategorySelector from './CategorySelector';
+import LabelSelector from './LabelSelector';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const ModalForm = ({ visible, onCancel, onOk}) => {
@@ -13,6 +14,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [searchValue, setSearchValue] = useState('');
+  const [selectedLabels, setSelectedLabels] = useState([]);
 
   // Ürünleri çek
   useEffect(() => {
@@ -63,6 +65,8 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   const onCancel_handler = () => {
     form.resetFields();
     setFile(null);
+    setSelectedLabels([]);
+    setSearchValue('');
     onCancel();
   };
 
@@ -78,6 +82,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       
       // Form verilerini al
       const values = await form.validateFields();
+      console.log('✅ Form validation başarılı:', values);
   
       const formData = new FormData();
       formData.append('resim', file);
@@ -88,9 +93,18 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       formData.append('status', status === 'true');
       formData.append('showcase', showcase === 'true');
       
+      // Etiketleri ekle
+      if (selectedLabels && selectedLabels.length > 0) {
+        formData.append('labels', JSON.stringify(selectedLabels));
+      }
+      
       // Backend'e veri gönderme
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/products/create`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 
@@ -103,10 +117,22 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       message.success('Ürün başarıyla oluşturuldu!');
       form.resetFields();  // Formu sıfırla
       setFile(null);
+      setSelectedLabels([]);
+      setSearchValue('');
       onOk();
     } catch (error) {
-      console.error(error);
-      message.error(error.message);
+      console.error('❌ Form hatası:', error);
+      
+      // Validation hatası ise detayları göster
+      if (error.errorFields) {
+        console.log('❌ Validation hataları:', error.errorFields);
+        error.errorFields.forEach(field => {
+          console.log(`❌ Field: ${field.name}, Errors:`, field.errors);
+        });
+        message.error('Form alanlarını kontrol edin!');
+      } else {
+        message.error(error.message || 'Bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,14 +143,21 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   return (
     <Modal
     title="Ürün Oluştur"
-    visible={visible}
+    open={visible}
     onOk={handleOk}
     onCancel={onCancel_handler}
     okText="Oluştur"
     cancelText="İptal"
     padding={0}
     width={600}
-    style={{ height: 400,top: 25 }}
+    style={{ top: 20 }}
+    styles={{
+      body: {
+        maxHeight: '70vh', 
+        overflowY: 'auto',
+        padding: '20px'
+      }
+    }}
   >
     {/* Form Bileşeni */}
     <Form form={form} layout="vertical">
@@ -161,21 +194,35 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
         />
       </Form.Item>
 
-      {/* Grid Sistemi: Açıklama ve Kategori */}
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            label="Açıklama"
-            name="description"
-            // rules={[{ required: true, message: 'Lütfen açıklama giriniz!' }]}
-          >
-            <Input placeholder="Açıklama girin" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <CategorySelector/>
-        </Col>
-      </Row>
+      {/* Açıklama */}
+      <Form.Item
+        label="Açıklama"
+        name="description"
+        // rules={[{ required: true, message: 'Lütfen açıklama giriniz!' }]}
+      >
+        <Input placeholder="Açıklama girin" />
+      </Form.Item>
+
+      {/* Etiketler */}
+      <Form.Item
+        label="Etiketler"
+        help="Ürün özelliklerini belirten etiketleri seçebilirsiniz (Vejetaryen, Glutensiz, vb.)"
+      >
+        <LabelSelector
+          value={selectedLabels}
+          onChange={setSelectedLabels}
+          placeholder="Etiket seçiniz veya yeni etiket oluşturun..."
+        />
+      </Form.Item>
+
+      {/* Kategori */}
+      <Form.Item
+        label="Kategori"
+        name="category"
+        rules={[{ required: true, message: 'Lütfen kategori seçiniz!' }]}
+      >
+        <CategorySelector/>
+      </Form.Item>
 
       {/* Grid Sistemi: Fiyat ve Resim Yükleme */}
     <Row gutter={20}>

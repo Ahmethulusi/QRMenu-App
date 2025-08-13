@@ -1,6 +1,7 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
 const Business = require('../models/Business');
+const { Label, ProductLabel } = require('../models');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
@@ -24,15 +25,36 @@ exports.updateImageUrl = async (req, res) => {
 // Tüm ürünleri getir
 exports.getAllProuducts = async (req, res) => {
   try {
+    console.log('🔄 Tüm ürünler getiriliyor...');
+    console.log('👤 Kullanıcı:', req.user);
+    
     const products = await Products.findAll({
       include: [
         {
           model: Category,
           as: 'category',
-          attributes: ['category_id', 'category_name'] // name yerine category_name
+          attributes: ['category_id', 'category_name']
+        },
+        {
+          model: Label,
+          as: 'labels',
+          attributes: ['label_id', 'name', 'color'],
+          through: { attributes: [] }, // ProductLabel junction tablosundan hiçbir alan almayız
+          required: false
         }
       ]
     });
+    
+    console.log(`✅ ${products.length} ürün bulundu`);
+    if (products.length > 0) {
+      console.log('📦 İlk ürün örneği:', {
+        product_id: products[0].product_id,
+        product_name: products[0].product_name,
+        category: products[0].category ? products[0].category.category_name : 'Yok',
+        labels: products[0].labels ? products[0].labels.length : 0
+      });
+    }
+    
     res.json(products);
   } catch (error) {
     console.error('❌ Ürün getirme hatası:', error);
@@ -113,44 +135,104 @@ exports.createProduct = async (req, res) => {
     if (!req.body) {
         return res.status(400).json({ error: "Request body is empty" });
     }
+    
+    const transaction = await sequelize.transaction();
+    
     try {
-        const { name, price, description, category_id, status, showcase, branch_ids, branch_prices, branch_stocks } = req.body;
+        const { name, price, description, category_id, status, showcase, labels } = req.body;
+        const imageUrl = req.file ? req.file.filename : null;
+
+        console.log('🔍 Request body:', req.body);
+        console.log('🏷️ Labels raw:', labels);
+        console.log('🏷️ Labels type:', typeof labels);
+
         if (!name || !price || !category_id) {
-            return res.status(400).json({ error: "Zorunlu alanlar eksik: productName, price, category_id" });
+            return res.status(400).json({ error: "Zorunlu alanlar eksik" });
         }
-        const existingProduct = await Products.findOne({ where: { product_name: name,business_id:8 } });
+
+        const existingProduct = await Products.findOne({ 
+            where: { product_name: name, business_id: 8 } 
+        });
         if (existingProduct) {
             return res.status(400).json({ error: "Bu ürün zaten mevcut" }); 
         }
-        const imageUrl = req.file ? req.file.filename : null;
+
         const count = await Products.count();
+        
+        // Ürünü oluştur
         const product = await Products.create({
             product_name: name,
-            price: price,
-            description: description,
-            category_id: category_id,
-            is_selected: showcase,
-            is_available: status,
+            price: parseFloat(price),
+            description,
+            category_id: parseInt(category_id),
+            is_available: status === 'true' || status === true,
+            is_selected: showcase === 'true' || showcase === true,
             sira_id: count + 1,
             image_url: imageUrl,
-            business_id:1
-        });
-        // Branch assignment (optional)
-        if (Array.isArray(branch_ids)) {
-            const BranchProduct = require('../models/BranchProduct');
-            for (let i = 0; i < branch_ids.length; i++) {
-                await BranchProduct.create({
-                    branch_id: branch_ids[i],
-                    product_id: product.product_id,
-                    price: branch_prices && branch_prices[i] ? branch_prices[i] : price,
-                    stock: branch_stocks && branch_stocks[i] ? branch_stocks[i] : null
-                });
+            business_id: 1
+        }, { transaction });
+
+        // Etiketleri ekle (eğer varsa)
+        let labelArray = labels;
+        if (typeof labels === 'string') {
+            try {
+                labelArray = JSON.parse(labels);
+            } catch (e) {
+                console.log('❌ Labels JSON parse hatası:', e);
+                labelArray = [];
             }
         }
-        return res.status(201).json(product);
+        
+        console.log('🏷️ Label array after parse:', labelArray);
+        console.log('🏷️ Is array?', Array.isArray(labelArray));
+        
+        if (labelArray && Array.isArray(labelArray) && labelArray.length > 0) {
+            const labelIds = labelArray.map(labelId => parseInt(labelId)).filter(id => !isNaN(id));
+            console.log('🏷️ Label IDs:', labelIds);
+            
+            if (labelIds.length > 0) {
+                // Etiketlerin geçerli olduğunu kontrol et
+                const validLabels = await Label.findAll({
+                    where: { 
+                        label_id: labelIds
+                    },
+                    transaction
+                });
+                
+                console.log('🏷️ Valid labels found:', validLabels.length);
+                console.log('🏷️ Valid labels:', validLabels.map(l => ({ id: l.label_id, name: l.name })));
+                
+                if (validLabels.length > 0) {
+                    await product.setLabels(validLabels, { transaction });
+                    console.log(`✅ Ürüne ${validLabels.length} etiket eklendi`);
+                } else {
+                    console.log('❌ Geçerli etiket bulunamadı');
+                }
+            } else {
+                console.log('❌ Geçerli label ID bulunamadı');
+            }
+        } else {
+            console.log('❌ Label array boş veya geçersiz');
+        }
+
+        await transaction.commit();
+        
+        // Ürünü etiketleriyle birlikte getir
+        const productWithLabels = await Products.findByPk(product.product_id, {
+            include: [{
+                model: Label,
+                as: 'labels',
+                attributes: ['label_id', 'name', 'color'],
+                through: { attributes: [] }
+            }]
+        });
+
+        console.log('✅ Ürün başarıyla oluşturuldu:', productWithLabels.product_name);
+        res.status(201).json(productWithLabels);
     } catch (error) {
-        console.error("Product creation error:", error);
-        return res.status(500).json({ error: "Ürün oluşturulurken bir hata oluştu." });
+        await transaction.rollback();
+        console.error('❌ Ürün oluşturma hatası:', error);
+        res.status(500).json({ error: "Ürün oluşturulamadı: " + error.message });
     }
 };
 

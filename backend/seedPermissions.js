@@ -47,6 +47,12 @@ const permissions = [
   { name: 'business_read', description: 'İşletme görüntüleme', resource: 'businesses', action: 'read' },
   { name: 'business_update', description: 'İşletme güncelleme', resource: 'businesses', action: 'update' },
   
+  // Etiket yönetimi (4 izin)
+  { name: 'label_create', description: 'Etiket oluşturma', resource: 'labels', action: 'create' },
+  { name: 'label_read', description: 'Etiket görüntüleme', resource: 'labels', action: 'read' },
+  { name: 'label_update', description: 'Etiket güncelleme', resource: 'labels', action: 'update' },
+  { name: 'label_delete', description: 'Etiket silme', resource: 'labels', action: 'delete' },
+  
   // Sistem yönetimi (4 izin)
   { name: 'system_settings', description: 'Sistem ayarları', resource: 'system', action: 'settings' },
   { name: 'system_logs', description: 'Sistem logları', resource: 'system', action: 'logs' },

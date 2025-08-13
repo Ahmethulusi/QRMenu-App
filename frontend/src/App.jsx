@@ -110,6 +110,22 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
+          {/* İçerik Yönetimi */}
+          <Route path="/labels" element={
+            <ProtectedRoute requiredResource="labels" requiredAction="read">
+              <Content selectedComponent={selectedComponent} />
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns" element={
+            <Content selectedComponent={selectedComponent} />
+          } />
+          <Route path="/daily-menu" element={
+            <Content selectedComponent={selectedComponent} />
+          } />
+          <Route path="/ingredients" element={
+            <Content selectedComponent={selectedComponent} />
+          } />
+          
           {/* Şube Yönetimi */}
           <Route path="/branches" element={
             <ProtectedRoute requiredResource="branches" requiredAction="read">

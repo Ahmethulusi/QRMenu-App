@@ -47,6 +47,14 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Sort';
     } else if (path === '/categories') {
       componentName = 'Categories';
+    } else if (path === '/labels') {
+      componentName = 'Labels';
+    } else if (path === '/campaigns') {
+      componentName = 'Campaigns';
+    } else if (path === '/daily-menu') {
+      componentName = 'DailyMenu';
+    } else if (path === '/ingredients') {
+      componentName = 'Ingredients';
     } else if (path === '/branches') {
       componentName = 'Branches';
     } else if (path === '/qr/general') {
@@ -146,6 +154,10 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Products': '/products',
       'Sort': '/products/sort',
       'Categories': '/categories',
+      'Labels': '/labels',
+      'Campaigns': '/campaigns',
+      'DailyMenu': '/daily-menu',
+      'Ingredients': '/ingredients',
       'Branches': '/branches',
       'GeneralQR': '/qr/general',
       'QRDesigns': '/qr/designs',
@@ -185,6 +197,17 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       children: [
         { key: 'Categories', label: 'Ana Kategoriler' },
         { key: 'CategorySort', label: 'Kategori Sıralama' }
+      ]
+    },
+    {
+      key: 'ContentManagement',
+      icon: <ContainerOutlined />,
+      label: 'İçerik Yönetimi',
+      children: [
+        { key: 'Labels', label: 'Etiketler' },
+        { key: 'Campaigns', label: 'Kampanyalar' },
+        { key: 'DailyMenu', label: 'Günün Menüsü' },
+        { key: 'Ingredients', label: 'İçindekiler' }
       ]
     },
     {

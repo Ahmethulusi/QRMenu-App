@@ -321,3 +321,92 @@ export const testUpdateRolePermissionsAPI = async (role, permissions, businessId
     throw error;
   }
 };
+
+// Label API fonksiyonları
+export const labelAPI = {
+  // Tüm etiketleri getir
+  getAllLabels: async () => {
+    try {
+      console.log('🔄 Tüm etiketler getiriliyor...');
+      const response = await apiCall('/api/labels');
+      console.log('✅ Etiketler başarıyla getirildi:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Etiket getirme hatası:', error);
+      throw error;
+    }
+  },
+
+  // Yeni etiket oluştur
+  createLabel: async (labelData) => {
+    try {
+      console.log('🔄 Yeni etiket oluşturuluyor...', labelData);
+      const response = await apiCall('/api/labels', {
+        method: 'POST',
+        body: JSON.stringify(labelData),
+      });
+      console.log('✅ Etiket başarıyla oluşturuldu:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Etiket oluşturma hatası:', error);
+      throw error;
+    }
+  },
+
+  // Etiket güncelle
+  updateLabel: async (labelId, labelData) => {
+    try {
+      console.log('🔄 Etiket güncelleniyor...', { labelId, labelData });
+      const response = await apiCall(`/api/labels/${labelId}`, {
+        method: 'PUT',
+        body: JSON.stringify(labelData),
+      });
+      console.log('✅ Etiket başarıyla güncellendi:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Etiket güncelleme hatası:', error);
+      throw error;
+    }
+  },
+
+  // Etiket sil
+  deleteLabel: async (labelId) => {
+    try {
+      console.log('🔄 Etiket siliniyor...', labelId);
+      const response = await apiCall(`/api/labels/${labelId}`, {
+        method: 'DELETE',
+      });
+      console.log('✅ Etiket başarıyla silindi:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Etiket silme hatası:', error);
+      throw error;
+    }
+  },
+
+  // Ürün etiketlerini getir
+  getProductLabels: async (productId) => {
+    try {
+      console.log('🔄 Ürün etiketleri getiriliyor...', productId);
+      const response = await apiCall(`/api/labels/product/${productId}`);
+      console.log('✅ Ürün etiketleri başarıyla getirildi:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Ürün etiketleri getirme hatası:', error);
+      throw error;
+    }
+  },
+
+  // Etiket ürünlerini getir
+  getLabelProducts: async (labelId) => {
+    try {
+      console.log('🔄 Etiket ürünleri getiriliyor...', labelId);
+      const response = await apiCall(`/api/labels/${labelId}/products`);
+      console.log('✅ Etiket ürünleri başarıyla getirildi:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Etiket ürünleri getirme hatası:', error);
+      throw error;
+    }
+  }
+};

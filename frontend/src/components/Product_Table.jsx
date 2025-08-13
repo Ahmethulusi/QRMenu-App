@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Upload, Button, Popover ,Switch, message,Popconfirm, Spin} from 'antd';
-import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeInvisibleFilled} from '@ant-design/icons';
+import { Table, Upload, Button, Popover ,Switch, message,Popconfirm, Spin, Tag} from 'antd';
+import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeInvisibleFilled, TagOutlined} from '@ant-design/icons';
 import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './EditModal';
@@ -42,8 +42,10 @@ const Product_Table = () => {
         throw new Error('API geçersiz veri döndürdü');
       }
 
-      const formattedData = datas.map((item, index) => {
+              const formattedData = datas.map((item, index) => {
         const imageUrl = item.image_url ? `${API_URL}/images/${item.image_url}` : null;
+        
+
 
         return {
           key: index, 
@@ -62,8 +64,9 @@ const Product_Table = () => {
           name: item.product_name,
           description: item.description,
           price: item.price,
-                         category: item.category ? item.category.category_name : 'Kategori Yok',
+          category: item.category ? item.category.category_name : 'Kategori Yok',
           category_id: item.category_id, // Kategori ID'sini ekle
+          labels: item.labels || [], // Etiketleri ekle
           status: item.is_available,
           showcase: item.is_selected,
         };
@@ -278,15 +281,46 @@ const Product_Table = () => {
       dataIndex: 'category',
       key: 'category',
       filters: categoryFilters,
-      width: '14%',
+      width: '12%',
       filterSearch: true,
       onFilter: (value, record) => record.category.includes(value),
+    },
+    {
+      title: 'Etiketler',
+      dataIndex: 'labels',
+      key: 'labels',
+      width: '15%',
+      render: (labels) => (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
+          {labels && labels.length > 0 ? (
+            labels.map(label => (
+              <Tag
+                key={label.label_id}
+                color={label.color || '#007bff'}
+                style={{ 
+                  fontSize: '11px',
+                  margin: '1px',
+                  borderRadius: '4px',
+                  fontWeight: '500'
+                }}
+                icon={<TagOutlined style={{ fontSize: '10px' }} />}
+              >
+                {label.name}
+              </Tag>
+            ))
+          ) : (
+            <span style={{ color: '#999', fontSize: '12px', fontStyle: 'italic' }}>
+              Etiket yok
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       title: 'Action',
       dataIndex: '',
       key: 'id',
-      width: '16%',
+      width: '14%',
       render: (record) => (
         <div className='action-buttons-container'>
           {hasPermission('products', 'update') && (

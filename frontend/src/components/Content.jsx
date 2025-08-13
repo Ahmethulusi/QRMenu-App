@@ -17,6 +17,7 @@ import BranchTable from '../components/BranchTable';
 import BranchProductMatrix from '../components/BranchProductMatrix';
 import UsersTable from '../components/UsersTable';
 import PermissionsTable from '../components/PermissionsTable';
+import LabelTable from '../components/LabelTable';
 import NoPermission from '../components/NoPermission';
 import { getCurrentUser } from '../utils/permissions';
 
@@ -98,6 +99,33 @@ function Content({ selectedComponent }) {
         />;
       }
       return <Categories />;
+
+    case 'Labels':
+      if (!checkComponentPermission('labels', 'read')) {
+        return <NoPermission 
+          title="Etiketler sayfasına erişim yetkiniz yok"
+          subTitle="Etiketleri görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <LabelTable />;
+
+    case 'Campaigns':
+      return <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>Kampanyalar</h2>
+        <p>Bu özellik henüz geliştirilmemiştir.</p>
+      </div>;
+
+    case 'DailyMenu':
+      return <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>Günün Menüsü</h2>
+        <p>Bu özellik henüz geliştirilmemiştir.</p>
+      </div>;
+
+    case 'Ingredients':
+      return <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>İçindekiler</h2>
+        <p>Bu özellik henüz geliştirilmemiştir.</p>
+      </div>;
 
     case 'Menus':
       if (!checkComponentPermission('products', 'read')) {

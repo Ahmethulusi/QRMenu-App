@@ -10,6 +10,8 @@ const BranchProduct = require('./BranchProduct');
 const Section = require('./Section');
 const QRCode = require('./QRCode');
 const Table = require('./Table');
+const Label = require('./Label');
+const ProductLabel = require('./ProductLabel');
 
 // Permission - RolePermission association'ları
 RolePermission.belongsTo(Permission, {
@@ -109,6 +111,21 @@ Table.hasMany(QRCode, {
   as: 'qrcodes'
 });
 
+// Products - Labels Many-to-Many association
+Products.belongsToMany(Label, {
+  through: ProductLabel,
+  foreignKey: 'product_id',
+  otherKey: 'label_id',
+  as: 'labels'
+});
+
+Label.belongsToMany(Products, {
+  through: ProductLabel,
+  foreignKey: 'label_id',
+  otherKey: 'product_id',
+  as: 'products'
+});
+
 module.exports = {
   sequelize,
   Permission,
@@ -121,5 +138,7 @@ module.exports = {
   BranchProduct,
   Section,
   QRCode,
-  Table
+  Table,
+  Label,
+  ProductLabel
 };

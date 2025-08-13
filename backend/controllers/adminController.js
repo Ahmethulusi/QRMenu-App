@@ -1,6 +1,7 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
 const Business = require('../models/Business');
+const { Label, ProductLabel } = require('../models');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
@@ -40,6 +41,13 @@ exports.getAllProuducts = async (req, res) => {
                     model: db.Branch, 
                     through: { attributes: ['price'] },
                     as: 'Branches' // Alias ekledik
+                },
+                {
+                    model: Label,
+                    as: 'labels',
+                    attributes: ['label_id', 'name', 'color'],
+                    through: { attributes: [] }, // ProductLabel junction tablosundan hiçbir alan almayız
+                    required: false
                 }
             ]
         });
@@ -137,55 +145,177 @@ exports.createProduct = async (req, res) => {
     if (!req.body) {
         return res.status(400).json({ error: "Request body is empty" });
     }
+    
+    const transaction = await sequelize.transaction();
+    
     try {
-        const { name, price, description, category_id, status, showcase } = req.body;
+        const { name, price, description, category_id, status, showcase, labels } = req.body;
+        const imageUrl = req.file ? req.file.filename : null;
+
+        console.log('🔍 Request body:', req.body);
+        console.log('🏷️ Labels raw:', labels);
+        console.log('🏷️ Labels type:', typeof labels);
 
         if (!name || !price || !category_id) {
             return res.status(400).json({ error: "Zorunlu alanlar eksik" });
         }
 
+        // Ürünü oluştur
         const product = await Products.create({
-            name,
-            price,
+            product_name: name,
+            price: parseFloat(price),
             description,
-            category_id,
-            status: status || true,
-            showcase: showcase || false
+            category_id: parseInt(category_id),
+            is_available: status === 'true' || status === true,
+            is_selected: showcase === 'true' || showcase === true,
+            image_url: imageUrl
+        }, { transaction });
+
+        // Etiketleri ekle (eğer varsa)
+        let labelArray = labels;
+        if (typeof labels === 'string') {
+            try {
+                labelArray = JSON.parse(labels);
+            } catch (e) {
+                console.log('❌ Labels JSON parse hatası:', e);
+                labelArray = [];
+            }
+        }
+        
+        console.log('🏷️ Label array after parse:', labelArray);
+        console.log('🏷️ Is array?', Array.isArray(labelArray));
+        
+        if (labelArray && Array.isArray(labelArray) && labelArray.length > 0) {
+            const labelIds = labelArray.map(labelId => parseInt(labelId)).filter(id => !isNaN(id));
+            console.log('🏷️ Label IDs:', labelIds);
+            
+            if (labelIds.length > 0) {
+                // Etiketlerin geçerli olduğunu kontrol et
+                const validLabels = await Label.findAll({
+                    where: { 
+                        label_id: labelIds
+                    },
+                    transaction
+                });
+                
+                console.log('🏷️ Valid labels found:', validLabels.length);
+                console.log('🏷️ Valid labels:', validLabels.map(l => ({ id: l.label_id, name: l.name })));
+                
+                if (validLabels.length > 0) {
+                    await product.setLabels(validLabels, { transaction });
+                    console.log(`✅ Ürüne ${validLabels.length} etiket eklendi`);
+                } else {
+                    console.log('❌ Geçerli etiket bulunamadı');
+                }
+            } else {
+                console.log('❌ Geçerli label ID bulunamadı');
+            }
+        } else {
+            console.log('❌ Label array boş veya geçersiz');
+        }
+
+        await transaction.commit();
+        
+        // Ürünü etiketleriyle birlikte getir
+        const productWithLabels = await Products.findByPk(product.product_id, {
+            include: [{
+                model: Label,
+                as: 'labels',
+                attributes: ['label_id', 'name', 'color'],
+                through: { attributes: [] }
+            }]
         });
 
-        res.status(201).json(product);
+        console.log('✅ Ürün başarıyla oluşturuldu:', productWithLabels.product_name);
+        res.status(201).json(productWithLabels);
     } catch (error) {
-        console.error('Ürün oluşturma hatası:', error);
-        res.status(500).json({ error: "Ürün oluşturulamadı" });
+        await transaction.rollback();
+        console.error('❌ Ürün oluşturma hatası:', error);
+        res.status(500).json({ error: "Ürün oluşturulamadı: " + error.message });
     }
 }
 
 exports.updateProduct = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
-        const { product_id, name, price, description, category_id, status, showcase } = req.body;
+        const { product_id, name, price, description, category_id, status, showcase, labels } = req.body;
 
         if (!product_id) {
             return res.status(400).json({ error: "Product ID gerekli" });
         }
 
-        const product = await Products.findByPk(product_id);
+        const product = await Products.findByPk(product_id, { transaction });
         if (!product) {
             return res.status(404).json({ error: "Ürün bulunamadı" });
         }
 
+        // Ürün bilgilerini güncelle
         await product.update({
-            name: name || product.name,
-            price: price || product.price,
-            description: description || product.description,
-            category_id: category_id || product.category_id,
-            status: status !== undefined ? status : product.status,
-            showcase: showcase !== undefined ? showcase : product.showcase
+            product_name: name || product.product_name,
+            price: price !== undefined ? parseFloat(price) : product.price,
+            description: description !== undefined ? description : product.description,
+            category_id: category_id !== undefined ? parseInt(category_id) : product.category_id,
+            is_available: status !== undefined ? (status === 'true' || status === true) : product.is_available,
+            is_selected: showcase !== undefined ? (showcase === 'true' || showcase === true) : product.is_selected
+        }, { transaction });
+
+        // Etiketleri güncelle (eğer labels parametresi gönderildiyse)
+        if (labels !== undefined) {
+            let labelArray = labels;
+            if (typeof labels === 'string') {
+                try {
+                    labelArray = JSON.parse(labels);
+                } catch (e) {
+                    console.log('❌ Labels JSON parse hatası:', e);
+                    labelArray = [];
+                }
+            }
+            
+            if (Array.isArray(labelArray) && labelArray.length > 0) {
+                const labelIds = labelArray.map(labelId => parseInt(labelId)).filter(id => !isNaN(id));
+                
+                if (labelIds.length > 0) {
+                    // Etiketlerin geçerli olduğunu kontrol et
+                    const validLabels = await Label.findAll({
+                        where: { 
+                            label_id: labelIds
+                        },
+                        transaction
+                    });
+                    
+                    await product.setLabels(validLabels, { transaction });
+                    console.log(`✅ Ürün etiketleri güncellendi: ${validLabels.length} etiket`);
+                } else {
+                    // Boş array gönderildiyse tüm etiketleri kaldır
+                    await product.setLabels([], { transaction });
+                    console.log('✅ Ürün etiketleri temizlendi');
+                }
+            } else if (Array.isArray(labelArray)) {
+                // labels = [] gönderildiyse tüm etiketleri kaldır
+                await product.setLabels([], { transaction });
+                console.log('✅ Ürün etiketleri temizlendi');
+            }
+        }
+
+        await transaction.commit();
+        
+        // Güncellenmiş ürünü etiketleriyle birlikte getir
+        const updatedProduct = await Products.findByPk(product_id, {
+            include: [{
+                model: Label,
+                as: 'labels',
+                attributes: ['label_id', 'name', 'color'],
+                through: { attributes: [] }
+            }]
         });
 
-        res.json(product);
+        console.log('✅ Ürün başarıyla güncellendi:', updatedProduct.product_name);
+        res.json(updatedProduct);
     } catch (error) {
-        console.error('Ürün güncelleme hatası:', error);
-        res.status(500).json({ error: "Ürün güncellenemedi" });
+        await transaction.rollback();
+        console.error('❌ Ürün güncelleme hatası:', error);
+        res.status(500).json({ error: "Ürün güncellenemedi: " + error.message });
     }
 }
 

@@ -135,7 +135,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
   return (
     <Modal
       title="Ürün Düzenle"
-      visible={visible}
+      open={visible}
       onOk={handleOk}
       onCancel={onCancel_handler}
       okText="Güncelle"
