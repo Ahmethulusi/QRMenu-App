@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sort2 from '../components/Sort2';
 import Menus from '../components/FoodMenus';
 // import Categories from '../components/Categories';
-import Categories from '../components/Additional_Category_Table';
+import Categories from '../components/Categories';
 // import ProductTable from '../components/ProductTable';
 import ProductTable from './Product_Table';
 import PriceChangingPage from '../components/PriceChange';
@@ -29,11 +29,24 @@ function Content({ selectedComponent }) {
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/permissions/user`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
+        
+        if (response.status === 401) {
+          // Token geçersiz, kullanıcıyı login'e yönlendir
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return;
+        }
         
         if (response.ok) {
           const data = await response.json();
@@ -105,7 +118,7 @@ function Content({ selectedComponent }) {
       return <PriceChangingPage />;
 
     case 'Sort':
-      if (!checkComponentPermission('products', 'read')) {
+      if (!checkComponentPermission('products', 'sort')) {
         return <NoPermission 
           title="Sıralama sayfasına erişim yetkiniz yok"
           subTitle="Ürün sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
@@ -126,7 +139,7 @@ function Content({ selectedComponent }) {
       return <TablesPage />;
 
     case 'CategorySort':
-      if (!checkComponentPermission('categories', 'read')) {
+      if (!checkComponentPermission('categories', 'sort')) {
         return <NoPermission 
           title="Kategori sıralama sayfasına erişim yetkiniz yok"
           subTitle="Kategori sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
@@ -180,7 +193,7 @@ function Content({ selectedComponent }) {
       return <QRDesignsTable businessId={1} />;
     
     case 'Auth':
-      if (!checkComponentPermission('users', 'read')) {
+      if (!checkComponentPermission('permissions', 'read')) {
         return <NoPermission 
           title="Yetkilendirmeler sayfasına erişim yetkiniz yok"
           subTitle="Kullanıcı yetkilerini yönetmek için gerekli yetkilere sahip değilsiniz."

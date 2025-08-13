@@ -5,6 +5,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Table, Card, Space } from 'antd';
+import { usePermissions } from '../hooks/usePermissions';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -113,6 +114,9 @@ const DragAndDropTable = () => {
   const [error, setError] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const isMobile = useIsMobile();
+  
+  // İzin kontrolü
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     fetchData();
@@ -235,6 +239,17 @@ const DragAndDropTable = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
+  
+  // İzin kontrolü
+  if (!hasPermission('products', 'sort')) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px 0' }}>
+        <h3>Erişim Yetkisi Yok</h3>
+        <p>Ürün sıralama sayfasına erişim yetkiniz bulunmamaktadır.</p>
+        <p>Bu sayfayı kullanabilmek için gerekli yetkilere sahip olmanız gerekmektedir.</p>
+      </div>
+    );
+  }
 
   // Mobil görünüm
   if (isMobile) {

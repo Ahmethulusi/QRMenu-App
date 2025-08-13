@@ -42,6 +42,15 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
   const handleOkClick = async () => {
     try {
       setLoading(true);
+      
+      // Token kontrolü
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+        window.location.href = '/login';
+        return;
+      }
+      
       const values = await form.validateFields();
 
       if (!values.name) {
@@ -61,11 +70,23 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
 
       const response = await fetch(`${API_URL}/api/admin/categories/update/${category.id}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Kategori güncellenemedi!');
+        if (response.status === 403) {
+          message.error('Bu işlem için yetkiniz yok!');
+        } else if (response.status === 401) {
+          message.error('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        } else {
+          throw new Error('Kategori güncellenemedi!');
+        }
+        return;
       }
 
       message.success('Kategori başarıyla güncellendi!');

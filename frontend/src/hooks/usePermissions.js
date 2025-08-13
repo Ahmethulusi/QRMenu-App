@@ -83,9 +83,11 @@ export const usePermissions = () => {
       'create_product': hasPermission('products', 'create'),
       'edit_product': hasPermission('products', 'update'),
       'delete_product': hasPermission('products', 'delete'),
+      'sort_product': hasPermission('products', 'sort'),
       'create_category': hasPermission('categories', 'create'),
       'edit_category': hasPermission('categories', 'update'),
       'delete_category': hasPermission('categories', 'delete'),
+      'sort_category': hasPermission('categories', 'sort'),
       'create_user': hasPermission('users', 'create'),
       'edit_user': hasPermission('users', 'update'),
       'delete_user': hasPermission('users', 'delete'),
@@ -98,6 +100,8 @@ export const usePermissions = () => {
       'create_table': hasPermission('tables', 'create'),
       'edit_table': hasPermission('tables', 'update'),
       'delete_table': hasPermission('tables', 'delete'),
+      'view_permissions': hasPermission('permissions', 'read'),
+      'update_permissions': hasPermission('permissions', 'update'),
     };
 
     return actionPermissions[action] || false;

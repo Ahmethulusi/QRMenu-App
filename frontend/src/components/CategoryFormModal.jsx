@@ -17,6 +17,14 @@ const ModalForm = ({ visible, onCancel, onOk, parentId }) => {
   // Form submit edildiğinde çağrılan fonksiyon
   const handleOk = async () => {
     try {
+      // Token kontrolü
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+        window.location.href = '/login';
+        return;
+      }
+
       // Form alanlarını doğrula
       const values = await form.validateFields();
 
@@ -35,11 +43,23 @@ const ModalForm = ({ visible, onCancel, onOk, parentId }) => {
       // Backend'e veri gönderme
       const response = await fetch(`${API_URL}/api/admin/categories/create`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        if (response.status === 403) {
+          message.error('Bu işlem için yetkiniz yok!');
+        } else if (response.status === 401) {
+          message.error('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        } else {
+          throw new Error('Network response was not ok');
+        }
+        return;
       }
 
       form.resetFields(); // Formu temizle

@@ -10,10 +10,10 @@ router.post('/check', authenticateToken, permissionController.checkPermission);
 // Kullanıcı yetkilerini getir
 router.get('/user', authenticateToken, permissionController.getUserPermissions);
 
-// Yetki yönetimi (sadece super_admin)
+// Yetki güncelleme
 router.put('/update', 
   authenticateToken, 
-  hasPermission('system', 'settings'), 
+  hasPermission('permissions', 'update'), 
   permissionController.updateRolePermissions
 );
 
@@ -27,7 +27,7 @@ router.get('/all',
 // Rol yetkilerini listele
 router.get('/role/:role', 
   authenticateToken, 
-  hasPermission('system', 'settings'), 
+  hasPermission('permissions', 'read'), 
   permissionController.getRolePermissions
 );
 

@@ -3,19 +3,21 @@ const sequelize = require('./db');
 
 // Tüm izinleri tanımla
 const permissions = [
-  // Ürün yönetimi (6 izin)
+  // Ürün yönetimi (7 izin)
   { name: 'product_create', description: 'Ürün oluşturma', resource: 'products', action: 'create' },
   { name: 'product_read', description: 'Ürün görüntüleme', resource: 'products', action: 'read' },
   { name: 'product_update', description: 'Ürün güncelleme', resource: 'products', action: 'update' },
   { name: 'product_delete', description: 'Ürün silme', resource: 'products', action: 'delete' },
   { name: 'product_image_upload', description: 'Ürün resmi yükleme', resource: 'products', action: 'image_upload' },
   { name: 'product_bulk_update', description: 'Toplu ürün güncelleme', resource: 'products', action: 'bulk_update' },
+  { name: 'product_sort', description: 'Ürün sıralama', resource: 'products', action: 'sort' },
   
-  // Kategori yönetimi (4 izin)
+  // Kategori yönetimi (5 izin)
   { name: 'category_create', description: 'Kategori oluşturma', resource: 'categories', action: 'create' },
   { name: 'category_read', description: 'Kategori görüntüleme', resource: 'categories', action: 'read' },
   { name: 'category_update', description: 'Kategori güncelleme', resource: 'categories', action: 'update' },
   { name: 'category_delete', description: 'Kategori silme', resource: 'categories', action: 'delete' },
+  { name: 'category_sort', description: 'Kategori sıralama', resource: 'categories', action: 'sort' },
   
   // Şube yönetimi (4 izin)
   { name: 'branch_create', description: 'Şube oluşturma', resource: 'branches', action: 'create' },
@@ -45,9 +47,11 @@ const permissions = [
   { name: 'business_read', description: 'İşletme görüntüleme', resource: 'businesses', action: 'read' },
   { name: 'business_update', description: 'İşletme güncelleme', resource: 'businesses', action: 'update' },
   
-  // Sistem yönetimi (2 izin)
+  // Sistem yönetimi (4 izin)
   { name: 'system_settings', description: 'Sistem ayarları', resource: 'system', action: 'settings' },
-  { name: 'system_logs', description: 'Sistem logları', resource: 'system', action: 'logs' }
+  { name: 'system_logs', description: 'Sistem logları', resource: 'system', action: 'logs' },
+  { name: 'permissions_read', description: 'Yetki görüntüleme', resource: 'permissions', action: 'read' },
+  { name: 'permissions_update', description: 'Yetki güncelleme', resource: 'permissions', action: 'update' }
 ];
 
 // Roller
@@ -65,7 +69,6 @@ const roleDefaultPermissions = {
     exceptions: {
       'user_delete': false,
       'business_update': false,
-      'system_settings': false,
       'system_logs': false
     }
   },
@@ -81,7 +84,9 @@ const roleDefaultPermissions = {
       'user_read': true,
       'qrcode_read': true,
       'table_read': true,
-      'business_read': true
+      'business_read': true,
+      'permissions_read': true,
+      'permissions_update': true
     }
   }
 };
