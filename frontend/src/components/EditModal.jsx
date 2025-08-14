@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Select, Radio } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import CategorySelector from './CategorySelector';
+import LabelSelector from './LabelSelector';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -12,6 +13,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
   const [showcase, setShowcase] = useState('false');
   const [loading, setLoading] = useState(false);
   const [imageRemoved, setImageRemoved] = useState(false);
+  const [selectedLabels, setSelectedLabels] = useState([]);
 
   // Record değiştiğinde form alanlarını doldur
   useEffect(() => {
@@ -29,6 +31,14 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       setStatus(record.is_available ? 'true' : 'false');
       setShowcase(record.is_selected ? 'true' : 'false');
       setImageRemoved(false);
+      
+      // Etiketleri ayarla
+      if (record.labels && Array.isArray(record.labels)) {
+        setSelectedLabels(record.labels.map(label => label.label_id));
+        console.log('✅ EditModal - Etiketler yüklendi:', record.labels);
+      } else {
+        setSelectedLabels([]);
+      }
       
       // Eğer resim varsa göster
       if (record.image_url) {
@@ -50,6 +60,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     form.resetFields();
     setFile(null);
     setImageRemoved(false);
+    setSelectedLabels([]);
     onCancel();
   };
 
@@ -88,7 +99,8 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
           newCategory_id: parseInt(values.category),
           stock: values.stock,
           status: status === 'true',
-          showcase: showcase === 'true'
+          showcase: showcase === 'true',
+          labels: selectedLabels // Etiketleri ekle
         }),
       });
 
@@ -142,7 +154,14 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       cancelText="İptal"
       padding={0}
       width={600}
-      style={{ height: 400, top: 25 }}
+      style={{ top: 20 }}
+      styles={{
+        body: {
+          maxHeight: '70vh', 
+          overflowY: 'auto',
+          padding: '20px'
+        }
+      }}
     >
       <Form form={form} layout="vertical">
         <Form.Item
@@ -181,6 +200,18 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
             </Form.Item>
           </Col>
         </Row>
+
+        {/* Etiketler */}
+        <Form.Item
+          label="Etiketler"
+          help="Ürün özelliklerini belirten etiketleri seçebilirsiniz (Vejetaryen, Glutensiz, vb.)"
+        >
+          <LabelSelector
+            value={selectedLabels}
+            onChange={setSelectedLabels}
+            placeholder="Etiket seçiniz veya yeni etiket oluşturun..."
+          />
+        </Form.Item>
 
         <Row gutter={20}>
           <Col span={12}>

@@ -131,11 +131,11 @@
 
 /* Üst bar (içine ikon yerleşir) */
 .sidebar-header {
-  height: 60px;
+  height: 70px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 8px 16px 0 16px;
   background-color: #001529;
   color: white;
   font-size: 18px;
@@ -145,18 +145,21 @@
 /* Kullanıcı bilgisi */
 .user-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   color: white;
   font-size: 12px;
   max-width: 120px;
   overflow: hidden;
+  padding-top: 8px;
 }
 
 /* Collapsed durumunda kullanıcı bilgisi */
 .sidebar-container.collapsed .user-info {
   max-width: 40px;
   justify-content: center;
+  align-items: center;
 }
 
 .user-email {
@@ -164,6 +167,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 80px;
+}
+
+.token-time-left {
+  font-size: 11px;
+  color: #1890ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+  margin-top: 2px;
+}
+
+/* Collapsed durumunda token süresini gizle */
+.sidebar-container.collapsed .token-time-left {
+  display: none;
 }
 
 .collapse-btn {
@@ -284,6 +302,8 @@
   font-size: 14px;
   max-width: 200px;
   overflow: hidden;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .mobile-user-email {
@@ -291,6 +311,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 150px;
+}
+
+.mobile-token-time-left {
+  font-size: 11px;
+  color: #1890ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  margin-top: 2px;
 }
 
 .close-btn {

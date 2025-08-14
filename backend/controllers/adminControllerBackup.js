@@ -268,8 +268,10 @@ exports.deleteProduct = async (req, res) => {
 
 // 4. Update updateProduct to allow updating business_id and branch assignments
 exports.updateProduct = async (req, res) => {
-    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks, status, showcase } = req.body;
+    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks, status, showcase, labels } = req.body;
     try {
+        console.log('🔄 Ürün güncelleniyor:', { id, labels });
+        
         // Güncellenecek alanları hazırla
         const updateData = {
             product_name: newName,
@@ -289,6 +291,28 @@ exports.updateProduct = async (req, res) => {
             where: { product_id: id }
         });
 
+        // Etiketleri güncelle
+        if (Array.isArray(labels)) {
+            console.log('🔄 Etiketler güncelleniyor:', labels);
+            
+            // Ürünü bul
+            const productInstance = await Products.findByPk(id);
+            if (productInstance) {
+                // Geçerli etiketleri kontrol et
+                const validLabels = await Label.findAll({
+                    where: {
+                        label_id: labels
+                    }
+                });
+                
+                console.log('✅ Geçerli etiketler bulundu:', validLabels.length);
+                
+                // Etiketleri güncelle
+                await productInstance.setLabels(validLabels.map(label => label.label_id));
+                console.log('✅ Ürün etiketleri güncellendi');
+            }
+        }
+
         // Update branch assignments if provided
         if (Array.isArray(branch_ids)) {
             const BranchProduct = require('../models/BranchProduct');
@@ -304,9 +328,11 @@ exports.updateProduct = async (req, res) => {
                 });
             }
         }
+        
+        console.log('✅ Ürün başarıyla güncellendi');
         res.json(product);
     } catch (error) {
-        console.log(error);
+        console.error('❌ Ürün güncelleme hatası:', error);
         res.status(500).json({ error: 'An error occurred while updating the product.' });
     }
 };

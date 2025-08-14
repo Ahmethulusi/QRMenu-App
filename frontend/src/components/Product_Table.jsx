@@ -219,6 +219,7 @@ const Product_Table = () => {
       category_id: originalProduct ? originalProduct.category_id : null, // Kategori ID'sini doğru şekilde al
       is_available: record.status, // Boolean değer olarak
       is_selected: record.showcase, // Boolean değer olarak
+      labels: originalProduct ? originalProduct.labels : [], // Etiketleri ekle
       image_url: record.image && record.image.props && record.image.props.children && 
                 record.image.props.children.props ? 
                 record.image.props.children.props.src : null

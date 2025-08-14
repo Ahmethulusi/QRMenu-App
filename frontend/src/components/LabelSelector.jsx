@@ -87,26 +87,60 @@ const LabelSelector = ({
     createForm.resetFields();
   };
 
-  // Etiket render fonksiyonu
+  // Etiket render fonksiyonu - kompakt görünüm
   const tagRender = (props) => {
     const { label, value: tagValue, closable, onClose } = props;
     const labelData = labels.find(l => l.label_id === tagValue);
     
     return (
-      <Tag
-        color={labelData?.color || '#007bff'}
-        closable={closable}
-        onClose={onClose}
-        style={{ 
-          marginRight: 3,
-          marginBottom: 2,
-          borderRadius: '4px',
-          fontWeight: '500'
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '2px 6px',
+          marginRight: '4px',
+          marginBottom: '2px',
+          backgroundColor: '#f0f0f0',
+          borderRadius: '12px',
+          fontSize: '12px',
+          color: '#333',
+          border: '1px solid #d9d9d9'
         }}
-        icon={<TagOutlined />}
       >
-        {label}
-      </Tag>
+        {/* Renkli nokta */}
+        <span
+          style={{
+            width: '8px',
+            height: '8px',
+            backgroundColor: labelData?.color || '#007bff',
+            borderRadius: '50%',
+            display: 'inline-block'
+          }}
+        />
+        
+        {/* Etiket metni */}
+        <span style={{ fontWeight: '500' }}>{label}</span>
+        
+        {/* Kapatma butonu */}
+        {closable && (
+          <span
+            onClick={onClose}
+            style={{
+              marginLeft: '2px',
+              cursor: 'pointer',
+              color: '#999',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              lineHeight: '1'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#ff4d4f'}
+            onMouseLeave={(e) => e.target.style.color = '#999'}
+          >
+            ×
+          </span>
+        )}
+      </span>
     );
   };
 

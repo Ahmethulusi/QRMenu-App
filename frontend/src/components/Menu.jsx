@@ -27,12 +27,51 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState([]);
+  const [tokenTimeLeft, setTokenTimeLeft] = useState('');
   
   const navigate = useNavigate();
   const location = useLocation();
 
   // Kullanıcı bilgisini al
   const user = getCurrentUser();
+
+  // Token süresini hesapla ve güncelle
+  const calculateTokenTimeLeft = () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setTokenTimeLeft('Token bulunamadı');
+        return;
+      }
+
+      // JWT token'ı decode et (basit yöntem)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = payload.exp * 1000; // Unix timestamp'i milisaniyeye çevir
+      const currentTime = Date.now();
+      const timeLeft = expirationTime - currentTime;
+
+      if (timeLeft <= 0) {
+        setTokenTimeLeft('Token süresi dolmuş');
+        return;
+      }
+
+      // Kalan süreyi saat:dakika:saniye formatında göster
+      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      setTokenTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    } catch (error) {
+      setTokenTimeLeft('Token hatası');
+    }
+  };
+
+  // Token süresini her saniye güncelle
+  useEffect(() => {
+    calculateTokenTimeLeft();
+    const interval = setInterval(calculateTokenTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // URL'den hangi sayfada olduğumuzu anla ve selectedComponent'i ayarla
   useEffect(() => {
@@ -268,7 +307,10 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
             <div className="user-info">
               <Avatar size="small" icon={<UserOutlined />} />
               {!collapsed && (
-                <span className="user-email">{user?.email || 'Kullanıcı'}</span>
+                <>
+                  <span className="user-email">{user?.email || 'Kullanıcı'}</span>
+                  <span className="token-time-left">Token: {tokenTimeLeft}</span>
+                </>
               )}
             </div>
             <span onClick={toggleCollapsed} className="collapse-btn">
@@ -295,10 +337,11 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       {isMobile && (
         <div className={`mobile-bottom-sheet ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-header">
-            <div className="mobile-user-info">
-              <Avatar size="small" icon={<UserOutlined />} />
-              <span className="mobile-user-email">{user?.email || 'Kullanıcı'}</span>
-            </div>
+                          <div className="mobile-user-info">
+                <Avatar size="small" icon={<UserOutlined />} />
+                <span className="mobile-user-email">{user?.email || 'Kullanıcı'}</span>
+                <span className="mobile-token-time-left">Token: {tokenTimeLeft}</span>
+              </div>
             <span onClick={toggleMobileMenu} className="close-btn">
               ✕
             </span>
