@@ -41,12 +41,88 @@ Kullanıcı dostu arayüzü sayesinde restoran, kafe ve benzeri işletmeler içi
 - Kullanıcı dostu ve responsive arayüz
 - Kolay kurulum ve kullanım
 
+- 🚀 Özellikler
+  
+--📱 Ürün & Menü Yönetimi
+
+---Dinamik Ürün Yönetimi: Ürünleri kolayca ekleme, düzenleme ve silme
+---Kategori Sistemi: Ürünleri kategorilere ayırma ve organize etme
+---Etiket Sistemi: Ürünlere özel etiketler (Vejetaryen, Glutensiz, Acılı vb.)
+---Görsel Yükleme: Ürün resimlerini yükleme ve önizleme
+---Fiyat Yönetimi: Toplu fiyat değişiklikleri ve özel fiyatlandırma
+---Stok Takibi: Ürün stok durumu izleme
+---Vitrin Ürünleri: Öne çıkarılacak ürünleri belirleme
+---Excel İmport/Export: Toplu ürün aktarımı
+
+--🏢 Şube Yönetimi
+
+---Multi-Branch Desteği: Birden fazla şube yönetimi
+---Şube Bazlı Fiyatlandırma: Her şube için farklı fiyat belirleme
+---Şube Bazlı Stok: Şubelere özel stok yönetimi
+---Ürün Matris Yönetimi: Hangi ürünün hangi şubede satılacağını belirleme
+
+--🔐 Kullanıcı & Yetki Yönetimi
+
+---Rol Tabanlı Erişim Kontrolü (RBAC): Super Admin, Admin, Manager rolleri
+---Granüler İzin Sistemi: Kaynak ve eylem bazlı detaylı yetkilendirme
+---Güvenli Kimlik Doğrulama: JWT token tabanlı oturum yönetimi
+---Kullanıcı Profil Yönetimi: Kullanıcı bilgilerini güncelleme
+---Oturum Güvenliği: Token süresi dolduğunda otomatik çıkış
+
+--📊 QR Kod & Dijital Menü
+
+---QR Kod Üretimi: Her masa için özel QR kodları
+---QR Tasarım Yönetimi: Farklı QR kod tasarımları
+---Masa Yönetimi: Masa numaraları ve QR kod eşleştirmesi
+---Mobil Uyumlu Menü: Responsive dijital menü görünümü
+---Anlık Güncellemeler: Menü değişikliklerinin QR'da anlık yansıması
+
+--🎨 Kullanıcı Deneyimi & Arayüz
+
+---Modern & Responsive Tasarım: Tüm cihazlarda uyumlu arayüz
+---Tema Özelleştirme: Renk ve stil seçenekleri
+---Drag & Drop Sıralama: Ürün ve kategori sıralaması
+---Gelişmiş Filtreleme: Çoklu filtre ve arama seçenekleri
+---Bulk Operations: Toplu işlemler (fiyat değişikliği, durum güncelleme)
+---Real-time Önizleme: Değişikliklerin anlık görüntülenmesi
+
+--📈 İçerik & Kampanya Yönetimi
+
+---Etiket Yönetimi: Ürün özelliklerini belirten renkli etiketler
+---Kampanya Sistemi: Özel promosyonlar ve indirimler
+---Günün Menüsü: Özel günlük menü önerileri
+---İçerik Editörü: Zengin metin editörü ile açıklama yazımı
+
+--🔧 Teknik Özellikler
+
+---RESTful API: Modern API mimarisi
+---Güvenli Veri İletimi: HTTPS ve token tabanlı güvenlik
+---Veritabanı Optimizasyonu: İlişkisel veritabanı yapısı
+---Error Handling: Kapsamlı hata yönetimi ve kullanıcı bildirimleri
+---Performance: Lazy loading ve optimize edilmiş sorgular
+---Cross-browser Compatibility: Tüm modern tarayıcılarda çalışma
+
+--📱 Mobil & Erişilebilirlik
+
+---PWA Desteği: Mobil uygulama deneyimi
+---Offline Capability: Çevrimdışı çalışma desteği
+---Touch-friendly Interface: Dokunmatik ekran optimizasyonu
+---Keyboard Navigation: Klavye ile navigasyon desteği
+
+--🚀 Performans & Ölçeklenebilirlik
+
+---Lazy Loading: İhtiyaç duyulan içeriğin dinamik yüklenmesi
+---Caching Strategy: Akıllı önbellekleme sistemi
+---Database Indexing: Optimize edilmiş veritabanı sorguları
+---Scalable Architecture: Büyüyen işletmeler için ölçeklenebilir yapı
+
 ## 🛠️ Kullanılan Teknolojiler
 
-- **Frontend:** JavaScript, HTML, CSS
-- **Backend:** Node.js
+- **Frontend:** React JS
+- **Backend:** Node.js, Express JS
 - **Veritabanı:** PostgreSQL
-- **UI Kütüphanesi:** Ant Design
+- **UI Kütüphanesi:** Ant Design + Manual CSS
+- **Deployment: Backend Service and Database -> Railway -- Static Site -> Render 
 
 ## 🔧 Kurulum
 
