@@ -35,10 +35,11 @@ function AppContent() {
       setUser(userData);
     } catch (error) {
       console.log('Token doğrulama hatası:', error.message);
-      // Token geçersiz, localStorage'ı temizle
+      // Token geçersiz, localStorage'ı temizle ve /login'e yönlendir
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
+      navigate('/login');
     }
   };
 
@@ -57,8 +58,9 @@ function AppContent() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    // Çıkış yapıldığında selectedComponent'i sıfırla
+    // Çıkış yapıldığında selectedComponent'i sıfırla ve /login'e yönlendir
     setSelectedComponent('Foods');
+    navigate('/login');
   };
 
   // İlk yükleme sırasında kısa bir loading göster
@@ -77,104 +79,112 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
-  }
-
   return (
-    <div className="App responsive-container">
-      <div className="menu-container">
-        <Menu setSelectedComponent={setSelectedComponent} onLogout={handleLogout} />
-      </div>
-      <div className="content">
-        <Routes>
-          {/* Ana sayfa - varsayılan olarak Foods'a yönlendir */}
-          <Route path="/" element={<Navigate to="/products" replace />} />
-          
-          {/* Ürün Yönetimi */}
-          <Route path="/products" element={
-            <ProtectedRoute requiredResource="products" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          <Route path="/products/sort" element={
-            <ProtectedRoute requiredResource="products" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* Kategori Yönetimi */}
-          <Route path="/categories" element={
-            <ProtectedRoute requiredResource="categories" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* İçerik Yönetimi */}
-          <Route path="/labels" element={
-            <ProtectedRoute requiredResource="labels" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          <Route path="/campaigns" element={
-            <Content selectedComponent={selectedComponent} />
-          } />
-          <Route path="/daily-menu" element={
-            <Content selectedComponent={selectedComponent} />
-          } />
-          <Route path="/ingredients" element={
-            <Content selectedComponent={selectedComponent} />
-          } />
-          
-          {/* Şube Yönetimi */}
-          <Route path="/branches" element={
-            <ProtectedRoute requiredResource="branches" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* QR Yönetimi */}
-          <Route path="/qr/general" element={
-            <ProtectedRoute requiredResource="qr" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          <Route path="/qr/designs" element={
-            <ProtectedRoute requiredResource="qr" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* Fiyat Değişikliği */}
-          <Route path="/price-change" element={
-            <ProtectedRoute requiredResource="products" requiredAction="update">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* Kullanıcı Yönetimi */}
-          <Route path="/users" element={
-            <ProtectedRoute requiredResource="users" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          <Route path="/auth" element={
-            <ProtectedRoute requiredResource="users" requiredAction="read">
-              <Content selectedComponent={selectedComponent} />
-            </ProtectedRoute>
-          } />
-          
-          {/* Profil */}
-          <Route path="/profile" element={<Content selectedComponent={selectedComponent} />} />
-          
-          {/* Çıkış Yap */}
-          <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />
-          
-          {/* 404 - Bilinmeyen route'lar için */}
-          <Route path="*" element={<div>Sayfa bulunamadı!</div>} />
-        </Routes>
-      </div>
-    </div>
+    <Routes>
+      {/* Login sayfası */}
+      <Route path="/login" element={<Login onLogin={handleLogin} />} />
+      
+      {/* Ana uygulama - kullanıcı girişi gerekli */}
+      <Route path="/*" element={
+        user ? (
+          <div className="App responsive-container">
+            <div className="menu-container">
+              <Menu setSelectedComponent={setSelectedComponent} onLogout={handleLogout} />
+            </div>
+            <div className="content">
+              <Routes>
+                {/* Ana sayfa - varsayılan olarak Foods'a yönlendir */}
+                <Route path="/" element={<Navigate to="/products" replace />} />
+                
+                {/* Ürün Yönetimi */}
+                <Route path="/products" element={
+                  <ProtectedRoute requiredResource="products" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/products/sort" element={
+                  <ProtectedRoute requiredResource="products" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Kategori Yönetimi */}
+                <Route path="/categories" element={
+                  <ProtectedRoute requiredResource="categories" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* İçerik Yönetimi */}
+                <Route path="/labels" element={
+                  <ProtectedRoute requiredResource="labels" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/campaigns" element={
+                  <Content selectedComponent={selectedComponent} />
+                } />
+                <Route path="/daily-menu" element={
+                  <Content selectedComponent={selectedComponent} />
+                } />
+                <Route path="/ingredients" element={
+                  <Content selectedComponent={selectedComponent} />
+                } />
+                
+                {/* Şube Yönetimi */}
+                <Route path="/branches" element={
+                  <ProtectedRoute requiredResource="branches" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* QR Yönetimi */}
+                <Route path="/qr/general" element={
+                  <ProtectedRoute requiredResource="qr" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/qr/designs" element={
+                  <ProtectedRoute requiredResource="qr" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Fiyat Değişikliği */}
+                <Route path="/price-change" element={
+                  <ProtectedRoute requiredResource="products" requiredAction="update">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Kullanıcı Yönetimi */}
+                <Route path="/users" element={
+                  <ProtectedRoute requiredResource="users" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/auth" element={
+                  <ProtectedRoute requiredResource="users" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Profil */}
+                <Route path="/profile" element={<Content selectedComponent={selectedComponent} />} />
+                
+                {/* Çıkış Yap */}
+                <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />
+                
+                {/* 404 - Bilinmeyen route'lar için */}
+                <Route path="*" element={<div>Sayfa bulunamadı!</div>} />
+              </Routes>
+            </div>
+          </div>
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+    </Routes>
   );
 }
 

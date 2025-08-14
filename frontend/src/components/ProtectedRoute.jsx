@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { getCurrentUser, canAccess } from '../utils/permissions';
+import NoPermission from './NoPermission';
 
 const ProtectedRoute = ({ children, requiredResource, requiredAction }) => {
   const user = getCurrentUser();
@@ -15,8 +16,8 @@ const ProtectedRoute = ({ children, requiredResource, requiredAction }) => {
     const hasPermission = canAccess(user, requiredResource, requiredAction);
     
     if (!hasPermission) {
-      // Yetkisi yoksa ana sayfaya yönlendir
-      return <Navigate to="/products" replace />;
+      // Yetkisi yoksa yetkisiz erişim sayfasını göster
+      return <NoPermission />;
     }
   }
 

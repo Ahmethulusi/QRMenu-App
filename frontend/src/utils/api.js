@@ -34,10 +34,10 @@ export const apiCall = async (endpoint, options = {}) => {
     
     if (response.status === 401) {
       console.log('❌ 401 Unauthorized - Token geçersiz');
-      // Token geçersiz, kullanıcıyı logout yap
+      // Token geçersiz, kullanıcıyı logout yap ve login sayfasına yönlendir
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.reload();
+      window.location.href = '#/login';
       return;
     }
 
