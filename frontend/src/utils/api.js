@@ -9,9 +9,12 @@ const getToken = () => {
 export const apiCall = async (endpoint, options = {}) => {
   const token = getToken();
   
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-  };
+  const defaultHeaders = {};
+
+  // FormData kullanılıyorsa Content-Type header'ını ekleme
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
@@ -61,20 +64,32 @@ export const apiCall = async (endpoint, options = {}) => {
 export const apiGet = (endpoint) => apiCall(endpoint);
 
 // POST isteği
-export const apiPost = (endpoint, data) => apiCall(endpoint, {
-  method: 'POST',
-  body: JSON.stringify(data),
-});
+export const apiPost = (endpoint, data) => {
+  const body = data instanceof FormData ? data : JSON.stringify(data);
+  return apiCall(endpoint, {
+    method: 'POST',
+    body: body,
+  });
+};
 
 // PUT isteği
-export const apiPut = (endpoint, data) => apiCall(endpoint, {
-  method: 'PUT',
-  body: JSON.stringify(data),
-});
+export const apiPut = (endpoint, data) => {
+  const body = data instanceof FormData ? data : JSON.stringify(data);
+  return apiCall(endpoint, {
+    method: 'PUT',
+    body: body,
+  });
+};
 
 // DELETE isteği
 export const apiDelete = (endpoint) => apiCall(endpoint, {
   method: 'DELETE',
+});
+
+// PATCH isteği
+export const apiPatch = (endpoint, data) => apiCall(endpoint, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
 });
 
 // Auth API fonksiyonları

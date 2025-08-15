@@ -121,6 +121,11 @@ function AppContent() {
                     <Content selectedComponent={selectedComponent} />
                   </ProtectedRoute>
                 } />
+                <Route path="/announcements" element={
+                  <ProtectedRoute requiredResource="announcements" requiredAction="read">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
                 <Route path="/campaigns" element={
                   <Content selectedComponent={selectedComponent} />
                 } />

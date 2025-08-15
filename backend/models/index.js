@@ -12,6 +12,7 @@ const QRCode = require('./QRCode');
 const Table = require('./Table');
 const Label = require('./Label');
 const ProductLabel = require('./ProductLabel');
+const Announcement = require('./Announcement');
 
 // Permission - RolePermission association'ları
 RolePermission.belongsTo(Permission, {
@@ -140,5 +141,6 @@ module.exports = {
   QRCode,
   Table,
   Label,
-  ProductLabel
+  ProductLabel,
+  Announcement
 };

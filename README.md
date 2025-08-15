@@ -75,6 +75,7 @@ Kullanıcı dostu arayüzü sayesinde restoran, kafe ve benzeri işletmeler içi
 
 ### 📈 **İçerik & Kampanya Yönetimi**
 - **Etiket Yönetimi**: Ürün özelliklerini belirten renkli etiketler
+- **Duyuru Sistemi**: Farklı tipte duyurular (görsel, metin, form, geri sayım)
 - **Kampanya Sistemi**: Özel promosyonlar ve indirimler
 - **Günün Menüsü**: Özel günlük menü önerileri
 - **İçerik Editörü**: Zengin metin editörü ile açıklama yazımı
@@ -92,6 +93,14 @@ Kullanıcı dostu arayüzü sayesinde restoran, kafe ve benzeri işletmeler içi
 - **Offline Capability**: Çevrimdışı çalışma desteği
 - **Touch-friendly Interface**: Dokunmatik ekran optimizasyonu
 - **Keyboard Navigation**: Klavye ile navigasyon desteği
+
+### 📢 **Duyuru Sistemi**
+- **Çoklu Duyuru Tipleri**: 7 farklı duyuru formatı (görsel, metin, form, geri sayım)
+- **Dinamik Form Yapısı**: Duyuru tipine göre otomatik form alanları
+- **Zaman Yönetimi**: Başlangıç/bitiş tarihi ve gecikme ayarları
+- **Öncelik Sistemi**: Duyuruların görüntülenme sırası
+- **Responsive Tasarım**: Tüm cihazlarda uyumlu duyuru görünümü
+- **Aktif/Pasif Durumu**: Duyuruları geçici olarak devre dışı bırakma
 
 ### 🚀 **Performans & Ölçeklenebilirlik**
 - **Lazy Loading**: İhtiyaç duyulan içeriğin dinamik yüklenmesi

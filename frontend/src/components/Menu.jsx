@@ -88,6 +88,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Categories';
     } else if (path === '/labels') {
       componentName = 'Labels';
+    } else if (path === '/announcements') {
+      componentName = 'Announcements';
     } else if (path === '/campaigns') {
       componentName = 'Campaigns';
     } else if (path === '/daily-menu') {
@@ -194,6 +196,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Sort': '/products/sort',
       'Categories': '/categories',
       'Labels': '/labels',
+      'Announcements': '/announcements',
       'Campaigns': '/campaigns',
       'DailyMenu': '/daily-menu',
       'Ingredients': '/ingredients',
@@ -244,6 +247,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       label: 'İçerik Yönetimi',
       children: [
         { key: 'Labels', label: 'Etiketler' },
+        { key: 'Announcements', label: 'Duyurular' },
         { key: 'Campaigns', label: 'Kampanyalar' },
         { key: 'DailyMenu', label: 'Günün Menüsü' },
         { key: 'Ingredients', label: 'İçindekiler' }

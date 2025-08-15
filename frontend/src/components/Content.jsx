@@ -18,6 +18,7 @@ import BranchProductMatrix from '../components/BranchProductMatrix';
 import UsersTable from '../components/UsersTable';
 import PermissionsTable from '../components/PermissionsTable';
 import LabelTable from '../components/LabelTable';
+import Announcements from '../components/Announcements';
 import NoPermission from '../components/NoPermission';
 import { getCurrentUser } from '../utils/permissions';
 
@@ -108,6 +109,15 @@ function Content({ selectedComponent }) {
         />;
       }
       return <LabelTable />;
+
+    case 'Announcements':
+      if (!checkComponentPermission('announcements', 'read')) {
+        return <NoPermission 
+          title="Duyurular sayfasına erişim yetkiniz yok"
+          subTitle="Duyuruları görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <Announcements />;
 
     case 'Campaigns':
       return <div style={{ padding: '20px', textAlign: 'center' }}>
