@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
-// import '../css/BranchProductMatrix.css';
-import { apiGet, apiPut } from '../utils/api';
+import '../css/BranchProductMatrix.css';
+import { apiGet, apiPut, apiPost } from '../utils/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -113,21 +113,19 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
     try {
       const values = await form.validateFields(); 
       const branchId = editingBranch ? editingBranch.id : null;
-      const url = editingBranch
-        ? `${API_URL}/api/branches/${branchId}`
-        : `${API_URL}/api/branches/`;
-      const method = editingBranch ? 'PUT' : 'POST';
-      const body = JSON.stringify({ ...values, businessId: businessId });
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-
-      if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Kaydetme işlemi başarısız');
+      
+      if (editingBranch) {
+        // Şube güncelleme
+        await apiPut(`/api/branches/${branchId}`, { 
+          ...values, 
+          businessId: businessId 
+        });
+      } else {
+        // Yeni şube oluşturma
+        await apiPost('/api/branches', { 
+          ...values, 
+          businessId: businessId 
+        });
       }
 
       message.success(editingBranch ? 'Şube güncellendi' : 'Şube eklendi');
@@ -174,22 +172,8 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
       
       console.log('Gönderilen veri:', requestBody);
 
-      // Backend'e güncelleme isteği gönder
-      const response = await fetch(`${API_URL}/api/branches/branch-products`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Backend hatası:', errorData);
-        throw new Error(errorData.error || 'Güncelleme başarısız');
-      }
-
-      const result = await response.json();
+      // apiPut kullanarak güncelleme isteği gönder (token otomatik eklenir)
+      const result = await apiPut('/api/branches/branch-products', requestBody);
       console.log('Başarılı response:', result);
 
       // State'leri güncelle - API çağrısı yapmadan
@@ -256,15 +240,11 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
       const promises = changes.map(async (key) => {
         const row = editForm[key];
         const productId = parseInt(key);
-        return fetch(`${API_URL}/api/branches/branch-products`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            branch_id: selectedBranch,
-            product_id: productId,
-            price: row.branch_price,
-            stock: row.available ? 1 : 0,
-          }),
+        return apiPut('/api/branches/branch-products', {
+          branch_id: selectedBranch,
+          product_id: productId,
+          price: row.branch_price,
+          stock: row.available ? 1 : 0,
         });
       });
 
