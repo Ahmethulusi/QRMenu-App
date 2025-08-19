@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext ,useMemo} from 'react';
 import '../css/table2.css';
 import ProductModal from './NewProductModal';
 import CategoryModal from './NewCategoryModal';
-import EditModal from './EditModal';
+import ProductEditModal from './ProductEditModal';
 // import Select from 'react-select';
 import { Select,Input } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
@@ -154,6 +154,11 @@ useEffect(() => {
     setShowCategoryModal(false);
   };
 
+  const handleEditOk = () => {
+    fetchProducts();
+    setShowEditModal(false);
+  };
+
   const handleEditClick = row => {
     setProduct(row);
     setShowEditModal(true);
@@ -294,7 +299,14 @@ useEffect(() => {
             ))}
           </tbody>
         </table>
-        {showEditModal && <EditModal show={showEditModal} handleClose={() => setShowEditModal(false)} />}
+        {showEditModal && (
+          <ProductEditModal
+            visible={showEditModal}
+            onCancel={() => setShowEditModal(false)}
+            onOk={handleEditOk}
+            record={product}
+          />
+        )}
 
       </div>
     </ProductContext.Provider>

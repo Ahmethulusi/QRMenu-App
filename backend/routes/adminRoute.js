@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/adminControllerBackup');
+const adminController = require('../controllers/adminController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { hasPermission } = require('../controllers/permissionController');
 const multer = require('multer');
@@ -135,6 +135,13 @@ router.get('/products',
   authenticateToken, 
   hasPermission('products', 'read'), 
   adminController.getAllProuducts
+);
+
+// Önerilen ürünler için basit endpoint
+router.get('/products/recommended-data', 
+  authenticateToken, 
+  hasPermission('products', 'read'), 
+  adminController.getRecommendedProductsData
 );
 
 // Kategori işlemleri

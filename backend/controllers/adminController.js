@@ -5,6 +5,8 @@ const { Label, ProductLabel } = require('../models');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
+const { hasPermission } = require('../utils/permissionUtils');
+
 
 exports.updateImageUrl = async (req, res) => {
     const {productId } = req.body;
@@ -19,58 +21,46 @@ exports.updateImageUrl = async (req, res) => {
     }
 }
 
-exports.getAllProuducts = async (req, res) => {
-    try {
-        console.log('🔄 Tüm ürünler getiriliyor...');
-        console.log('👤 Kullanıcı:', req.user);
-        
-        const db = require('../models');
-        const products = await Products.findAll({
-            include: [
-                { 
-                    model: db.Category,
-                    attributes: ['category_id', 'category_name'],
-                    as: 'category' // Alias'ı 'category' olarak ayarla (model'deki ile eşleşmeli)
-                },
-                { 
-                    model: db.Business,
-                    attributes: ['name'],
-                    as: 'Business' // Alias ekleyelim
-                },
-                { 
-                    model: db.Branch, 
-                    through: { attributes: ['price'] },
-                    as: 'Branches' // Alias ekledik
-                },
-                {
-                    model: Label,
-                    as: 'labels',
-                    attributes: ['label_id', 'name', 'color'],
-                    through: { attributes: [] }, // ProductLabel junction tablosundan hiçbir alan almayız
-                    required: false
-                }
-            ]
-        });
-        
-        console.log(`✅ ${products.length} ürün bulundu`);
-        if (products.length > 0) {
-            console.log('📦 İlk ürün örneği:', {
-                product_id: products[0].product_id,
-                product_name: products[0].product_name,
-                category: products[0].category ? products[0].category.category_name : 'Yok',
-                business: products[0].Business ? products[0].Business.name : 'Yok'
-            });
-            console.log('🔍 İlk ürün raw data:', JSON.stringify(products[0], null, 2));
-        }
-        
-        res.json(products);
-    } catch (error) {
-        console.error('❌ Ürünler getirilirken hata:', error);
-        console.error('❌ Hata detayı:', error.message);
-        res.status(500).json({ error: 'Ürünler getirilirken bir hata oluştu: ' + error.message });
-    }
-}
 
+// Tüm ürünleri getir
+exports.getAllProuducts = async (req, res) => {
+  try {
+    console.log('🔄 Tüm ürünler getiriliyor...');
+    console.log('👤 Kullanıcı:', req.user);
+    
+    const products = await Products.findAll({
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['category_id', 'category_name']
+        },
+        {
+          model: Label,
+          as: 'labels',
+          attributes: ['label_id', 'name', 'color'],
+          through: { attributes: [] }, // ProductLabel junction tablosundan hiçbir alan almayız
+          required: false
+        }
+      ]
+    });
+    
+    console.log(`✅ ${products.length} ürün bulundu`);
+    if (products.length > 0) {
+      console.log('📦 İlk ürün örneği:', {
+        product_id: products[0].product_id,
+        product_name: products[0].product_name,
+        category: products[0].category ? products[0].category.category_name : 'Yok',
+        labels: products[0].labels ? products[0].labels.length : 0
+      });
+    }
+    
+    res.json(products);
+  } catch (error) {
+    console.error('❌ Ürün getirme hatası:', error);
+    res.status(500).json({ error: 'Ürünler alınamadı' });
+  }
+};
 exports.getAllProductsOrderBySiraId = async (req,res) => {
     try {
         const products = await Products.findAll({
@@ -108,7 +98,7 @@ exports.getProductsByBusiness = async (req, res) => {
     const { business_id } = req.params; 
     try {
       if (!business_id) {
-        return res.status(400).json({ message: 'Business ID gerekli' });
+        return res.status(400).json({ message: 'Kategori ID gerekli' });
       }
   
       const products = await Products.findAll({ where: { business_id } });
@@ -118,7 +108,7 @@ exports.getProductsByBusiness = async (req, res) => {
       console.error('Ürünler alınırken hata oluştu:', error);
       res.status(500).json({ message: 'Ürünler alınamadı' });
     }
-};
+  };
 
 exports.getProductById = async (req, res) => {
     try {
@@ -126,21 +116,27 @@ exports.getProductById = async (req, res) => {
         const product = await Products.findOne({
             where: { product_id: req.params.id },
             include: [
-                { model: db.Category },
-                { model: db.Business },
+                { 
+                    model: Category,
+                    as: 'category',
+                    attributes: ['category_id', 'category_name']
+                },
+                { 
+                    model: db.Business 
+                },
                 { 
                     model: db.Branch, 
-                    through: { attributes: ['price'] } 
+                    through: { attributes: ['price', 'stock'] } 
                 }
             ]
         });
         res.json(product);
     } catch (err) {
         console.log(err);
-        res.status(500).json({ error: 'Product not found' });
+        res.status(500).json({ error: 'An error occurred while fetching the product.' });
     }
 }
-
+// 1. Update createProduct to require business_id and optionally assign to branches
 exports.createProduct = async (req, res) => {
     if (!req.body) {
         return res.status(400).json({ error: "Request body is empty" });
@@ -160,6 +156,17 @@ exports.createProduct = async (req, res) => {
             return res.status(400).json({ error: "Zorunlu alanlar eksik" });
         }
 
+        const existingProduct = await Products.findOne({ 
+            where: { product_name: name, business_id: 8 } 
+        });
+        if (existingProduct) {
+            return res.status(400).json({ error: "Bu ürün zaten mevcut" }); 
+        }
+
+        const count = await Products.count();
+        
+        const { stock, calorie_count, cooking_time, carbs, protein, fat, allergens, recommended_with } = req.body;
+        
         // Ürünü oluştur
         const product = await Products.create({
             product_name: name,
@@ -168,7 +175,17 @@ exports.createProduct = async (req, res) => {
             category_id: parseInt(category_id),
             is_available: status === 'true' || status === true,
             is_selected: showcase === 'true' || showcase === true,
-            image_url: imageUrl
+            sira_id: count + 1,
+            image_url: imageUrl,
+            business_id: 1,
+            stock: stock ? parseInt(stock) : null,
+            calorie_count: calorie_count ? parseInt(calorie_count) : null,
+            cooking_time: cooking_time ? parseInt(cooking_time) : null,
+            carbs: carbs ? parseFloat(carbs) : null,
+            protein: protein ? parseFloat(protein) : null,
+            fat: fat ? parseFloat(fat) : null,
+            allergens: allergens || null,
+            recommended_with: recommended_with || null
         }, { transaction });
 
         // Etiketleri ekle (eğer varsa)
@@ -233,301 +250,172 @@ exports.createProduct = async (req, res) => {
         console.error('❌ Ürün oluşturma hatası:', error);
         res.status(500).json({ error: "Ürün oluşturulamadı: " + error.message });
     }
-}
+};
 
+
+// Ürün Silme Endpoint'i
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Önce branch_products tablosundaki kayıtları sil
+    const BranchProduct = require('../models/BranchProduct');
+    await BranchProduct.destroy({
+      where: { product_id: id }
+    });
+
+    // Sonra ürünü sil
+    const deleted = await Products.destroy({
+      where: { product_id: id }
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Ürün bulunamadı' });
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Silme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+};
+
+
+
+// 4. Update updateProduct to allow updating business_id and branch assignments
 exports.updateProduct = async (req, res) => {
-    const transaction = await sequelize.transaction();
-    
+    const { newName, newPrice, newDescription, newCategory_id, newBusiness_id, id, branch_ids, branch_prices, branch_stocks, status, showcase, labels } = req.body;
+    // Yeni alanlar
+    const { stock, calorie_count, cooking_time, carbs, protein, fat, allergens, recommended_with } = req.body;
     try {
-        const { product_id, name, price, description, category_id, status, showcase, labels } = req.body;
-
-        if (!product_id) {
-            return res.status(400).json({ error: "Product ID gerekli" });
-        }
-
-        const product = await Products.findByPk(product_id, { transaction });
-        if (!product) {
-            return res.status(404).json({ error: "Ürün bulunamadı" });
-        }
-
-        // Ürün bilgilerini güncelle
-        await product.update({
-            product_name: name || product.product_name,
-            price: price !== undefined ? parseFloat(price) : product.price,
-            description: description !== undefined ? description : product.description,
-            category_id: category_id !== undefined ? parseInt(category_id) : product.category_id,
-            is_available: status !== undefined ? (status === 'true' || status === true) : product.is_available,
-            is_selected: showcase !== undefined ? (showcase === 'true' || showcase === true) : product.is_selected
-        }, { transaction });
-
-        // Etiketleri güncelle (eğer labels parametresi gönderildiyse)
-        if (labels !== undefined) {
-            let labelArray = labels;
-            if (typeof labels === 'string') {
-                try {
-                    labelArray = JSON.parse(labels);
-                } catch (e) {
-                    console.log('❌ Labels JSON parse hatası:', e);
-                    labelArray = [];
-                }
-            }
-            
-            if (Array.isArray(labelArray) && labelArray.length > 0) {
-                const labelIds = labelArray.map(labelId => parseInt(labelId)).filter(id => !isNaN(id));
-                
-                if (labelIds.length > 0) {
-                    // Etiketlerin geçerli olduğunu kontrol et
-                    const validLabels = await Label.findAll({
-                        where: { 
-                            label_id: labelIds
-                        },
-                        transaction
-                    });
-                    
-                    await product.setLabels(validLabels, { transaction });
-                    console.log(`✅ Ürün etiketleri güncellendi: ${validLabels.length} etiket`);
-                } else {
-                    // Boş array gönderildiyse tüm etiketleri kaldır
-                    await product.setLabels([], { transaction });
-                    console.log('✅ Ürün etiketleri temizlendi');
-                }
-            } else if (Array.isArray(labelArray)) {
-                // labels = [] gönderildiyse tüm etiketleri kaldır
-                await product.setLabels([], { transaction });
-                console.log('✅ Ürün etiketleri temizlendi');
-            }
-        }
-
-        await transaction.commit();
+        console.log('🔄 Ürün güncelleniyor:', { id, labels });
         
-        // Güncellenmiş ürünü etiketleriyle birlikte getir
-        const updatedProduct = await Products.findByPk(product_id, {
-            include: [{
-                model: Label,
-                as: 'labels',
-                attributes: ['label_id', 'name', 'color'],
-                through: { attributes: [] }
-            }]
+        // Güncellenecek alanları hazırla
+        const updateData = {
+            product_name: newName,
+            price: newPrice,
+            description: newDescription,
+            business_id: newBusiness_id,
+            is_available: status,
+            is_selected: showcase
+        };
+
+        // category_id sadece geçerli bir değer varsa ekle
+        if (newCategory_id !== null && newCategory_id !== undefined) {
+            updateData.category_id = newCategory_id;
+        }
+
+        // Yeni alanları (gönderildiyse) ekle - tip dönüşümleriyle
+        if (stock !== undefined) {
+            const parsed = parseInt(stock);
+            updateData.stock = isNaN(parsed) ? null : parsed;
+        }
+        if (calorie_count !== undefined) {
+            const parsed = parseInt(calorie_count);
+            updateData.calorie_count = isNaN(parsed) ? null : parsed;
+        }
+        if (cooking_time !== undefined) {
+            const parsed = parseInt(cooking_time);
+            updateData.cooking_time = isNaN(parsed) ? null : parsed;
+        }
+        if (carbs !== undefined) {
+            const parsed = parseFloat(carbs);
+            updateData.carbs = isNaN(parsed) ? null : parsed;
+        }
+        if (protein !== undefined) {
+            const parsed = parseFloat(protein);
+            updateData.protein = isNaN(parsed) ? null : parsed;
+        }
+        if (fat !== undefined) {
+            const parsed = parseFloat(fat);
+            updateData.fat = isNaN(parsed) ? null : parsed;
+        }
+        if (allergens !== undefined) {
+            updateData.allergens = allergens || null;
+        }
+        if (recommended_with !== undefined) {
+            // Frontend genelde JSON.stringify edilmiş array gönderiyor; direkt TEXT olarak saklıyoruz
+            updateData.recommended_with = recommended_with || null;
+        }
+
+        await Products.update(updateData, {
+            where: { product_id: id }
         });
 
-        console.log('✅ Ürün başarıyla güncellendi:', updatedProduct.product_name);
+        // Etiketleri güncelle
+        if (Array.isArray(labels)) {
+            console.log('🔄 Etiketler güncelleniyor:', labels);
+            
+            // Ürünü bul
+            const productInstance = await Products.findByPk(id);
+            if (productInstance) {
+                // Geçerli etiketleri kontrol et
+                const validLabels = await Label.findAll({
+                    where: {
+                        label_id: labels
+                    }
+                });
+                
+                console.log('✅ Geçerli etiketler bulundu:', validLabels.length);
+                
+                // Etiketleri güncelle
+                await productInstance.setLabels(validLabels.map(label => label.label_id));
+                console.log('✅ Ürün etiketleri güncellendi');
+            }
+        }
+
+        // Update branch assignments if provided
+        if (Array.isArray(branch_ids)) {
+            const BranchProduct = require('../models/BranchProduct');
+            // Remove old assignments
+            await BranchProduct.destroy({ where: { product_id: id } });
+            // Add new assignments
+            for (let i = 0; i < branch_ids.length; i++) {
+                await BranchProduct.create({
+                    branch_id: branch_ids[i],
+                    product_id: id,
+                    price: branch_prices && branch_prices[i] ? branch_prices[i] : newPrice,
+                    stock: branch_stocks && branch_stocks[i] ? branch_stocks[i] : null
+                });
+            }
+        }
+        
+        // Güncellenmiş ürünü ilişkileriyle birlikte döndür
+        const updatedProduct = await Products.findByPk(id, {
+            include: [
+                {
+                    model: Category,
+                    as: 'category',
+                    attributes: ['category_id', 'category_name']
+                },
+                {
+                    model: Label,
+                    as: 'labels',
+                    attributes: ['label_id', 'name', 'color'],
+                    through: { attributes: [] },
+                    required: false
+                }
+            ]
+        });
+
+        console.log('✅ Ürün başarıyla güncellendi');
         res.json(updatedProduct);
     } catch (error) {
-        await transaction.rollback();
         console.error('❌ Ürün güncelleme hatası:', error);
-        res.status(500).json({ error: "Ürün güncellenemedi: " + error.message });
+        res.status(500).json({ error: 'An error occurred while updating the product.' });
     }
-}
-
-exports.updateProductImage = async (req, res) => {
-    try {
-        const { product_id } = req.body;
-        const imageUrl = req.file.filename;
-
-        if (!product_id) {
-            return res.status(400).json({ error: "Product ID gerekli" });
-        }
-
-        const product = await Products.findByPk(product_id);
-        if (!product) {
-            return res.status(404).json({ error: "Ürün bulunamadı" });
-        }
-
-        await product.update({ image_url: imageUrl });
-        res.json(product);
-    } catch (error) {
-        console.error('Ürün resmi güncelleme hatası:', error);
-        res.status(500).json({ error: "Ürün resmi güncellenemedi" });
-    }
-}
-
-exports.deleteProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const product = await Products.findByPk(id);
-        
-        if (!product) {
-            return res.status(404).json({ error: "Ürün bulunamadı" });
-        }
-
-        await product.destroy();
-        res.json({ message: "Ürün başarıyla silindi" });
-    } catch (error) {
-        console.error('Ürün silme hatası:', error);
-        res.status(500).json({ error: "Ürün silinemedi" });
-    }
-}
-
-exports.updateShowcase = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const product = await Products.findByPk(productId);
-        
-        if (!product) {
-            return res.status(404).json({ error: "Ürün bulunamadı" });
-        }
-
-        await product.update({ showcase: !product.showcase });
-        res.json(product);
-    } catch (error) {
-        console.error('Showcase güncelleme hatası:', error);
-        res.status(500).json({ error: "Showcase güncellenemedi" });
-    }
-}
-
-exports.updateStatus = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const product = await Products.findByPk(productId);
-        
-        if (!product) {
-            return res.status(404).json({ error: "Ürün bulunamadı" });
-        }
-
-        await product.update({ status: !product.status });
-        res.json(product);
-    } catch (error) {
-        console.error('Status güncelleme hatası:', error);
-        res.status(500).json({ error: "Status güncellenemedi" });
-    }
-}
-
-exports.updateProductPrices = async (req, res) => {
-    try {
-        const { products } = req.body;
-        
-        for (const product of products) {
-            await Products.update(
-                { price: product.price },
-                { where: { product_id: product.product_id } }
-            );
-        }
-        
-        res.json({ message: "Fiyatlar güncellendi" });
-    } catch (error) {
-        console.error('Fiyat güncelleme hatası:', error);
-        res.status(500).json({ error: "Fiyatlar güncellenemedi" });
-    }
-}
-
-exports.bulkCreatePrices = async (req, res) => {
-    try {
-        const { products } = req.body;
-        
-        for (const product of products) {
-            await Products.update(
-                { price: product.price },
-                { where: { product_id: product.product_id } }
-            );
-        }
-        
-        res.json({ message: "Toplu fiyat güncelleme tamamlandı" });
-    } catch (error) {
-        console.error('Toplu fiyat güncelleme hatası:', error);
-        res.status(500).json({ error: "Toplu fiyat güncelleme başarısız" });
-    }
-}
-
-// Kategori işlemleri
-exports.createCategory = async (req, res) => {
-    try {
-        const { name, description, parent_id } = req.body;
-        const imageUrl = req.file ? req.file.filename : null;
-
-        if (!name) {
-            return res.status(400).json({ error: "Kategori adı gerekli" });
-        }
-
-        const category = await Category.create({
-            category_name: name,
-            description,
-            parent_id: parent_id || null,
-            image_url: imageUrl
-        });
-
-        res.status(201).json(category);
-    } catch (error) {
-        console.error('Kategori oluşturma hatası:', error);
-        res.status(500).json({ error: "Kategori oluşturulamadı" });
-    }
-}
-
-exports.createSubCategory = async (req, res) => {
-    try {
-        const { name, description, parent_id } = req.body;
-
-        if (!name || !parent_id) {
-            return res.status(400).json({ error: "Kategori adı ve parent ID gerekli" });
-        }
-
-        const category = await Category.create({
-            category_name: name,
-            description,
-            parent_id
-        });
-
-        res.status(201).json(category);
-    } catch (error) {
-        console.error('Alt kategori oluşturma hatası:', error);
-        res.status(500).json({ error: "Alt kategori oluşturulamadı" });
-    }
-}
-
-exports.updateCategory = async (req, res) => {
-    try {
-        const { category_id } = req.params;
-        const { name, description, parent_id } = req.body;
-        const imageUrl = req.file ? req.file.filename : null;
-
-        const category = await Category.findByPk(category_id);
-        if (!category) {
-            return res.status(404).json({ error: "Kategori bulunamadı" });
-        }
-
-        await category.update({
-            category_name: name || category.category_name,
-            description: description || category.description,
-            parent_id: parent_id || category.parent_id,
-            image_url: imageUrl || category.image_url
-        });
-
-        res.json(category);
-    } catch (error) {
-        console.error('Kategori güncelleme hatası:', error);
-        res.status(500).json({ error: "Kategori güncellenemedi" });
-    }
-}
-
-exports.deleteCategory = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const category = await Category.findByPk(id);
-        
-        if (!category) {
-            return res.status(404).json({ error: "Kategori bulunamadı" });
-        }
-
-        await category.destroy();
-        res.json({ message: "Kategori başarıyla silindi" });
-    } catch (error) {
-        console.error('Kategori silme hatası:', error);
-        res.status(500).json({ error: "Kategori silinemedi" });
-    }
-}
+};
 
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Category.findAll({
-            order: [['sira_id', 'ASC']]
-        });
+        const categories = await Category.findAll();
         res.json(categories);
     } catch (error) {
-        console.error('Kategori listeleme hatası:', error);
-        res.status(500).json({ error: "Kategoriler alınamadı" });
+        console.log(error);
     }
 }
 
-// Sadece kategori listesi için (yetki kontrolü olmadan)
+// Sadece kategori listesi için (yetki kontrolü olmadan) - CategorySelector için
 exports.getCategoriesList = async (req, res) => {
     try {
         console.log('🔄 Kategori listesi getiriliyor (yetki kontrolü olmadan)');
@@ -543,108 +431,564 @@ exports.getCategoriesList = async (req, res) => {
     }
 }
 
-exports.getCategoryById = async (req, res) => {
+// Kategori silme endpointi
+exports.deleteCategory = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const productCount = await Products.count({ where: { category_id: id } });
+    if (productCount > 0) {
+      return res.status(400).json({ error: 'Bu kategoriye bağlı ürünler var, önce ürünleri silin veya başka kategoriye taşıyın.' });
+    }
+    const deleted = await Category.destroy({ where: { category_id: id } });
+    if (deleted) {
+      res.json({ message: 'Kategori silindi' });
+    } else {
+      res.status(404).json({ error: 'Kategori bulunamadı' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Silme işlemi başarısız' });
+  }
+};
+
+
+// Kategori oluştururken parent_id desteği
+exports.createCategory = async (req, res) => {
+  try {
+    const { category_name, parent_id } = req.body;
+    const image_url = req.file ? req.file.filename : null;
+    if (!category_name) {
+      return res.status(400).json({ error: "Kategori adı boş olamaz!" });
+    }
+    const category = await Category.create({
+      category_name: category_name,
+      sira_id: 0,
+      parent_id: parent_id ? parseInt(parent_id) : null,
+      image_url: image_url
+    });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: "Bir hata oluştu!" });
+  }
+};
+  
+
+// ✅ 1. backend/controller/adminController.js içine alt kategori oluşturmayı doğru şekilde sağlayan endpoint
+exports.createSubCategory = async (req, res) => {
+  const { name, parentId } = req.body;
+  try {
+    const category = await Category.create({
+      category_name: name,
+      sira_id: 0,
+      parent_id: parentId || null
+    });
+    res.json(category);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Alt kategori oluşturulamadı' });
+  }
+};
+
+exports.getSubCategoriesByParentId = async (req,res) => {
+    const id = req.params.id;
     try {
-        const { id } = req.params;
-        const category = await Category.findByPk(id);
-        
-        if (!category) {
-            return res.status(404).json({ error: "Kategori bulunamadı" });
-        }
-        
+        const otherSubCategories = await Category.findAll({
+            where: {
+                parent_id: id
+            }
+        });
+        res.json(otherSubCategories);
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+
+
+
+exports.getCategoryById = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const category = await Category.findOne({
+            where: {
+                category_id: id
+            }
+        });
         res.json(category);
     } catch (error) {
-        console.error('Kategori getirme hatası:', error);
-        res.status(500).json({ error: "Kategori alınamadı" });
+        console.log(error);
     }
 }
 
-exports.getSubCategoriesByParentId = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const subCategories = await Category.findAll({
-            where: { parent_id: id },
-            order: [['sira_id', 'ASC']]
-        });
-        res.json(subCategories);
-    } catch (error) {
-        console.error('Alt kategori listeleme hatası:', error);
-        res.status(500).json({ error: "Alt kategoriler alınamadı" });
-    }
-}
 
 exports.getLastCategory = async (req, res) => {
     try {
-        const lastCategory = await Category.findOne({
-            order: [['category_id', 'DESC']]
-        });
-        res.json(lastCategory);
+      const lastCategory = await Category.findOne({
+        order: [['category_id', 'DESC']],
+        limit: 1
+      });
+      res.json(lastCategory);
     } catch (error) {
-        console.error('Son kategori getirme hatası:', error);
-        res.status(500).json({ error: "Son kategori alınamadı" });
+      res.status(500).json({ error: 'An error occurred while fetching the last category.' });
+    }
+  };
+
+// Kategori güncelleme endpoint'i
+exports.updateCategory = async (req, res) => {
+  try {
+    const { category_id } = req.params;
+    const { category_name, removeImage } = req.body;
+    const imageFile = req.file;
+
+    let imageUrl = null;
+
+    // Eğer resim kaldırılacaksa
+    if (removeImage === 'true') {
+      imageUrl = null;
+    }
+    // Eğer yeni resim yüklenecekse
+    else if (imageFile) {
+      imageUrl = imageFile.filename;
+    }
+    // Eğer hiçbir değişiklik yoksa mevcut resmi koru
+    else {
+      // Mevcut kategoriyi bul ve resmini koru
+      const existingCategory = await Category.findByPk(category_id);
+      if (existingCategory) {
+        imageUrl = existingCategory.image_url;
+      }
+    }
+
+    // Kategoriyi güncelle
+    await Category.update(
+      { 
+        category_name: category_name,
+        image_url: imageUrl 
+      },
+      { where: { category_id: category_id } }
+    );
+
+    res.json({ 
+      message: 'Kategori başarıyla güncellendi',
+      image_url: imageUrl 
+    });
+  } catch (error) {
+    console.error('Kategori güncelleme hatası:', error);
+    res.status(500).json({ error: 'Kategori güncellenirken bir hata oluştu' });
+  }
+};
+
+  
+
+
+
+
+
+
+
+exports.updateProductPrices = async (req,res)=>{
+    const {price,product_id} = req.body;
+    
+    try {
+        const product = await Products.update({
+            price:price
+        },
+        {
+          where:{
+            product_id:product_id
+          }
+        });
+        res.json(product);
+    } catch (error) {
+        console.log(error);
     }
 }
 
-exports.updateCategoriesSira = async (req, res) => {
+exports.bulkCreatePrices = async (req, res) => {
+    const { categoryIds, percentage } = req.body;
+  
     try {
-        const { categories } = req.body;
-        
-        for (let i = 0; i < categories.length; i++) {
-            await Category.update(
-                { sira_id: i + 1 },
-                { where: { category_id: categories[i].category_id } }
-            );
-        }
-        
-        res.json({ message: "Kategori sıralaması güncellendi" });
+      // Veri validasyonu (isteğe bağlı)
+      if (!Array.isArray(categoryIds) || !percentage) {
+        return res.status(400).json({ error: 'Geçersiz veri' });
+      }
+  
+      const products = await Products.findAll({
+        where: {
+          category_id: {
+            [Op.in]: categoryIds,
+          },
+        },
+      });
+  
+      const updatedProducts = await Promise.all(
+        products.map(async (product) => {
+          const newPrice = product.price * (1 + percentage / 100);
+          product.price = Math.round(newPrice);
+          await product.save();
+          return product;
+        })
+      );
+  
+      res.json({ message: 'Fiyatlar başarıyla güncellendi', updatedProducts });
     } catch (error) {
-        console.error('Kategori sıralama hatası:', error);
-        res.status(500).json({ error: "Kategori sıralaması güncellenemedi" });
+      console.error(error);
+      res.status(500).json({ error: 'Bir hata oluştu' });
     }
-}
+};
 
 exports.getProductsByCategory = async (req, res) => {
+    const { category_id } = req.params; 
     try {
-        const { category_id } = req.params;
-        const products = await Products.findAll({
-            where: { category_id },
-            include: [{ model: Category }]
-        });
-        res.json(products);
+      if (!category_id) {
+        return res.status(400).json({ message: 'Kategori ID gerekli' });
+      }
+  
+      const products = await Products.findAll({ where: { category_id } });
+  
+      res.status(200).json(products);
     } catch (error) {
-        console.error('Kategori ürünleri getirme hatası:', error);
-        res.status(500).json({ error: "Kategori ürünleri alınamadı" });
+      console.error('Ürünler alınırken hata oluştu:', error);
+      res.status(500).json({ message: 'Ürünler alınamadı' });
     }
+  };
+
+exports.updateShowcase = async (req, res) => {
+  const { productId } = req.params; // URL'den productId'yi alıyoruz
+  const { showcase } = req.body; // Body'den showcase durumunu alıyoruz
+
+  try {
+    const product = await Products.findByPk(productId);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Ürün bulunamadı!' });
+    }
+
+    // Ürünün showcase durumunu güncelle
+    product.is_selected = showcase;
+    console.log(showcase);
+    await product.save();
+
+    return res.status(200).json({ message: 'Vitrin durumu başarıyla güncellendi.', product });
+    }catch(error){
+        console.log(error);
+        res.json(500,'Backend Hatası');
+    }
+  
+};
+
+exports.updateStatus = async (req, res) => {
+    const { productId } = req.params; // URL'den productId'yi alıyoruz
+    const { status } = req.body; // Body'den showcase durumunu alıyoruz
+  
+    try {
+      // Belirli ürünü bulup showcase durumunu güncelleme
+      const product = await Products.findByPk(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: 'Ürün bulunamadı!' });
+      }
+  
+      // Ürünün showcase durumunu güncelle
+      product.is_available = status;
+      await product.save();
+  
+      return res.status(200).json({ message: 'Vitrin durumu başarıyla güncellendi.', product });
+    } catch (error) {
+      console.error('Vitrin durumu güncellenirken bir hata oluştu:', error);
+      return res.status(500).json({ message: 'Vitrin durumu güncellenirken bir hata oluştu.' });
+    }
+};
+
+const stringSimilarity = require('string-similarity');
+
+exports.uploadExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
+    }
+
+    const columnMapping = {
+      "Ürün Adı": "product_name",
+      "Fiyat": "price",
+      "Kategori": "category_name",
+      "Açıklama": "description",
+      "Stok": "stock",
+      "Seçili": "is_selected",
+      "Mevcut": "is_available",
+      "Resim": "image_url",
+      "Kalori": "calorie_count",
+      "Pişirme Süresi": "cooking_time"
+    };
+
+    const workbook = xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = xlsx.utils.sheet_to_json(worksheet);
+
+    if (rawData.length === 0) {
+      return res.status(400).json({ message: 'Excel dosyası boş.' });
+    }
+
+    const unknownColumns = Object.keys(rawData[0]).filter(
+      col => !columnMapping[col.trim()]
+    );
+    
+    if (unknownColumns.length > 0) {
+      return res.status(400).json({
+        message: "Bilinmeyen sütun başlıkları tespit edildi.",
+        unknownColumns
+      });
+    }
+
+    const data = rawData.map(item => {
+      const mappedItem = {};
+      for (const key in item) {
+        const mappedKey = columnMapping[key.trim()];
+        if (mappedKey) {
+          mappedItem[mappedKey] = item[key];
+        }
+      }
+      return mappedItem;
+    });
+
+    const missingFields = [];
+    data.forEach((item, index) => {
+      if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
+      if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
+      if (!item.category_name) missingFields.push(`Satır ${index + 1}: Kategori adı eksik`);
+    });
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: 'Zorunlu alanlar eksik:',
+        details: missingFields
+      });
+    }
+
+    const count = await Products.count();
+    const duplicateProducts = [];
+    const successfulProducts = [];
+    const categoryErrors = [];
+
+    // 🧠 Kategorileri başta çekip bellekten kontrol edeceğiz
+    const allCategories = await Category.findAll();
+    const allCategoryNames = allCategories.map(cat =>
+      cat.category_name.toString().trim().toLowerCase()
+    );
+
+    // 🧠 Tüm ürünler belleğe alınıyor
+    const allProducts = await Products.findAll();
+    const allProductNames = allProducts.map(p =>
+      p.product_name.toString().trim().toLowerCase()
+    );
+
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      const incomingName = item.product_name.toString().trim().toLowerCase();
+
+      // 🔍 Benzer ürün var mı?
+      let matchedProduct = allProducts.find(p =>
+        p.product_name.toString().trim().toLowerCase() === incomingName
+      );
+
+      if (!matchedProduct) {
+        const { bestMatch } = stringSimilarity.findBestMatch(incomingName, allProductNames);
+        const bestMatchName = bestMatch.target;
+        const bestRating = bestMatch.rating;
+
+        if (bestRating > 0.6) {
+          matchedProduct = allProducts.find(p =>
+            p.product_name.toString().trim().toLowerCase() === bestMatchName
+          );
+        }
+      }
+
+      if (matchedProduct) {
+        duplicateProducts.push(`${item.product_name} (benzer: ${matchedProduct.product_name})`);
+        continue;
+      }
+
+      const categoryName = item.category_name.toString().trim().toLowerCase();
+      let matchedCategory = allCategories.find(cat =>
+        cat.category_name.toString().trim().toLowerCase() === categoryName
+      );
+
+      if (!matchedCategory) {
+        const { bestMatch } = stringSimilarity.findBestMatch(categoryName, allCategoryNames);
+        const bestMatchName = bestMatch.target;
+        const bestCategory = allCategories.find(cat =>
+          cat.category_name.toString().trim().toLowerCase() === bestMatchName
+        );
+
+        if (bestMatch.rating > 0.8 && bestCategory) {
+          matchedCategory = bestCategory;
+        } else {
+          try {
+            matchedCategory = await Category.create({
+              category_name: item.category_name.trim(),
+              parent_id: null,
+              sira_id: 0,
+              depth: 0
+            });
+            allCategories.push(matchedCategory);
+            allCategoryNames.push(matchedCategory.category_name.trim().toLowerCase());
+          } catch (catErr) {
+            categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı.`);
+            continue;
+          }
+        }
+      }
+
+      try {
+        await Products.create({
+          product_name: item.product_name,
+          price: item.price,
+          category_id: matchedCategory.category_id,
+          description: item.description || null,
+          is_selected: item.is_selected || false,
+          is_available: item.is_available === undefined ? true : item.is_available,
+          sira_id: count + successfulProducts.length + 1,
+          image_url: item.image_url || null,
+          calorie_count: item.calorie_count || null,
+          cooking_time: item.cooking_time || null,
+          stock: item.stock || null,
+          carbs: item.carbs || null,
+          protein: item.protein || null,
+          fat: item.fat || null,
+          allergens: item.allergens || null,
+          recommended_with: item.recommended_with || null,
+          business_id: 8
+        });
+
+        successfulProducts.push(item.product_name);
+      } catch (createErr) {
+        categoryErrors.push(`Satır ${i + 1}: ${item.product_name} ürünü eklenemedi.`);
+      }
+    }
+
+   let responseMessage = '';
+let statusCode = 200;
+
+if (successfulProducts.length === 0) {
+  responseMessage = 'Hiçbir ürün eklenmedi. Tüm ürünler sistemde zaten mevcut veya hatalıydı.';
+  statusCode = 400; // bad request gibi davran
+} else if (duplicateProducts.length > 0 || categoryErrors.length > 0) {
+  responseMessage = 'Bazı ürünler eklendi fakat bazıları atlandı.';
+} else {
+  responseMessage = 'Excel yüklemesi tamamlandı.';
 }
 
-// Excel upload fonksiyonu
-exports.uploadExcel = async (req, res) => {
+res.status(statusCode).json({
+  message: responseMessage,
+  addedProducts: successfulProducts,
+  duplicateProducts,
+  categoryErrors,
+  addedCount: successfulProducts.length,
+  duplicateCount: duplicateProducts.length
+});
+
+  } catch (error) {
+    console.error('Excel dosyası yüklenirken bir hata oluştu:', error);
+    res.status(500).json({
+      message: 'Excel dosyası yüklenirken bir hata oluştu.',
+      error: error.message
+    });
+  }
+};
+
+// Resim güncelleme fonksiyonu
+exports.updateProductImage = async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: "Excel dosyası gerekli" });
+        const { product_id, removeImage } = req.body;
+        const imageFile = req.file;
+
+        let imageUrl = null;
+
+        // Eğer resim kaldırılacaksa
+        if (removeImage === 'true') {
+            imageUrl = null;
         }
-
-        const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = xlsx.utils.sheet_to_json(worksheet);
-
-        for (const row of data) {
-            if (row.name && row.price && row.category_id) {
-                await Products.create({
-                    name: row.name,
-                    price: row.price,
-                    description: row.description || '',
-                    category_id: row.category_id,
-                    status: row.status !== undefined ? row.status : true,
-                    showcase: row.showcase !== undefined ? row.showcase : false
-                });
+        // Eğer yeni resim yüklenecekse
+        else if (imageFile) {
+            imageUrl = imageFile.filename;
+        }
+        // Eğer hiçbir değişiklik yoksa mevcut resmi koru
+        else {
+            // Mevcut ürünü bul ve resmini koru
+            const existingProduct = await Products.findByPk(product_id);
+            if (existingProduct) {
+                imageUrl = existingProduct.image_url;
             }
         }
 
-        res.json({ message: "Excel dosyası başarıyla yüklendi", count: data.length });
+        // Ürünü güncelle
+        await Products.update(
+            { image_url: imageUrl },
+            { where: { product_id: product_id } }
+        );
+
+        res.json({ 
+            message: 'Ürün resmi başarıyla güncellendi',
+            image_url: imageUrl 
+        });
     } catch (error) {
-        console.error('Excel upload hatası:', error);
-        res.status(500).json({ error: "Excel dosyası yüklenemedi" });
+        console.error('Resim güncelleme hatası:', error);
+        res.status(500).json({ error: 'Resim güncellenirken bir hata oluştu' });
     }
-}
+};
+
+// Kategori sıralama endpoint'i
+exports.updateCategoriesSira = async (req, res) => {
+  try {
+    const { categories } = req.body;
+
+    if (!categories || !Array.isArray(categories)) {
+      return res.status(400).json({ error: 'Kategoriler listesi gerekli' });
+    }
+
+    // Her kategori için sira_id'yi güncelle
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      await Category.update(
+        { sira_id: i + 1 },
+        { where: { category_id: category.category_id } }
+      );
+    }
+
+    res.json({ 
+      message: 'Kategori sıralaması başarıyla güncellendi',
+      updatedCount: categories.length 
+    });
+  } catch (error) {
+    console.error('Kategori sıralama hatası:', error);
+    res.status(500).json({ error: 'Kategori sıralaması güncellenirken bir hata oluştu' });
+  }
+};
+
+// Önerilen ürünler için özel endpoint - sadece ID ve isim döndürür
+exports.getRecommendedProductsData = async (req, res) => {
+  try {
+    console.log('🔄 Önerilen ürünler için basit liste getiriliyor...');
+    
+    const products = await Products.findAll({
+      attributes: ['product_id', 'product_name', 'is_available'],
+      where: {
+        is_available: true // Sadece aktif ürünleri getir
+      },
+      order: [['product_name', 'ASC']]
+    });
+    
+    console.log(`✅ ${products.length} aktif ürün bulundu (önerilen ürünler için)`);
+    
+    // Basit format: { id, name }
+    const formattedProducts = products.map(product => ({
+      product_id: product.product_id,
+      product_name: product.product_name
+    }));
+    
+    res.json(formattedProducts);
+  } catch (error) {
+    console.error('❌ Önerilen ürünler getirme hatası:', error);
+    res.status(500).json({ error: 'Önerilen ürünler alınamadı' });
+  }
+};

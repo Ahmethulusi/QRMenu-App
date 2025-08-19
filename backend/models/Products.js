@@ -59,6 +59,31 @@ const Product = sequelize.define('Product', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  carbs: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    comment: 'Karbonhidrat miktarı (gram)'
+  },
+  protein: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    comment: 'Protein miktarı (gram)'
+  },
+  fat: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    comment: 'Yağ miktarı (gram)'
+  },
+  allergens: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Alerjen bilgileri'
+  },
+  recommended_with: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Yanında iyi gidecek ürünlerin ID\'leri (JSON array olarak)'
+  },
 }, {
   tableName: 'products',
   timestamps: false,

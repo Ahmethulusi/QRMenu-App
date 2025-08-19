@@ -3,7 +3,7 @@ import { Table, Upload, Button, Popover ,Switch, message,Popconfirm, Spin, Tag} 
 import { UploadOutlined ,PlusOutlined ,EditOutlined,DeleteTwoTone,EyeFilled,EyeInvisibleFilled, TagOutlined} from '@ant-design/icons';
 import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
-import EditFormModal from './EditModal';
+import EditFormModal from './ProductEditModal';
 import { apiGet, apiPut, apiDelete, apiPost } from '../utils/api';
 import '../css/tableSizeManager.css';
 
@@ -11,6 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const Product_Table = () => {
   const [data, setData] = useState([]);  // Verileri burada tutacağız
+  const [originalData, setOriginalData] = useState([]);  // Orijinal API verisini burada tutacağız
   const [loading, setLoading] = useState(true);  // Yüklenme durumu için
   const [error, setError] = useState(null);  // Hata durumunu tutmak için
   const [nameFilters, setNameFilters] = useState([]);  // Filtre değerleri burada tutulur
@@ -74,6 +75,7 @@ const Product_Table = () => {
 
       console.log('✅ Formatlanmış veri:', formattedData);
       setData(formattedData);
+      setOriginalData(datas); // Orijinal API verisini sakla
 
       // uploadCategoriesToModal(datas);
       const uniqueNames = [...new Set(datas.map(item => item.product_name))];
@@ -207,22 +209,34 @@ const Product_Table = () => {
   const showEditModal = (record) => {
     console.log("Edit record:", record); // Debug için
     
-    // Kategori ID'sini bulmak için data array'inden ürünü bul
-    const originalProduct = data.find(item => item.id === record.id);
+    // Orijinal API verisinden ürünü bul
+    const originalApiProduct = originalData.find(item => item.product_id === record.id);
+    console.log("Original API Product:", originalApiProduct); // Debug için
+    
+    if (!originalApiProduct) {
+      console.error("Orijinal ürün verisi bulunamadı!");
+      return;
+    }
     
     setIsEditModalVisible(true);
     setRecordToEdit({
-      product_id: record.id,
-      product_name: record.name,
-      description: record.description,
-      price: record.price,
-      category_id: originalProduct ? originalProduct.category_id : null, // Kategori ID'sini doğru şekilde al
-      is_available: record.status, // Boolean değer olarak
-      is_selected: record.showcase, // Boolean değer olarak
-      labels: originalProduct ? originalProduct.labels : [], // Etiketleri ekle
-      image_url: record.image && record.image.props && record.image.props.children && 
-                record.image.props.children.props ? 
-                record.image.props.children.props.src : null
+      product_id: originalApiProduct.product_id,
+      product_name: originalApiProduct.product_name,
+      description: originalApiProduct.description,
+      price: originalApiProduct.price,
+      category_id: originalApiProduct.category_id,
+      stock: originalApiProduct.stock,
+      calorie_count: originalApiProduct.calorie_count,
+      cooking_time: originalApiProduct.cooking_time,
+      carbs: originalApiProduct.carbs,
+      protein: originalApiProduct.protein,
+      fat: originalApiProduct.fat,
+      allergens: originalApiProduct.allergens,
+      recommended_with: originalApiProduct.recommended_with,
+      is_available: originalApiProduct.is_available,
+      is_selected: originalApiProduct.is_selected,
+      labels: originalApiProduct.labels || [],
+      image_url: originalApiProduct.image_url
     });
   };
 
