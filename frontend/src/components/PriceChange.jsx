@@ -396,8 +396,8 @@ const ProductPriceTable = () => {
           </span>
         ) : (
           <Button
-            disabled={editingKey !== ''}
-            onClick={() => edit(record.key)}
+            disabled={editingKey !== '' && editingKey !== record.key}
+            onClick={() => edit(record)}
             type="link"
             icon={<EditOutlined />}
           >

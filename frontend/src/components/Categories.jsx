@@ -178,11 +178,15 @@ const Categories = () => {
       }
       
       const categoriesJson = await response.json();
-      const formattedData = categoriesJson.map((category) => ({
+      // Kategorileri sira_id'ye göre sırala
+      const sortedCategories = [...categoriesJson].sort((a, b) => (a.sira_id || 0) - (b.sira_id || 0));
+      
+      const formattedData = sortedCategories.map((category) => ({
         id: category.category_id,
         name: category.category_name,
         parent_id: category.parent_id,
         imageUrl: category.image_url,
+        sira_id: category.sira_id || 0, // sira_id'yi ekleyelim, yoksa 0 olsun
       }));
       
       const treeData = buildCategoryTree(formattedData);
@@ -216,6 +220,16 @@ const Categories = () => {
         }
       }
     });
+
+    // Ana kategorileri sira_id'ye göre sırala
+    tree.sort((a, b) => (a.sira_id || 0) - (b.sira_id || 0));
+    
+    // Alt kategorileri de sira_id'ye göre sırala
+    for (const category of tree) {
+      if (category.children && category.children.length > 0) {
+        category.children.sort((a, b) => (a.sira_id || 0) - (b.sira_id || 0));
+      }
+    }
 
     return tree;
   };

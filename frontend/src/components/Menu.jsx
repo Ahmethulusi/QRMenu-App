@@ -237,8 +237,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       icon: <GroupOutlined />,
       label: 'Kategori Yönetimi',
       children: [
-        { key: 'Categories', label: 'Ana Kategoriler' },
-        { key: 'CategorySort', label: 'Kategori Sıralama' }
+        { key: 'Categories', label: 'Kategoriler' },
+        { key: 'CategorySort', label: 'Sıralama' }
       ]
     },
     {
