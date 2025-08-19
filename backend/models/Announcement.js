@@ -19,9 +19,14 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.STRING(500),
     allowNull: true
   },
+  type: {
+    type: DataTypes.ENUM('promotion', 'campaign', 'discount', 'general'),
+    allowNull: false,
+    defaultValue: 'general'
+  },
   category: {
     type: DataTypes.ENUM('visual_only', 'visual_text', 'subscription_form', 'text_image_button', 'newsletter_form', 'countdown_timer', 'countdown_image'),
-    allowNull: false
+    allowNull: true
   },
   priority: {
     type: DataTypes.INTEGER,
@@ -41,6 +46,34 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  // Promosyon ve İndirim için alanlar
+  discount_type: {
+    type: DataTypes.ENUM('amount', 'percentage'),
+    allowNull: true
+  },
+  discount_value: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null
+  },
+  applicable_products: {
+    type: DataTypes.JSON, // Ürün ID'lerini içeren dizi
+    allowNull: true
+  },
+  applicable_categories: {
+    type: DataTypes.JSON, // Kategori ID'lerini içeren dizi
+    allowNull: true
+  },
+  // Kampanya için alanlar
+  campaign_condition: {
+    type: DataTypes.STRING(500),
+    allowNull: true
+  },
+  campaign_reward: {
+    type: DataTypes.STRING(500),
+    allowNull: true
+  },
+  // Mevcut alanlar
   delay: {
     type: DataTypes.INTEGER, // milliseconds
     allowNull: true

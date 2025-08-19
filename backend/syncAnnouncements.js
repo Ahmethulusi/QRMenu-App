@@ -1,43 +1,37 @@
-const { sequelize } = require('./models');
+const sequelize = require('./db');
+const { Announcement } = require('./models');
 
-async function syncAnnouncements() {
+/**
+ * Bu script, Announcement modelini veritabanı ile senkronize eder.
+ * Modelde tanımlanan alanları veritabanına ekler.
+ * 
+ * NOT: Bu işlem mevcut verileri korur, ancak yeni alanlar ekler.
+ */
+const syncAnnouncementModel = async () => {
   try {
-    console.log('🔄 Duyurular tablosu senkronize ediliyor...');
+    console.log('🔄 Announcement modeli senkronizasyonu başlatılıyor...');
     
-    // Announcements tablosunu senkronize et
-    await sequelize.sync({ force: false });
+    // Mevcut tabloyu değiştirmeden yeni alanları ekle
+    await Announcement.sync({ alter: true });
     
-    console.log('✅ Duyurular tablosu başarıyla senkronize edildi!');
+    console.log('✅ Announcement modeli başarıyla senkronize edildi.');
     
-    // PostgreSQL için tablo yapısını kontrol et
-    const [results] = await sequelize.query(`
-      SELECT 
-        column_name as "Field",
-        data_type as "Type",
-        is_nullable as "Null",
-        column_default as "Default"
-      FROM information_schema.columns 
-      WHERE table_name = 'announcements' 
-      ORDER BY ordinal_position
+    // Mevcut kayıtları güncelle - type alanını 'general' olarak ayarla
+    const [updatedCount] = await sequelize.query(`
+      UPDATE announcements 
+      SET type = 'general' 
+      WHERE type IS NULL
     `);
     
-    console.log('\n📋 Duyurular tablosu yapısı:');
-    results.forEach(row => {
-      const nullInfo = row.Null === 'NO' ? '(NOT NULL)' : '';
-      const defaultInfo = row.Default ? `(Default: ${row.Default})` : '';
-      console.log(`  - ${row.Field}: ${row.Type} ${nullInfo} ${defaultInfo}`);
-    });
+    console.log(`🔄 ${updatedCount} kayıt güncellendi, type = 'general' olarak ayarlandı.`);
     
+    console.log('✅ Senkronizasyon tamamlandı.');
   } catch (error) {
-    console.error('❌ Duyurular tablosu senkronize edilirken hata:', error);
+    console.error('❌ Senkronizasyon hatası:', error);
   } finally {
-    await sequelize.close();
+    process.exit();
   }
-}
+};
 
-// Script çalıştırılırsa
-if (require.main === module) {
-  syncAnnouncements();
-}
-
-module.exports = { syncAnnouncements };
+// Scripti çalıştır
+syncAnnouncementModel();

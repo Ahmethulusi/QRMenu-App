@@ -100,9 +100,12 @@ const getAnnouncementById = async (req, res) => {
 // Yeni duyuru oluştur
 const createAnnouncement = async (req, res) => {
   try {
+    console.log('📥 Gelen istek:', req.body);
+    
     const {
       title,
       content,
+      type,
       category,
       priority,
       is_active,
@@ -115,20 +118,36 @@ const createAnnouncement = async (req, res) => {
       countdown_date,
       subscription_form_fields,
       newsletter_form_fields,
-      layout_config
+      layout_config,
+      // Yeni alanlar
+      discount_type,
+      discount_value,
+      applicable_products,
+      applicable_categories,
+      campaign_condition,
+      campaign_reward
     } = req.body;
     
     // Zorunlu alanları kontrol et
-    if (!title || !category) {
+    if (!title) {
       return res.status(400).json({
         success: false,
-        message: 'Başlık ve kategori alanları zorunludur'
+        message: 'Başlık alanı zorunludur'
       });
     }
     
     // Görsel dosyalarını kontrol et
-    const imageUrl = req.files?.image ? req.files.image[0].filename : null;
-    const backgroundImageUrl = req.files?.background_image ? req.files.background_image[0].filename : null;
+    let imageUrl = null;
+    if (req.files?.image) {
+      imageUrl = `/public/images/${req.files.image[0].filename}`;
+      console.log('📸 Yeni görsel yüklendi:', imageUrl);
+    }
+    
+    let backgroundImageUrl = null;
+    if (req.files?.background_image) {
+      backgroundImageUrl = `/public/images/${req.files.background_image[0].filename}`;
+      console.log('🖼️ Yeni arka plan görseli yüklendi:', backgroundImageUrl);
+    }
     
     // Integer alanları düzelt
     const priorityValue = priority && priority !== '' ? parseInt(priority) : 0;
@@ -169,11 +188,63 @@ const createAnnouncement = async (req, res) => {
       }
     }
     
-    const announcement = await Announcement.create({
+    // JSON alanlarını işle
+    let parsedApplicableProducts = null;
+    let parsedApplicableCategories = null;
+    
+    if (applicable_products) {
+      try {
+        parsedApplicableProducts = typeof applicable_products === 'string' 
+          ? JSON.parse(applicable_products) 
+          : applicable_products;
+      } catch (e) {
+        console.error('Ürünler parse edilirken hata:', e);
+      }
+    }
+    
+    if (applicable_categories) {
+      try {
+        parsedApplicableCategories = typeof applicable_categories === 'string' 
+          ? JSON.parse(applicable_categories) 
+          : applicable_categories;
+      } catch (e) {
+        console.error('Kategoriler parse edilirken hata:', e);
+      }
+    }
+    
+    // Discount value'yu sayıya çevir
+    let parsedDiscountValue = null;
+    if (discount_value) {
+      parsedDiscountValue = parseFloat(discount_value);
+    }
+    
+    // Kategori alanı için varsayılan değer atama
+    let categoryValue = category;
+    
+    // Eğer kategori yoksa, type değerine göre bir varsayılan kategori atama
+    if (!categoryValue) {
+      switch (type) {
+        case 'promotion':
+          categoryValue = 'visual_text'; // Promosyonlar için varsayılan kategori
+          break;
+        case 'campaign':
+          categoryValue = 'visual_text'; // Kampanyalar için varsayılan kategori
+          break;
+        case 'discount':
+          categoryValue = 'visual_text'; // İndirimler için varsayılan kategori
+          break;
+        default:
+          categoryValue = 'visual_only'; // Genel duyurular için varsayılan kategori
+      }
+      console.log(`🔄 Kategori belirtilmediği için varsayılan kategori atandı: ${categoryValue}`);
+    }
+    
+    const announcementData = {
       title,
       content: content || '',
       image_url: imageUrl,
-      category,
+      type: type || 'general',
+      category: categoryValue, // Varsayılan kategori kullanılıyor
       priority: priorityValue,
       is_active: is_active !== undefined ? is_active : true,
       start_date: formattedStartDate,
@@ -184,12 +255,41 @@ const createAnnouncement = async (req, res) => {
       button_url: button_url || '',
       background_image_url: backgroundImageUrl,
       countdown_date: formattedCountdownDate,
-      subscription_form_fields: subscription_form_fields ? JSON.parse(subscription_form_fields) : null,
-      newsletter_form_fields: newsletter_form_fields ? JSON.parse(newsletter_form_fields) : null,
-      layout_config: layout_config ? JSON.parse(layout_config) : null
-    });
+      
+      // Yeni alanlar
+      discount_type: discount_type || null,
+      discount_value: parsedDiscountValue,
+      applicable_products: parsedApplicableProducts,
+      applicable_categories: parsedApplicableCategories,
+      campaign_condition: campaign_condition || null,
+      campaign_reward: campaign_reward || null,
+      
+      // Eski alanlar
+      subscription_form_fields: subscription_form_fields ? 
+        (typeof subscription_form_fields === 'string' ? JSON.parse(subscription_form_fields) : subscription_form_fields) 
+        : null,
+      newsletter_form_fields: newsletter_form_fields ? 
+        (typeof newsletter_form_fields === 'string' ? JSON.parse(newsletter_form_fields) : newsletter_form_fields) 
+        : null,
+      layout_config: layout_config ? 
+        (typeof layout_config === 'string' ? JSON.parse(layout_config) : layout_config) 
+        : null
+    };
     
-    console.log('🎉 Duyuru oluşturuldu:', announcement.toJSON());
+    console.log('🔧 Oluşturulacak duyuru verisi:', announcementData);
+    
+    let announcement;
+    try {
+      announcement = await Announcement.create(announcementData);
+      console.log('🎉 Duyuru oluşturuldu:', announcement.toJSON());
+    } catch (createError) {
+      console.error('❌ Duyuru oluşturma hatası:', createError);
+      console.error('❌ Hata detayı:', createError.message);
+      if (createError.name === 'SequelizeDatabaseError') {
+        console.error('❌ SQL hatası:', createError.parent?.message || 'Bilinmeyen SQL hatası');
+      }
+      throw createError;
+    }
     
     const responseData = {
       success: true,
@@ -201,10 +301,29 @@ const createAnnouncement = async (req, res) => {
     
     res.status(201).json(responseData);
   } catch (error) {
-    console.error('Duyuru oluşturulurken hata:', error);
+    console.error('❌ Duyuru oluşturulurken hata:', error);
+    console.error('❌ Hata tipi:', error.name);
+    console.error('❌ Hata mesajı:', error.message);
+    
+    if (error.name === 'SequelizeDatabaseError') {
+      console.error('❌ SQL hatası:', error.parent?.message || 'Bilinmeyen SQL hatası');
+      console.error('❌ SQL kodu:', error.parent?.code || 'Bilinmeyen SQL kodu');
+      console.error('❌ SQL durumu:', error.parent?.state || 'Bilinmeyen SQL durumu');
+    }
+    
+    if (error.name === 'SequelizeValidationError') {
+      console.error('❌ Doğrulama hataları:', error.errors.map(e => e.message));
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Duyuru oluşturulurken bir hata oluştu'
+      message: 'Duyuru oluşturulurken bir hata oluştu',
+      error: process.env.NODE_ENV === 'development' ? {
+        name: error.name,
+        message: error.message,
+        sql: error.parent?.message,
+        detail: error.errors?.map(e => e.message)
+      } : undefined
     });
   }
 };
@@ -212,6 +331,8 @@ const createAnnouncement = async (req, res) => {
 // Duyuru güncelle
 const updateAnnouncement = async (req, res) => {
   try {
+    console.log('📥 Güncelleme isteği:', req.body);
+    
     const { id } = req.params;
     const updateData = req.body;
     
@@ -226,10 +347,21 @@ const updateAnnouncement = async (req, res) => {
     
     // Görsel dosyalarını kontrol et
     if (req.files?.image) {
-      updateData.image_url = req.files.image[0].filename;
+      updateData.image_url = `/public/images/${req.files.image[0].filename}`;
+      console.log('📸 Yeni görsel yüklendi:', updateData.image_url);
+    } else if (req.body.existing_image_path) {
+      // Mevcut görsel korunuyor
+      updateData.image_url = req.body.existing_image_path;
+      console.log('🖼️ Mevcut görsel korunuyor:', updateData.image_url);
     }
+    
     if (req.files?.background_image) {
-      updateData.background_image_url = req.files.background_image[0].filename;
+      updateData.background_image_url = `/public/images/${req.files.background_image[0].filename}`;
+      console.log('🖼️ Yeni arka plan görseli yüklendi:', updateData.background_image_url);
+    } else if (req.body.existing_background_image_path) {
+      // Mevcut arka plan görseli korunuyor
+      updateData.background_image_url = req.body.existing_background_image_path;
+      console.log('🖼️ Mevcut arka plan görseli korunuyor:', updateData.background_image_url);
     }
     
     // Integer alanları düzelt
@@ -310,6 +442,38 @@ const updateAnnouncement = async (req, res) => {
         updateData.layout_config = null;
       }
     }
+    
+    // Yeni alanları işle
+    if (updateData.applicable_products) {
+      try {
+        updateData.applicable_products = typeof updateData.applicable_products === 'string' 
+          ? JSON.parse(updateData.applicable_products) 
+          : updateData.applicable_products;
+      } catch (e) {
+        console.error('Ürünler parse edilirken hata:', e);
+        updateData.applicable_products = null;
+      }
+    }
+    
+    if (updateData.applicable_categories) {
+      try {
+        updateData.applicable_categories = typeof updateData.applicable_categories === 'string' 
+          ? JSON.parse(updateData.applicable_categories) 
+          : updateData.applicable_categories;
+      } catch (e) {
+        console.error('Kategoriler parse edilirken hata:', e);
+        updateData.applicable_categories = null;
+      }
+    }
+    
+    // Discount value'yu sayıya çevir
+    if (updateData.discount_value !== undefined) {
+      updateData.discount_value = updateData.discount_value 
+        ? parseFloat(updateData.discount_value) 
+        : null;
+    }
+    
+    console.log('🔧 Güncellenecek veri:', updateData);
     
     await announcement.update(updateData);
     
