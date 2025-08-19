@@ -31,49 +31,74 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching data for businessId:', businessId); // Debug için
-      const result = await apiGet(`/api/branches/matrix/${businessId}`);
+      console.log('🔄 Fetching branch product matrix...'); // Debug için
       
-      setBranches(result.branches);
+      // YENİ ENDPOINT: Şube ürün matrisi getir
+      const result = await apiGet('/api/branches/branch-product-matrix');
       
-      // Tüm kategorileri topla
+      setBranches(result);
+      
+      // Tüm kategorileri ve ürünleri topla
       const categories = new Set();
-      result.allProducts.forEach(product => {
-        categories.add(product.category_name);
+      const products = [];
+      
+      result.forEach(branch => {
+        if (branch.categories && Array.isArray(branch.categories)) {
+          branch.categories.forEach(category => {
+            categories.add(category.category_name);
+            if (category.products && Array.isArray(category.products)) {
+              category.products.forEach(product => {
+                // Ürünü sadece bir kez ekle
+                if (!products.find(p => p.product_id === product.product_id)) {
+                  products.push(product);
+                }
+              });
+            }
+          });
+        }
       });
       
       setAllCategories(Array.from(categories));
-      setAllProducts(result.allProducts);
-      setFilteredProducts(result.allProducts);
-      console.log('Backend response:', result);
-      console.log('Branches:', result.branches);
-      console.log('Sample branch product:', result.branches[0]?.categories[0]?.products[0]);
+      setAllProducts(products);
+      setFilteredProducts(products);
+      
+      console.log('✅ Backend response:', {
+        branchCount: result.length,
+        categoryCount: categories.size,
+        productCount: products.length
+      });
+      console.log('📋 Sample branch:', result[0]);
     } catch (error) {
-      console.error('Veri çekme hatası:', error);
+      console.error('❌ Veri çekme hatası:', error);
       message.error('Veriler yüklenemedi');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtreleme fonksiyonları
+  // YENİ MANTIK: Filtreleme fonksiyonları  
   const handleBranchFilter = (branchId) => {
     setSelectedBranch(branchId);
     if (branchId) {
-      // Şube seçildiğinde tüm ürünleri göster, ama şube bilgilerini ekle
+      // Şube seçildiğinde TÜM ürünleri göster, sadece o şubedeki durumlarını belirt
       const selectedBranchData = branches.find(b => b.branch_id === branchId);
+      
       const productsWithBranchData = allProducts.map(product => {
-        const branchProduct = selectedBranchData.categories
-          .flatMap(cat => cat.products)
-          .find(bp => bp.product_id === product.product_id);
+        // Bu ürün bu şubede var mı kontrol et
+        const branchProduct = selectedBranchData?.categories
+          ?.flatMap(cat => cat.products)
+          ?.find(bp => bp.product_id === product.product_id);
         
         return {
           ...product,
-          branch_price: branchProduct ? branchProduct.branch_price : null,
-          available: branchProduct ? branchProduct.available : false, // Bu zaten doğru
+          // Şubede varsa branch fiyatını, yoksa ana fiyatı göster
+          branch_price: branchProduct ? branchProduct.branch_price : product.list_price || product.price,
+          // YENİ MANTIK: branchProduct varsa available=true, yoksa false (excluded)
+          available: !!branchProduct, 
           branch_id: branchId,
         };
       });
+      
       setFilteredProducts(productsWithBranchData);
     } else {
       setFilteredProducts(allProducts);
@@ -174,21 +199,38 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
 
       // apiPut kullanarak güncelleme isteği gönder (token otomatik eklenir)
       const result = await apiPut('/api/branches/branch-products', requestBody);
-      console.log('Başarılı response:', result);
+      console.log('✅ Başarılı response:', result);
 
-      // State'leri güncelle - API çağrısı yapmadan
-      setFilteredProducts(prevProducts => 
-        prevProducts.map(product => {
-          if (product.product_id === productId) {
-            return {
-              ...product,
-              branch_price: row.branch_price,
-              available: row.available,
-            };
-          }
-          return product;
-        })
-      );
+      // YENİ MANTIK: State'leri güncelle
+      if (row.available) {
+        // Ürün dahil edildi - sadece local state'i güncelle
+        setFilteredProducts(prevProducts => 
+          prevProducts.map(product => {
+            if (product.product_id === productId) {
+              return {
+                ...product,
+                branch_price: row.branch_price,
+                available: true,
+              };
+            }
+            return product;
+          })
+        );
+      } else {
+        // Ürün exclude edildi - local state'de available: false yap
+        setFilteredProducts(prevProducts => 
+          prevProducts.map(product => {
+            if (product.product_id === productId) {
+              return {
+                ...product,
+                branch_price: row.branch_price,
+                available: false,
+              };
+            }
+            return product;
+          })
+        );
+      }
 
       // Branches state'ini de güncelle
       setBranches(prevBranches => 
@@ -435,8 +477,7 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
 
   return (
     <div className="branch-product-matrix branch-product-matrix-page" style={{ 
-      padding: 16,
-      minHeight: 'calc(100vh - 60px)'
+      padding: 16
     }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2}>Şube Ürün Yönetimi</Title>

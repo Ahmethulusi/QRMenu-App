@@ -330,54 +330,155 @@ exports.AddProductToBranch= async (req, res) => {
   }
 };
 
-// Şube ürününde fiyat ve bulunurluk güncelleme
+// YENİ MANTIK: Şube ürününde fiyat ve bulunurluk güncelleme
 exports.updateBranchProduct = async (req, res) => {
   try {
-    console.log('Gelen veri:', req.body);
+    console.log('🔄 Gelen veri:', req.body);
     const { branch_id, product_id, price, stock } = req.body;
 
     if (!branch_id || !product_id) {
-      console.log('Eksik parametreler:', { branch_id, product_id });
+      console.log('❌ Eksik parametreler:', { branch_id, product_id });
       return res.status(400).json({ error: 'branch_id ve product_id zorunludur.' });
     }
 
-    console.log('Aranan kayıt:', { branch_id, product_id });
-
-    // Önce mevcut kaydı ara
-    let branchProduct = await BranchProduct.findOne({
+    // YENİ MANTIK: stock 0 = ürünü şubeden çıkar (exclude)
+    if (stock === 0) {
+      console.log('🚫 Ürün şubeden çıkarılıyor...');
+      
+      // Exclude kaydı oluştur veya güncelle
+      const [branchProduct, created] = await BranchProduct.findOrCreate({
+        where: { branch_id, product_id },
+        defaults: {
+          branch_id,
+          product_id,
+          price: price || 0,
+          is_available: false // FALSE = excluded
+        }
+      });
+      
+      if (!created) {
+        // Mevcut kayıt varsa, exclude olarak işaretle
+        branchProduct.is_available = false;
+        branchProduct.price = price || branchProduct.price;
+        await branchProduct.save();
+      }
+      
+      console.log('✅ Ürün şubeden çıkarıldı:', branchProduct.dataValues);
+      return res.status(200).json({ success: true, action: 'excluded', branchProduct });
+    }
+    
+    // stock 1 = ürün şubede var
+    console.log('✅ Ürün şubede dahil ediliyor...');
+    
+    // Mevcut exclude kaydını ara
+    const existingRecord = await BranchProduct.findOne({
       where: { branch_id, product_id }
     });
-
-    console.log('Bulunan kayıt:', branchProduct);
-
-    if (!branchProduct) {
-      console.log('Yeni kayıt oluşturuluyor...');
-      // Kayıt yoksa yeni bir kayıt oluştur
-      branchProduct = await BranchProduct.create({
-        branch_id,
-        product_id,
-        price: price || 0,
-        is_available: stock === 1 ? true : false // stock 1 ise true, değilse false
-      });
-      console.log('Yeni kayıt oluşturuldu:', branchProduct);
+    
+    if (existingRecord) {
+      // Kayıt varsa sil (çünkü kayıt yoksa = ürün var demek)
+      await existingRecord.destroy();
+      console.log('✅ Exclude kaydı silindi - ürün artık şubede mevcut');
+      return res.status(200).json({ success: true, action: 'included', message: 'Ürün şubeye dahil edildi' });
     } else {
-      console.log('Mevcut kayıt güncelleniyor...');
-      // Mevcut kaydı güncelle
-      if (price !== undefined) branchProduct.price = price;
-      if (stock !== undefined) branchProduct.is_available = stock === 1 ? true : false;
-      await branchProduct.save();
-      console.log('Kayıt güncellendi:', branchProduct);
+      // Zaten kayıt yok = zaten şubede var
+      console.log('✅ Ürün zaten şubede mevcut');
+      return res.status(200).json({ success: true, action: 'already_included', message: 'Ürün zaten şubede mevcut' });
     }
 
-    return res.status(200).json({ success: true, branchProduct });
   } catch (error) {
-    console.error('Şube ürün güncelleme hatası:', error);
-    console.error('Hata detayı:', error.message);
-    console.error('Stack trace:', error.stack);
+    console.error('❌ Şube ürün güncelleme hatası:', error);
     return res.status(500).json({ 
       error: 'Sunucu hatası: Şube ürün güncellenemedi.',
       details: error.message 
     });
+  }
+};
+
+// YENİ MANTIK: Şubedeki ürünleri getir - excluded olanları çıkar
+exports.getBranchProductMatrix = async (req, res) => {
+  try {
+    console.log('🔄 Şube ürün matrisi getiriliyor...');
+    
+    // Tüm şubeleri getir
+    const branches = await Branch.findAll({
+      attributes: ['id', 'name', 'business_id']
+    });
+    
+    // Tüm ürünleri kategorileriyle birlikte getir
+    const allProducts = await Products.findAll({
+      include: [{
+        model: Category,
+        as: 'category',
+        attributes: ['category_id', 'category_name']
+      }],
+      attributes: ['product_id', 'product_name', 'price', 'category_id'],
+      order: [['product_name', 'ASC']]
+    });
+    
+    // Excluded ürünleri getir (is_available: false olanlar)
+    const excludedProducts = await BranchProduct.findAll({
+      where: { is_available: false },
+      attributes: ['branch_id', 'product_id', 'price']
+    });
+    
+    console.log(`✅ ${branches.length} şube, ${allProducts.length} ürün, ${excludedProducts.length} excluded ürün`);
+    
+    // Her şube için ürünleri düzenle
+    const result = branches.map(branch => {
+      // Bu şubede excluded olan ürünlerin ID'lerini al
+      const excludedInThisBranch = excludedProducts
+        .filter(ep => ep.branch_id === branch.id)
+        .map(ep => ep.product_id);
+      
+      // Kategorilere göre grupla
+      const categories = {};
+      
+      allProducts.forEach(product => {
+        const categoryName = product.category ? product.category.category_name : 'Kategori Yok';
+        
+        if (!categories[categoryName]) {
+          categories[categoryName] = [];
+        }
+        
+        // Excluded değilse listeye ekle
+        if (!excludedInThisBranch.includes(product.product_id)) {
+          // Custom fiyat var mı kontrol et
+          const customPriceRecord = excludedProducts.find(ep => 
+            ep.branch_id === branch.id && 
+            ep.product_id === product.product_id && 
+            ep.price && ep.price > 0
+          );
+          
+          categories[categoryName].push({
+            product_id: product.product_id,
+            product_name: product.product_name,
+            list_price: product.price,
+            branch_price: customPriceRecord ? customPriceRecord.price : product.price,
+            available: true, // Excluded değilse available
+            category_name: categoryName
+          });
+        }
+      });
+      
+      // Kategorileri array'e çevir
+      const categoryArray = Object.keys(categories).map(categoryName => ({
+        category_name: categoryName,
+        products: categories[categoryName]
+      }));
+      
+              return {
+          branch_id: branch.id,
+          branch_name: branch.name,
+          business_id: branch.business_id,
+          categories: categoryArray
+        };
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Şube ürün matrisi hatası:', error);
+    res.status(500).json({ error: 'Şube ürün matrisi getirilemedi' });
   }
 };
 
@@ -433,8 +534,8 @@ exports.deleteBranchProduct = async (req, res) => {
   }
 };
 
-// Yeni endpoint: Tüm ürünleri ve seçili şubedeki durumlarını getir
-exports.getBranchProductMatrix = async (req, res) => {
+// ESKİ ENDPOINT: Artık kullanılmıyor - silinebilir
+exports.getBranchProductMatrixOLD = async (req, res) => {
   try {
     console.log('🔄 Matrix verisi getiriliyor...');
     const { businessId } = req.params;

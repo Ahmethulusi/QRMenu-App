@@ -119,24 +119,6 @@ function Content({ selectedComponent }) {
       }
       return <Announcements />;
 
-    case 'Campaigns':
-      return <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>Kampanyalar</h2>
-        <p>Bu özellik henüz geliştirilmemiştir.</p>
-      </div>;
-
-    case 'DailyMenu':
-      return <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>Günün Menüsü</h2>
-        <p>Bu özellik henüz geliştirilmemiştir.</p>
-      </div>;
-
-    case 'Ingredients':
-      return <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>İçindekiler</h2>
-        <p>Bu özellik henüz geliştirilmemiştir.</p>
-      </div>;
-
     case 'Menus':
       if (!checkComponentPermission('products', 'read')) {
         return <NoPermission 

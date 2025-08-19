@@ -4,6 +4,13 @@ const branchController = require('../controllers/branchController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { hasPermission } = require('../controllers/permissionController');
 
+// Yeni endpoint: Şube ürün matrisi - ÖNEMLİ: Spesifik route'lar önce olmalı!
+router.get('/branch-product-matrix', 
+  authenticateToken, 
+  hasPermission('branches', 'read'), 
+  branchController.getBranchProductMatrix
+);
+
 // Şube görüntüleme işlemleri
 router.get('/:businessId', 
   authenticateToken, 
@@ -20,11 +27,12 @@ router.get("/:branchId/products",
   hasPermission('branches', 'read'), 
   branchController.getProductsByBranchId
 );
-router.get('/matrix/:businessId', 
-  authenticateToken, 
-  hasPermission('branches', 'read'), 
-  branchController.getBranchProductMatrix
-);
+// ESKİ ROUTE: Artık kullanılmıyor - silinebilir
+// router.get('/matrix/:businessId', 
+//   authenticateToken, 
+//   hasPermission('branches', 'read'), 
+//   branchController.getBranchProductMatrixOLD
+// );
 router.get('/:branchId/:businessId/available-products', 
   authenticateToken, 
   hasPermission('branches', 'read'), 
@@ -52,6 +60,8 @@ router.put('/branch-products',
   hasPermission('branches', 'update'), 
   branchController.updateBranchProduct
 );
+
+
 router.delete('/branch-products', 
   authenticateToken, 
   hasPermission('branches', 'update'), 

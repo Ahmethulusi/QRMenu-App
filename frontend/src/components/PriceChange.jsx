@@ -66,6 +66,7 @@ const ProductPriceTable = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Seçili satırların key'leri için state
   const [loading, setLoading] = useState(false); // Loading state ekleyelim
   const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
+  const [permissionsLoading, setPermissionsLoading] = useState(true); // Yetki yükleme durumu
 
   useEffect(() => {
     fetchProducts();
@@ -76,7 +77,10 @@ const ProductPriceTable = () => {
   const fetchUserPermissions = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        setPermissionsLoading(false);
+        return;
+      }
 
       const response = await fetch(`${API_URL}/api/permissions/user`, {
         headers: {
@@ -91,6 +95,8 @@ const ProductPriceTable = () => {
       }
     } catch (error) {
       console.error('❌ Yetkiler yüklenirken hata:', error);
+    } finally {
+      setPermissionsLoading(false);
     }
   };
 
@@ -427,6 +433,11 @@ const ProductPriceTable = () => {
     };
   });
   
+  // Yetkiler yüklenene kadar hiçbir şey gösterme
+  if (permissionsLoading) {
+    return <div>Yetki kontrolleri yapılıyor...</div>;
+  }
+
   return (
     <div>
       <Form form={form} component={false}>

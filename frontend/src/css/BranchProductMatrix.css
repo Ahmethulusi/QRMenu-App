@@ -1,7 +1,7 @@
 /* BranchProductMatrix Responsive Styles */
 .branch-product-matrix {
-  min-height: calc(100vh - 60px); /* Header yüksekliğini çıkar */
-  overflow-y: auto;
+  min-height: auto; /* Auto height - içeriğe göre ayarla */
+  overflow-y: visible;
   padding: 16px;
   background-color: #f5f5f5;
 }
@@ -32,7 +32,7 @@
 @media (max-width: 768px) {
   .branch-product-matrix {
     padding: 8px;
-    min-height: calc(100vh - 60px); /* Header yüksekliğini çıkar */
+    min-height: auto; /* İçeriğe göre otomatik */
   }
   
   .branch-product-matrix .ant-card {
@@ -151,7 +151,7 @@
 
 /* BranchProductMatrix için body scroll aktifleştirme */
 .branch-product-matrix {
-  min-height: 100vh;
+  min-height: auto; /* İçeriğe göre otomatik boyut */
 }
 
 /* Mobil cihazlarda body scroll'u aktif et - content.css'i ezecek şekilde */
