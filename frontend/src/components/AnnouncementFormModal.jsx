@@ -26,6 +26,42 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
+// Görsel URL'lerini düzeltmek için yardımcı fonksiyon
+const getCorrectImageUrl = (url) => {
+  if (!url) return null;
+  
+  console.log("🔍 URL düzeltiliyor:", url);
+  
+  // Eğer tam URL ise (http:// veya https:// ile başlıyorsa) doğrudan kullan
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    console.log("✅ Tam URL kullanılıyor:", url);
+    return url;
+  }
+  
+  // Eğer sadece dosya adı ise (örn: 1234.jpg) tam yolu oluştur
+  // Bu, veritabanında sadece dosya adının saklandığı durum için
+  if (!url.includes('/')) {
+    // Burada doğrudan API_URL'yi kullanmak yerine tam yolu belirtiyoruz
+    // Backend'in express.static ile public klasörünü sunduğunu biliyoruz
+    const fullUrl = `${API_URL}/images/${url}`;
+    console.log("✅ Dosya adı için tam yol oluşturuluyor:", fullUrl);
+    return fullUrl;
+  }
+  
+  // Eğer /public/ ile başlıyorsa, public kısmını kaldır çünkü express.static zaten public klasörünü sunuyor
+  if (url.includes('/public/')) {
+    const cleanPath = url.replace('/public', '');
+    const fullUrl = `${API_URL}${cleanPath}`;
+    console.log("✅ /public/ yolu düzeltiliyor:", fullUrl);
+    return fullUrl;
+  }
+  
+  // Diğer tüm durumlar için API_URL ile birleştir
+  const fullUrl = `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  console.log("✅ Genel durum - URL birleştiriliyor:", fullUrl);
+  return fullUrl;
+};
+
 const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('1');
@@ -110,41 +146,50 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       if (announcement.image_url) {
         console.log("🖼️ Orijinal Görsel URL'i:", announcement.image_url);
         
-        // Görsel URL'ini düzenle
-        let imageUrl = announcement.image_url;
-        
-        // Eğer tam URL değilse ve /public/ içermiyorsa
-        if (!imageUrl.startsWith('http') && !imageUrl.includes('/public/')) {
-          // Dosya adı olarak kabul et ve tam yolu oluştur
-          imageUrl = `${API_URL}/public/images/${imageUrl}`;
-        } 
-        // Eğer /public/ ile başlıyorsa API_URL ile birleştir
-        else if (imageUrl.startsWith('/public/')) {
-          imageUrl = `${API_URL}${imageUrl}`;
+        // Eğer sadece dosya adı ise tam URL oluştur
+        if (!announcement.image_url.includes('/')) {
+          const fullUrl = `${API_URL}/images/${announcement.image_url}`;
+          console.log("✅ Dosya adı için tam yol oluşturuldu:", fullUrl);
+          setImageUrl(fullUrl);
+        } else {
+          // Eğer /public/ içeriyorsa, kaldır
+          if (announcement.image_url.includes('/public/')) {
+            const cleanPath = announcement.image_url.replace('/public', '');
+            const fullUrl = `${API_URL}${cleanPath}`;
+            console.log("✅ /public/ yolu düzeltildi:", fullUrl);
+            setImageUrl(fullUrl);
+          } else {
+            // Diğer durumlar için API_URL ile birleştir
+            const fullUrl = `${API_URL}${announcement.image_url.startsWith('/') ? '' : '/'}${announcement.image_url}`;
+            console.log("✅ Genel durum - URL birleştirildi:", fullUrl);
+            setImageUrl(fullUrl);
+          }
         }
-        
-        console.log("🖼️ Düzeltilmiş Görsel URL'i:", imageUrl);
-        setImageUrl(imageUrl);
       }
       
+      // Arka plan görseli için aynı işlem
       if (announcement.background_image_url) {
         console.log("🖼️ Orijinal Arka Plan URL'i:", announcement.background_image_url);
         
-        // Arka plan görsel URL'ini düzenle
-        let bgImageUrl = announcement.background_image_url;
-        
-        // Eğer tam URL değilse ve /public/ içermiyorsa
-        if (!bgImageUrl.startsWith('http') && !bgImageUrl.includes('/public/')) {
-          // Dosya adı olarak kabul et ve tam yolu oluştur
-          bgImageUrl = `${API_URL}/public/images/${bgImageUrl}`;
+        // Eğer sadece dosya adı ise tam URL oluştur
+        if (!announcement.background_image_url.includes('/')) {
+          const fullUrl = `${API_URL}/images/${announcement.background_image_url}`;
+          console.log("✅ Dosya adı için tam yol oluşturuldu:", fullUrl);
+          setBackgroundImageUrl(fullUrl);
+        } else {
+          // Eğer /public/ içeriyorsa, kaldır
+          if (announcement.background_image_url.includes('/public/')) {
+            const cleanPath = announcement.background_image_url.replace('/public', '');
+            const fullUrl = `${API_URL}${cleanPath}`;
+            console.log("✅ /public/ yolu düzeltildi:", fullUrl);
+            setBackgroundImageUrl(fullUrl);
+          } else {
+            // Diğer durumlar için API_URL ile birleştir
+            const fullUrl = `${API_URL}${announcement.background_image_url.startsWith('/') ? '' : '/'}${announcement.background_image_url}`;
+            console.log("✅ Genel durum - URL birleştirildi:", fullUrl);
+            setBackgroundImageUrl(fullUrl);
+          }
         }
-        // Eğer /public/ ile başlıyorsa API_URL ile birleştir
-        else if (bgImageUrl.startsWith('/public/')) {
-          bgImageUrl = `${API_URL}${bgImageUrl}`;
-        }
-        
-        console.log("🖼️ Düzeltilmiş Arka Plan URL'i:", bgImageUrl);
-        setBackgroundImageUrl(bgImageUrl);
       }
     }
   }, [announcement, form]);
@@ -158,9 +203,10 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     }
   };
 
-  // Görsel yükleme işlemleri - EditModal.jsx'deki gibi
-  const handleImageUpload = ({ file }) => {
-    console.log("📤 Görsel yükleniyor:", file.name);
+  // Görsel yükleme işlemleri - CategoryFormModal.jsx'deki gibi
+  const handleImageUpload = (info) => {
+    console.log("📤 Görsel yükleniyor:", info);
+    const file = info.file;
     
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -176,13 +222,15 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
 
     // Dosyayı state'e kaydet ve URL oluştur
     setImageFile(file);
-    setImageUrl(URL.createObjectURL(file));
-    console.log("🔗 Görsel için URL oluşturuldu:", URL.createObjectURL(file));
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    console.log("🔗 Görsel için URL oluşturuldu:", objectUrl);
   };
 
-  // Arka plan görseli yükleme işlemleri
-  const handleBackgroundImageUpload = ({ file }) => {
-    console.log("📤 Arka plan görseli yükleniyor:", file.name);
+  // Arka plan görseli yükleme işlemleri - CategoryFormModal.jsx'deki gibi
+  const handleBackgroundImageUpload = (info) => {
+    console.log("📤 Arka plan görseli yükleniyor:", info);
+    const file = info.file;
     
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -198,8 +246,9 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
 
     // Dosyayı state'e kaydet ve URL oluştur
     setBackgroundImageFile(file);
-    setBackgroundImageUrl(URL.createObjectURL(file));
-    console.log("🔗 Arka plan için URL oluşturuldu:", URL.createObjectURL(file));
+    const objectUrl = URL.createObjectURL(file);
+    setBackgroundImageUrl(objectUrl);
+    console.log("🔗 Arka plan için URL oluşturuldu:", objectUrl);
   };
 
   // Görsel kaldırma işlemleri
@@ -280,14 +329,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         submitFormData.append('image', imageFile, imageFile.name);
         console.log('📸 Yeni görsel ekleniyor:', imageFile.name);
       } else if (imageUrl && announcement) {
-        // Mevcut görsel korunuyorsa, sadece path bilgisini gönder
-        // URL'den path'i çıkar (örn: http://localhost:5000/public/images/1234.jpg -> /public/images/1234.jpg)
-        const imagePath = imageUrl.includes(API_URL) 
-          ? imageUrl.replace(API_URL, '') 
-          : imageUrl;
-          
+        // Mevcut görsel korunuyorsa, sadece dosya adını gönder
+        let imagePath = imageUrl;
+        
+        // URL'den dosya adını çıkar
+        if (imageUrl.includes('/public/images/')) {
+          imagePath = imageUrl.split('/public/images/').pop();
+        } else if (imageUrl.includes('/')) {
+          // Başka bir yol formatı varsa en son / sonrasını al
+          imagePath = imageUrl.split('/').pop();
+        }
+        
         submitFormData.append('existing_image_path', imagePath);
-        console.log('🖼️ Mevcut görsel korunuyor:', imagePath);
+        console.log('🖼️ Mevcut görsel korunuyor (dosya adı):', imagePath);
       }
       
       if (backgroundImageFile) {
@@ -295,13 +349,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         submitFormData.append('background_image', backgroundImageFile, backgroundImageFile.name);
         console.log('🖼️ Yeni arka plan görseli ekleniyor:', backgroundImageFile.name);
       } else if (backgroundImageUrl && announcement) {
-        // Mevcut arka plan görseli korunuyorsa, sadece path bilgisini gönder
-        const bgImagePath = backgroundImageUrl.includes(API_URL) 
-          ? backgroundImageUrl.replace(API_URL, '') 
-          : backgroundImageUrl;
-          
+        // Mevcut arka plan görseli korunuyorsa, sadece dosya adını gönder
+        let bgImagePath = backgroundImageUrl;
+        
+        // URL'den dosya adını çıkar
+        if (backgroundImageUrl.includes('/public/images/')) {
+          bgImagePath = backgroundImageUrl.split('/public/images/').pop();
+        } else if (backgroundImageUrl.includes('/')) {
+          // Başka bir yol formatı varsa en son / sonrasını al
+          bgImagePath = backgroundImageUrl.split('/').pop();
+        }
+        
         submitFormData.append('existing_background_image_path', bgImagePath);
-        console.log('🖼️ Mevcut arka plan görseli korunuyor:', bgImagePath);
+        console.log('🖼️ Mevcut arka plan görseli korunuyor (dosya adı):', bgImagePath);
       }
       
       // FormData içeriğini kontrol et
@@ -390,11 +450,28 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   const AnnouncementPreview = ({ formValues }) => {
     const { title, content, type } = formValues || {};
     
+    // Görsel URL'ini doğru şekilde kullan - Burada imageFile veya imageUrl kullanılabilir
+    // imageFile varsa (yeni yüklenen görsel) onun URL'ini kullan
+    // yoksa mevcut imageUrl'i kullan
+    const previewImageUrl = imageFile 
+      ? URL.createObjectURL(imageFile) 
+      : (imageUrl ? imageUrl : null);
+    
+    console.log("🖼️ Önizleme için görsel URL'i:", previewImageUrl);
+    
+    // Görsel URL'ini konsola yazdır (debug için)
+    if (previewImageUrl) {
+      const img = new Image();
+      img.onload = () => console.log("✅ Görsel başarıyla yüklendi:", previewImageUrl);
+      img.onerror = () => console.error("❌ Görsel yüklenemedi:", previewImageUrl);
+      img.src = previewImageUrl;
+    }
+    
     return (
       <div className="announcement-preview">
         <div className="preview-header">
           <h3>Önizleme</h3>
-    </div>
+        </div>
         
         <div className="preview-content">
           <div className="preview-card">
@@ -403,15 +480,40 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
               {type === 'campaign' && 'KAMPANYA'}
               {type === 'discount' && 'İNDİRİM'}
               {type === 'general' && 'DUYURU'}
-        </div>
+            </div>
 
             <div className="preview-image-container">
-              {imageUrl ? (
-                <img src={imageUrl} alt="Duyuru Görseli" className="preview-image" />
+              {previewImageUrl ? (
+                <img 
+                  src={previewImageUrl} 
+                  alt="Duyuru Görseli" 
+                  className="preview-image" 
+                  onLoad={() => console.log("✅ Önizlemede görsel başarıyla yüklendi:", previewImageUrl)}
+                  onError={(e) => {
+                    console.error("🚫 Önizleme görseli yüklenemedi:", previewImageUrl);
+                    e.target.onerror = null;
+                    e.target.style.display = 'none';
+                    // Görsel yüklenemediğinde placeholder'ı göster
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'preview-image-placeholder';
+                    placeholder.innerText = 'Görsel Yüklenemedi';
+                    e.target.parentNode.appendChild(placeholder);
+                    
+                    // Hata durumunda URL'i konsola yazdır ve detaylı bilgi ver
+                    console.log("🔍 Önizleme URL detayları:", {
+                      url: previewImageUrl,
+                      isAbsolute: previewImageUrl.startsWith('http'),
+                      containsPublic: previewImageUrl.includes('/public/'),
+                      containsImages: previewImageUrl.includes('/images/'),
+                      lastPart: previewImageUrl.split('/').pop(),
+                      isObjectURL: previewImageUrl.startsWith('blob:')
+                    });
+                  }}
+                />
               ) : (
                 <div className="preview-image-placeholder">Görsel Yok</div>
               )}
-        </div>
+            </div>
 
             <div className="preview-text-container">
               <h4 className="preview-title">{title || 'Duyuru Başlığı'}</h4>
@@ -500,9 +602,18 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                     src={imageUrl} 
                     alt="Duyuru görseli" 
                     style={{ width: '120px', height: '120px', objectFit: 'cover' }} 
+                    onLoad={() => console.log("✅ Form içinde görsel başarıyla yüklendi:", imageUrl)}
                     onError={(e) => {
                       console.error("🚫 Görsel yüklenemedi:", imageUrl);
                       e.target.onerror = null; 
+                      // Hata durumunda URL'i konsola yazdır ve detaylı bilgi ver
+                      console.log("🔍 Görsel URL detayları:", {
+                        url: imageUrl,
+                        isAbsolute: imageUrl.startsWith('http'),
+                        containsPublic: imageUrl.includes('/public/'),
+                        containsImages: imageUrl.includes('/images/'),
+                        lastPart: imageUrl.split('/').pop()
+                      });
                       e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%22120%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%2264.5%22%3EGörsel%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
                     }}
                   />
@@ -513,13 +624,15 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
               ) : (
                 <Upload
                   accept="image/*"
+                  listType="picture-card"
                   beforeUpload={() => false}
                   onChange={handleImageUpload}
                   showUploadList={false}
                 >
-                  <Button style={{ width: '120px', height: '120px' }} icon={<PlusOutlined />}>
-                    Görsel Yükle
-                  </Button>
+                  <div>
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Görsel Yükle</div>
+                  </div>
                 </Upload>
               )}
             </Form.Item>
@@ -630,9 +743,18 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                         src={backgroundImageUrl} 
                         alt="Arka plan görseli" 
                         style={{ width: '120px', height: '120px', objectFit: 'cover' }} 
+                        onLoad={() => console.log("✅ Form içinde arka plan görseli başarıyla yüklendi:", backgroundImageUrl)}
                         onError={(e) => {
                           console.error("🚫 Arka plan görseli yüklenemedi:", backgroundImageUrl);
                           e.target.onerror = null; 
+                          // Hata durumunda URL'i konsola yazdır ve detaylı bilgi ver
+                          console.log("🔍 Arka plan URL detayları:", {
+                            url: backgroundImageUrl,
+                            isAbsolute: backgroundImageUrl.startsWith('http'),
+                            containsPublic: backgroundImageUrl.includes('/public/'),
+                            containsImages: backgroundImageUrl.includes('/images/'),
+                            lastPart: backgroundImageUrl.split('/').pop()
+                          });
                           e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%22120%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%2264.5%22%3EGörsel%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
                         }}
                       />
@@ -643,13 +765,15 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                   ) : (
                     <Upload
                       accept="image/*"
+                      listType="picture-card"
                       beforeUpload={() => false}
                       onChange={handleBackgroundImageUpload}
                       showUploadList={false}
                     >
-                      <Button style={{ width: '120px', height: '120px' }} icon={<PlusOutlined />}>
-                        Arka Plan Yükle
-                      </Button>
+                      <div>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>Arka Plan Yükle</div>
+                      </div>
                     </Upload>
                   )}
                 </Form.Item>

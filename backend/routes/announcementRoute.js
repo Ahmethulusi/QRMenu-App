@@ -51,6 +51,9 @@ router.get('/active', announcementController.getActiveAnnouncements);
 // ID'ye göre duyuru getir
 router.get('/:id', announcementController.getAnnouncementById);
 
+// ID'ye göre duyuru görselini getir
+router.get('/:id/image', announcementController.getAnnouncementImage);
+
 // Kategoriye göre duyuruları getir
 router.get('/category/:category', announcementController.getAnnouncementsByCategory);
 

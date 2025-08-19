@@ -212,10 +212,22 @@ const createAnnouncement = async (req, res) => {
       }
     }
     
+    // discount_type kontrol
+    let discountTypeValue = discount_type;
+    if (discountTypeValue === 'undefined' || discountTypeValue === '') {
+      console.log('⚠️ discount_type undefined veya boş string olarak geldi, null yapılıyor');
+      discountTypeValue = null;
+    }
+    
     // Discount value'yu sayıya çevir
     let parsedDiscountValue = null;
     if (discount_value) {
-      parsedDiscountValue = parseFloat(discount_value);
+      if (discount_value === 'undefined' || isNaN(parseFloat(discount_value))) {
+        console.log('⚠️ discount_value geçersiz değer, null olarak bırakılıyor:', discount_value);
+      } else {
+        parsedDiscountValue = parseFloat(discount_value);
+        console.log('✅ discount_value sayıya çevrildi:', parsedDiscountValue);
+      }
     }
     
     // Kategori alanı için varsayılan değer atama
@@ -257,7 +269,7 @@ const createAnnouncement = async (req, res) => {
       countdown_date: formattedCountdownDate,
       
       // Yeni alanlar
-      discount_type: discount_type || null,
+      discount_type: discountTypeValue,
       discount_value: parsedDiscountValue,
       applicable_products: parsedApplicableProducts,
       applicable_categories: parsedApplicableCategories,
@@ -347,20 +359,42 @@ const updateAnnouncement = async (req, res) => {
     
     // Görsel dosyalarını kontrol et
     if (req.files?.image) {
-      updateData.image_url = `/public/images/${req.files.image[0].filename}`;
+      // Dosya adını direkt olarak kaydet, /public/images/ öneki olmadan
+      updateData.image_url = req.files.image[0].filename;
       console.log('📸 Yeni görsel yüklendi:', updateData.image_url);
     } else if (req.body.existing_image_path) {
-      // Mevcut görsel korunuyor
-      updateData.image_url = req.body.existing_image_path;
+      // Mevcut görsel korunuyor, eğer tam yol ise sadece dosya adını al
+      const existingPath = req.body.existing_image_path;
+      if (existingPath.includes('/public/images/')) {
+        // /public/images/ önekini kaldır
+        updateData.image_url = existingPath.split('/public/images/').pop();
+      } else if (existingPath.includes('/')) {
+        // Başka bir yol formatı varsa en son / sonrasını al
+        updateData.image_url = existingPath.split('/').pop();
+      } else {
+        // Zaten sadece dosya adı ise olduğu gibi kullan
+        updateData.image_url = existingPath;
+      }
       console.log('🖼️ Mevcut görsel korunuyor:', updateData.image_url);
     }
     
     if (req.files?.background_image) {
-      updateData.background_image_url = `/public/images/${req.files.background_image[0].filename}`;
+      // Dosya adını direkt olarak kaydet, /public/images/ öneki olmadan
+      updateData.background_image_url = req.files.background_image[0].filename;
       console.log('🖼️ Yeni arka plan görseli yüklendi:', updateData.background_image_url);
     } else if (req.body.existing_background_image_path) {
-      // Mevcut arka plan görseli korunuyor
-      updateData.background_image_url = req.body.existing_background_image_path;
+      // Mevcut arka plan görseli korunuyor, eğer tam yol ise sadece dosya adını al
+      const existingBgPath = req.body.existing_background_image_path;
+      if (existingBgPath.includes('/public/images/')) {
+        // /public/images/ önekini kaldır
+        updateData.background_image_url = existingBgPath.split('/public/images/').pop();
+      } else if (existingBgPath.includes('/')) {
+        // Başka bir yol formatı varsa en son / sonrasını al
+        updateData.background_image_url = existingBgPath.split('/').pop();
+      } else {
+        // Zaten sadece dosya adı ise olduğu gibi kullan
+        updateData.background_image_url = existingBgPath;
+      }
       console.log('🖼️ Mevcut arka plan görseli korunuyor:', updateData.background_image_url);
     }
     
@@ -466,11 +500,21 @@ const updateAnnouncement = async (req, res) => {
       }
     }
     
+    // discount_type alanını kontrol et
+    if (updateData.discount_type === 'undefined' || updateData.discount_type === '') {
+      console.log('⚠️ discount_type undefined veya boş string olarak geldi, null yapılıyor');
+      updateData.discount_type = null;
+    }
+    
     // Discount value'yu sayıya çevir
     if (updateData.discount_value !== undefined) {
-      updateData.discount_value = updateData.discount_value 
-        ? parseFloat(updateData.discount_value) 
-        : null;
+      if (updateData.discount_value === '' || updateData.discount_value === 'undefined' || isNaN(parseFloat(updateData.discount_value))) {
+        console.log('⚠️ discount_value geçersiz değer, null yapılıyor:', updateData.discount_value);
+        updateData.discount_value = null;
+      } else {
+        updateData.discount_value = parseFloat(updateData.discount_value);
+        console.log('✅ discount_value sayıya çevrildi:', updateData.discount_value);
+      }
     }
     
     console.log('🔧 Güncellenecek veri:', updateData);
@@ -619,10 +663,44 @@ const getAnnouncementsByCategory = async (req, res) => {
   }
 };
 
+// Duyuru görselini getir
+const getAnnouncementImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const announcement = await Announcement.findByPk(id);
+    
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Duyuru bulunamadı'
+      });
+    }
+    
+    // Görsel bilgilerini hazırla
+    const imageData = {
+      success: true,
+      data: {
+        image_url: announcement.image_url ? `/public/images/${announcement.image_url}` : null,
+        background_image_url: announcement.background_image_url ? `/public/images/${announcement.background_image_url}` : null
+      }
+    };
+    
+    res.json(imageData);
+  } catch (error) {
+    console.error('Duyuru görseli getirilirken hata:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Duyuru görseli getirilirken bir hata oluştu'
+    });
+  }
+};
+
 module.exports = {
   getAllAnnouncements,
   getActiveAnnouncements,
   getAnnouncementById,
+  getAnnouncementImage,
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
