@@ -248,8 +248,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       children: [
         { key: 'Labels', label: 'Etiketler' },
         { key: 'Announcements', label: 'Duyurular' },
-        { key: 'Campaigns', label: 'Kampanyalar' },
-        { key: 'DailyMenu', label: 'Günün Menüsü' },
         { key: 'Ingredients', label: 'İçindekiler' }
       ]
     },
