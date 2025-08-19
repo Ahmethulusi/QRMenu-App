@@ -19,28 +19,35 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
 
-  // Önerilen ürünler için basit veri çek
+  // Select component için tüm ürünleri çek
   useEffect(() => {
-    const fetchRecommendedProductsData = async () => {
+    const fetchAllProducts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/admin/products/recommended-data`, {
+        const response = await fetch(`${API_URL}/api/admin/products`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         if (!response.ok) {
-          throw new Error('Önerilen ürün verileri yüklenirken bir hata oluştu');
+          throw new Error('Ürünler yüklenirken bir hata oluştu');
         }
         const data = await response.json();
-        setAllProducts(data);
+        // Sadece aktif ürünleri ve gerekli alanları al
+        const filteredProducts = data
+          .filter(product => product.is_available)
+          .map(product => ({
+            product_id: product.product_id,
+            product_name: product.product_name
+          }));
+        setAllProducts(filteredProducts);
       } catch (error) {
-        console.error('Önerilen ürün verileri yüklenemedi:', error);
-        message.error('Önerilen ürün verileri yüklenirken bir hata oluştu');
+        console.error('Ürünler yüklenemedi:', error);
+        message.error('Ürünler yüklenirken bir hata oluştu');
       }
     };
     
-    fetchRecommendedProductsData();
+    fetchAllProducts();
   }, []);
 
   // Record değiştiğinde form alanlarını doldur

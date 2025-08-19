@@ -106,17 +106,19 @@ router.put('/products/updateImage',
   adminController.updateProductImage
 );
 
-// Ürün görüntüleme işlemleri
+// Ürün görüntüleme işlemleri - ÖNEMLİ: Spesifik route'lar önce olmalı!
+
+// Belirli bir ürünün önerilen ürünlerini getir - :id route'undan ÖNCE olmalı
+router.get('/products/:product_id/recommended-data', 
+  authenticateToken, 
+  hasPermission('products', 'read'), 
+  adminController.getRecommendedProductsData
+);
+
 router.get('/productsByBusiness/:business_id', 
   authenticateToken, 
   hasPermission('products', 'read'), 
   adminController.getProductsByBusiness
-);
-
-router.get('/products/:id', 
-  authenticateToken, 
-  hasPermission('products', 'read'), 
-  adminController.getProductById
 );
 
 router.get('/productsByCategory/:category_id', 
@@ -137,11 +139,11 @@ router.get('/products',
   adminController.getAllProuducts
 );
 
-// Önerilen ürünler için basit endpoint
-router.get('/products/recommended-data', 
+// Bu route en sonda olmalı çünkü :id her şeyi yakalar
+router.get('/products/:id', 
   authenticateToken, 
   hasPermission('products', 'read'), 
-  adminController.getRecommendedProductsData
+  adminController.getProductById
 );
 
 // Kategori işlemleri

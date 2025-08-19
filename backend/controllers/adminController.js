@@ -965,28 +965,58 @@ exports.updateCategoriesSira = async (req, res) => {
   }
 };
 
-// Önerilen ürünler için özel endpoint - sadece ID ve isim döndürür
+// Belirli bir ürünün önerilen ürünlerinin detaylarını getir
 exports.getRecommendedProductsData = async (req, res) => {
   try {
-    console.log('🔄 Önerilen ürünler için basit liste getiriliyor...');
+    const { product_id } = req.params;
+    console.log(`🔄 Ürün ID ${product_id} için önerilen ürünler getiriliyor...`);
     
-    const products = await Products.findAll({
+    // Önce ana ürünü bul ve recommended_with alanını al
+    const mainProduct = await Products.findByPk(product_id, {
+      attributes: ['product_id', 'product_name', 'recommended_with']
+    });
+    
+    if (!mainProduct) {
+      return res.status(404).json({ error: 'Ürün bulunamadı' });
+    }
+    
+    // Eğer recommended_with alanı boşsa boş array döndür
+    if (!mainProduct.recommended_with) {
+      console.log('❌ Bu ürün için önerilen ürün yok');
+      return res.json([]);
+    }
+    
+    // JSON string'i parse et
+    let recommendedIds;
+    try {
+      recommendedIds = JSON.parse(mainProduct.recommended_with);
+    } catch (e) {
+      console.error('❌ recommended_with JSON parse hatası:', e);
+      return res.json([]);
+    }
+    
+    // Eğer array değilse veya boşsa
+    if (!Array.isArray(recommendedIds) || recommendedIds.length === 0) {
+      console.log('❌ Geçerli önerilen ürün ID\'si yok');
+      return res.json([]);
+    }
+    
+    console.log('🔍 Önerilen ürün ID\'leri:', recommendedIds);
+    
+    // Önerilen ürünlerin detaylarını getir
+    const recommendedProducts = await Products.findAll({
       attributes: ['product_id', 'product_name', 'is_available'],
       where: {
-        is_available: true // Sadece aktif ürünleri getir
+        product_id: {
+          [Op.in]: recommendedIds
+        }
       },
       order: [['product_name', 'ASC']]
     });
     
-    console.log(`✅ ${products.length} aktif ürün bulundu (önerilen ürünler için)`);
+    console.log(`✅ ${recommendedProducts.length} önerilen ürün bulundu`);
     
-    // Basit format: { id, name }
-    const formattedProducts = products.map(product => ({
-      product_id: product.product_id,
-      product_name: product.product_name
-    }));
-    
-    res.json(formattedProducts);
+    res.json(recommendedProducts);
   } catch (error) {
     console.error('❌ Önerilen ürünler getirme hatası:', error);
     res.status(500).json({ error: 'Önerilen ürünler alınamadı' });
