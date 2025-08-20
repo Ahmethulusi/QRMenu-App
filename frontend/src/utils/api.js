@@ -40,8 +40,9 @@ export const apiCall = async (endpoint, options = {}) => {
       // Token geçersiz, kullanıcıyı logout yap ve login sayfasına yönlendir
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '#/login';
-      return;
+      // Anında yönlendirme yap
+      window.location.replace('#/login');
+      return null;
     }
 
     const data = await response.json();
@@ -208,6 +209,13 @@ export const checkPermissionAPI = async (resource, action, businessId = null, br
       })
     });
 
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.replace('#/login');
+      return false;
+    }
+
     if (response.ok) {
       const result = await response.json();
       return result.hasPermission;
@@ -227,6 +235,13 @@ export const getUserPermissionsAPI = async () => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.replace('#/login');
+      return [];
+    }
 
     if (response.ok) {
       const result = await response.json();

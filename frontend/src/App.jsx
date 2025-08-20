@@ -25,20 +25,18 @@ function AppContent() {
       return;
     }
 
-    // Önce localStorage'dan kullanıcı bilgisini set et (hızlı)
-    setUser(JSON.parse(savedUser));
-    setIsInitializing(false);
-
-    // Sonra backend'den token geçerliliğini kontrol et (arka planda)
+    // Token geçerliliğini backend'den kontrol et (loading sırasında admin paneli gösterme)
     try {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
+      setIsInitializing(false);
     } catch (error) {
       console.log('Token doğrulama hatası:', error.message);
       // Token geçersiz, localStorage'ı temizle ve /login'e yönlendir
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
+      setIsInitializing(false);
       navigate('/login');
     }
   };

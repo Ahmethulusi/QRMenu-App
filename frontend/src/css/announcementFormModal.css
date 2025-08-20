@@ -129,6 +129,97 @@
   border-radius: 8px;
 }
 
+/* Cihaz Seçici Stilleri */
+.device-selector {
+  margin-bottom: 30px;
+}
+
+.device-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.device-card {
+  padding: 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.device-card.active {
+  border-color: #1890ff;
+  background-color: #f6ffed;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+.device-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.device-info h5 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.device-dimensions {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.device-description {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+}
+
+/* Responsive Önizleme Container */
+.responsive-preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 600px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  position: relative;
+  overflow: auto;
+}
+
+.preview-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.preview-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.preview-info p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
 .preview-header {
   margin-bottom: 20px;
   padding-bottom: 10px;
@@ -260,6 +351,345 @@
   opacity: 0.9;
 }
 
+/* Cihaz Frame Stilleri */
+.device-frame {
+  background-color: #333;
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* App Header Simülasyonu */
+.app-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.app-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-navigation h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.nav-icons {
+  display: flex;
+  gap: 16px;
+  font-size: 16px;
+}
+
+/* Duyuru Modal Simülasyonu */
+.announcement-modal {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 400px;
+}
+
+.modal-overlay-blur {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.modal-overlay-blur.desktop-modal {
+  max-width: 600px;
+  padding: 30px;
+}
+
+.modal-overlay-blur.tablet-modal {
+  max-width: 420px;
+  padding: 25px;
+}
+
+.announcement-content {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.announcement-content.desktop-content {
+  display: flex;
+  flex-direction: row;
+  min-height: 300px;
+}
+
+.announcement-content.desktop-content .announcement-image {
+  width: 40%;
+  height: 300px;
+  flex-shrink: 0;
+}
+
+.announcement-content.desktop-content .announcement-text {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.announcement-content.desktop-content .announcement-title {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.announcement-content.desktop-content .announcement-description {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.announcement-content.desktop-content .announcement-actions {
+  padding: 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+/* Tablet özel stilleri */
+.tablet-modal .announcement-title {
+  font-size: 22px;
+}
+
+.tablet-modal .announcement-description {
+  font-size: 15px;
+}
+
+.tablet-modal .announcement-text {
+  padding: 25px;
+}
+
+.tablet-modal .announcement-actions {
+  padding: 0 25px 25px;
+}
+
+/* Tür Badge */
+.type-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.type-badge.type-promotion {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.type-badge.type-campaign {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+}
+
+.type-badge.type-discount {
+  background: linear-gradient(135deg, #feca57, #ff9ff3);
+}
+
+.type-badge.type-general {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+/* Duyuru Görseli */
+.announcement-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+}
+
+.announcement-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Duyuru Metni */
+.announcement-text {
+  padding: 20px;
+}
+
+.announcement-title {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.3;
+}
+
+.announcement-description {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* İndirim Bilgisi */
+.discount-info {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.discount-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.applicable-info {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Kampanya Bilgisi */
+.campaign-info {
+  margin: 16px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #f6ffed, #e6f7ff);
+  border-left: 4px solid #52c41a;
+  border-radius: 8px;
+}
+
+.campaign-condition,
+.campaign-reward {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.campaign-condition strong,
+.campaign-reward strong {
+  color: #333;
+}
+
+/* Aksiyon Butonları */
+.announcement-actions {
+  padding: 0 20px 20px;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+.action-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-button.primary {
+  background-color: #1890ff;
+  color: white;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.action-button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+}
+
+.action-button.secondary {
+  background-color: #f0f0f0;
+  color: #666;
+  border: 1px solid #d9d9d9;
+}
+
+.action-button.secondary:hover {
+  background-color: #e6e6e6;
+  color: #333;
+}
+
+.action-button.disabled {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.action-button.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* App Footer (Sadece mobil için) */
+.app-footer {
+  background-color: white;
+  border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 12px 12px;
+}
+
+.footer-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  color: #666;
+  font-size: 10px;
+  transition: color 0.3s;
+}
+
+.nav-item.active {
+  color: #1890ff;
+}
+
+.nav-item span:first-child {
+  font-size: 16px;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .modal-content {
@@ -283,5 +713,39 @@
   .ant-tabs-tab {
     padding: 8px 12px;
     font-size: 14px;
+  }
+  
+  /* Cihaz seçici responsive */
+  .device-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Önizleme responsive */
+  .responsive-preview-container {
+    padding: 10px;
+    min-height: 500px;
+  }
+  
+  .device-frame {
+    transform: scale(0.8) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    width: 98%;
+    height: 95vh;
+  }
+  
+  .modal-body {
+    padding: 15px;
+  }
+  
+  .device-frame {
+    transform: scale(0.7) !important;
+  }
+  
+  .responsive-preview-container {
+    min-height: 400px;
   }
 }

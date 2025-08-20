@@ -74,6 +74,7 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState('mobile'); // mobile, tablet, desktop
 
   // Ürünleri ve kategorileri yükle
   useEffect(() => {
@@ -446,106 +447,252 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     }
   };
 
-  // Önizleme bileşeni
-  const AnnouncementPreview = ({ formValues }) => {
+  // Cihaz seçimi kartları
+  const DeviceSelector = () => {
+    const devices = [
+      { 
+        id: 'mobile', 
+        name: 'Telefon', 
+        icon: '📱', 
+        dimensions: '320x568px',
+        description: 'iOS/Android Telefon Görünümü'
+      },
+      { 
+        id: 'tablet', 
+        name: 'Tablet', 
+        icon: '📱', 
+        dimensions: '768x1024px',
+        description: 'iPad/Android Tablet Görünümü'
+      },
+      { 
+        id: 'desktop-hd', 
+        name: 'Laptop', 
+        icon: '💻', 
+        dimensions: '1366x768px',
+        description: 'HD Laptop Görünümü'
+      },
+      { 
+        id: 'desktop-fhd', 
+        name: 'Masaüstü', 
+        icon: '🖥️', 
+        dimensions: '1920x1080px',
+        description: 'Full HD Masaüstü Görünümü'
+      },
+      { 
+        id: 'desktop-legacy', 
+        name: 'Eski Ekran', 
+        icon: '🖥️', 
+        dimensions: '1280x800px',
+        description: 'Geleneksel Bilgisayar Ekranı'
+      }
+    ];
+
+    return (
+      <div className="device-selector">
+        <h4 style={{ marginBottom: '16px', color: '#333' }}>Cihaz Seçin:</h4>
+        <div className="device-cards">
+          {devices.map(device => (
+            <div 
+              key={device.id}
+              className={`device-card ${selectedDevice === device.id ? 'active' : ''}`}
+              onClick={() => setSelectedDevice(device.id)}
+            >
+              <div className="device-icon">{device.icon}</div>
+              <div className="device-info">
+                <h5>{device.name}</h5>
+                <p className="device-dimensions">{device.dimensions}</p>
+                <p className="device-description">{device.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Responsive önizleme bileşeni
+  const ResponsiveAnnouncementPreview = ({ formValues, device }) => {
     const { title, content, type } = formValues || {};
     
-    // Görsel URL'ini doğru şekilde kullan - Burada imageFile veya imageUrl kullanılabilir
-    // imageFile varsa (yeni yüklenen görsel) onun URL'ini kullan
-    // yoksa mevcut imageUrl'i kullan
+    // Görsel URL'ini doğru şekilde kullan
     const previewImageUrl = imageFile 
       ? URL.createObjectURL(imageFile) 
       : (imageUrl ? imageUrl : null);
     
+    const backgroundImagePreviewUrl = backgroundImageFile 
+      ? URL.createObjectURL(backgroundImageFile) 
+      : (backgroundImageUrl ? backgroundImageUrl : null);
+    
     console.log("🖼️ Önizleme için görsel URL'i:", previewImageUrl);
     
-    // Görsel URL'ini konsola yazdır (debug için)
-    if (previewImageUrl) {
-      const img = new Image();
-      img.onload = () => console.log("✅ Görsel başarıyla yüklendi:", previewImageUrl);
-      img.onerror = () => console.error("❌ Görsel yüklenemedi:", previewImageUrl);
-      img.src = previewImageUrl;
-    }
+    // Cihaza göre boyutları belirle
+    const getDeviceDimensions = () => {
+      switch (device) {
+        case 'mobile':
+          return { width: '320px', height: '568px', scale: 1.0 };
+        case 'tablet':
+          return { width: '768px', height: '1024px', scale: 0.65 };
+        case 'desktop-hd':
+          return { width: '1366px', height: '768px', scale: 0.35 };
+        case 'desktop-fhd':
+          return { width: '1920px', height: '1080px', scale: 0.25 };
+        case 'desktop-legacy':
+          return { width: '1280px', height: '800px', scale: 0.38 };
+        default:
+          return { width: '320px', height: '568px', scale: 1.0 };
+      }
+    };
+
+    const dimensions = getDeviceDimensions();
     
     return (
+      <div className="responsive-preview-container">
+        <div className="device-frame" style={{ 
+          width: dimensions.width, 
+          height: dimensions.height,
+          transform: `scale(${dimensions.scale})`,
+          transformOrigin: 'top center'
+        }}>
+          {/* QR Menu App Header Simülasyonu */}
+          <div className="app-header">
+            <div className="status-bar">
+              <span className="time">14:30</span>
+              <div className="status-icons">
+                <span>📶</span>
+                <span>🔋</span>
+              </div>
+            </div>
+            <div className="app-navigation">
+              <h3>QR Menü</h3>
+              <div className="nav-icons">
+                <span>🏠</span>
+                <span>🛒</span>
+                <span>👤</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Duyuru Modal Simülasyonu */}
+          <div className="announcement-modal" style={{
+            backgroundImage: backgroundImagePreviewUrl ? `url(${backgroundImagePreviewUrl})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}>
+            <div className={`modal-overlay-blur ${device.startsWith('desktop') ? 'desktop-modal' : device === 'tablet' ? 'tablet-modal' : ''}`}>
+              <div className={`announcement-content ${device.startsWith('desktop') ? 'desktop-content' : ''}`}>
+                {/* Tür Badge */}
+                <div className={`type-badge type-${type}`}>
+                  {type === 'promotion' && '🎁 PROMOSYON'}
+                  {type === 'campaign' && '🎯 KAMPANYA'}
+                  {type === 'discount' && '🔥 İNDİRİM'}
+                  {type === 'general' && '📢 DUYURU'}
+                </div>
+
+                {/* Ana Görsel */}
+                {previewImageUrl && (
+                  <div className="announcement-image">
+                    <img 
+                      src={previewImageUrl} 
+                      alt="Duyuru Görseli" 
+                      onLoad={() => console.log("✅ Önizlemede görsel başarıyla yüklendi:", previewImageUrl)}
+                      onError={(e) => {
+                        console.error("🚫 Önizleme görseli yüklenemedi:", previewImageUrl);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Başlık ve İçerik */}
+                <div className="announcement-text">
+                  <h2 className="announcement-title">{title || 'Duyuru Başlığı'}</h2>
+                  <p className="announcement-description">{content || 'Duyuru içeriği burada görüntülenecek...'}</p>
+                  
+                  {/* Promosyon/İndirim Bilgisi */}
+                  {(type === 'promotion' || type === 'discount') && formValues.discount_type && (
+                    <div className="discount-info">
+                      <div className="discount-badge">
+                        {formValues.discount_type === 'percentage' 
+                          ? `%${formValues.discount_value} İNDİRİM` 
+                          : `${formValues.discount_value} TL İNDİRİM`}
+                      </div>
+                      {formValues.applicable_products && formValues.applicable_products.length > 0 && (
+                        <p className="applicable-info">Seçili ürünlerde geçerli</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Kampanya Bilgisi */}
+                  {type === 'campaign' && formValues.campaign_condition && (
+                    <div className="campaign-info">
+                      <div className="campaign-condition">
+                        <strong>Koşul:</strong> {formValues.campaign_condition}
+                      </div>
+                      <div className="campaign-reward">
+                        <strong>Kazanç:</strong> {formValues.campaign_reward}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Aksiyon Butonları */}
+                <div className="announcement-actions">
+                  {formValues.button_text && (
+                    <div 
+                      className="action-button primary disabled"
+                      style={{ 
+                        backgroundColor: formValues.button_color || '#007bff',
+                        borderColor: formValues.button_color || '#007bff'
+                      }}
+                    >
+                      {formValues.button_text}
+                    </div>
+                  )}
+                  <div className="action-button secondary disabled">
+                    Kapat
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sadece mobil için App Footer */}
+          {device === 'mobile' && (
+            <div className="app-footer">
+              <div className="footer-nav">
+                <div className="nav-item active">
+                  <span>🏠</span>
+                  <span>Ana Sayfa</span>
+                </div>
+                <div className="nav-item">
+                  <span>📱</span>
+                  <span>Menü</span>
+                </div>
+                <div className="nav-item">
+                  <span>🛒</span>
+                  <span>Sepet</span>
+                </div>
+                <div className="nav-item">
+                  <span>👤</span>
+                  <span>Profil</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Ana önizleme bileşeni
+  const AnnouncementPreview = ({ formValues }) => {
+    return (
       <div className="announcement-preview">
-        <div className="preview-header">
-          <h3>Önizleme</h3>
-        </div>
-        
+        <DeviceSelector />
         <div className="preview-content">
-          <div className="preview-card">
-            <div className="preview-type-badge">
-              {type === 'promotion' && 'PROMOSYON'}
-              {type === 'campaign' && 'KAMPANYA'}
-              {type === 'discount' && 'İNDİRİM'}
-              {type === 'general' && 'DUYURU'}
-            </div>
-
-            <div className="preview-image-container">
-              {previewImageUrl ? (
-                <img 
-                  src={previewImageUrl} 
-                  alt="Duyuru Görseli" 
-                  className="preview-image" 
-                  onLoad={() => console.log("✅ Önizlemede görsel başarıyla yüklendi:", previewImageUrl)}
-                  onError={(e) => {
-                    console.error("🚫 Önizleme görseli yüklenemedi:", previewImageUrl);
-                    e.target.onerror = null;
-                    e.target.style.display = 'none';
-                    // Görsel yüklenemediğinde placeholder'ı göster
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'preview-image-placeholder';
-                    placeholder.innerText = 'Görsel Yüklenemedi';
-                    e.target.parentNode.appendChild(placeholder);
-                    
-                    // Hata durumunda URL'i konsola yazdır ve detaylı bilgi ver
-                    console.log("🔍 Önizleme URL detayları:", {
-                      url: previewImageUrl,
-                      isAbsolute: previewImageUrl.startsWith('http'),
-                      containsPublic: previewImageUrl.includes('/public/'),
-                      containsImages: previewImageUrl.includes('/images/'),
-                      lastPart: previewImageUrl.split('/').pop(),
-                      isObjectURL: previewImageUrl.startsWith('blob:')
-                    });
-                  }}
-                />
-              ) : (
-                <div className="preview-image-placeholder">Görsel Yok</div>
-              )}
-            </div>
-
-            <div className="preview-text-container">
-              <h4 className="preview-title">{title || 'Duyuru Başlığı'}</h4>
-              <p className="preview-description">{content || 'Duyuru içeriği burada görüntülenecek...'}</p>
-              
-              {type === 'promotion' && formValues.discount_type && (
-                <div className="preview-discount">
-                  <span className="discount-label">
-                    {formValues.discount_type === 'percentage' ? `%${formValues.discount_value}` : `${formValues.discount_value} TL`} İndirim
-                  </span>
+          <ResponsiveAnnouncementPreview formValues={formValues} device={selectedDevice} />
         </div>
-              )}
-              
-              {type === 'campaign' && formValues.campaign_condition && (
-                <div className="preview-campaign">
-                  <p className="campaign-condition">{formValues.campaign_condition}</p>
-                  <p className="campaign-reward">{formValues.campaign_reward}</p>
-        </div>
-              )}
-              
-              {formValues.button_text && (
-                <button 
-                  className="preview-button"
-                  style={{ backgroundColor: formValues.button_color || '#007bff' }}
-                >
-                  {formValues.button_text}
-                </button>
-              )}
-          </div>
-          </div>
-        </div>
-        </div>
+      </div>
     );
   };
 
