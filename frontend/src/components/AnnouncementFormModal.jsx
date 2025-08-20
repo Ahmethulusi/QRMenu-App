@@ -75,6 +75,7 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   const [categories, setCategories] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState('mobile'); // mobile, tablet, desktop
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Ürünleri ve kategorileri yükle
   useEffect(() => {
@@ -106,6 +107,15 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     fetchData();
   }, []);
 
+  // Geri sayım için timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   // Düzenleme durumunda formu doldur
   useEffect(() => {
     if (announcement) {
@@ -123,6 +133,7 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         is_active: announcement.is_active !== undefined ? announcement.is_active : true,
         date_range: startDate && endDate ? [startDate, endDate] : undefined,
         delay: announcement.delay,
+        countdown_date: announcement.countdown_date ? moment(announcement.countdown_date) : null,
         
         // Promosyon/İndirim alanları
         discount_type: announcement.discount_type,
@@ -265,6 +276,25 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     form.setFieldsValue({ background_image: undefined });
   };
 
+  // Geri sayım hesaplama fonksiyonu
+  const calculateCountdown = (countdownDate) => {
+    if (!countdownDate) return null;
+    
+    const targetDate = new Date(countdownDate);
+    const diff = targetDate.getTime() - currentTime.getTime();
+    
+    if (diff <= 0) {
+      return { expired: true };
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    return { days, hours, minutes, seconds, expired: false };
+  };
+
   // Tab değişikliği
   const handleTabChange = (key) => {
     setActiveTab(key);
@@ -296,6 +326,11 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       // Gecikme
       if (values.delay) {
         submitFormData.append('delay', values.delay);
+      }
+      
+      // Geri sayım tarihi
+      if (values.countdown_date) {
+        submitFormData.append('countdown_date', values.countdown_date.toISOString());
       }
       
       // Duyuru tipine göre özel alanlar
@@ -600,13 +635,40 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                         e.target.style.display = 'none';
                       }}
                     />
+                    
+                    {/* Geri Sayım - Sadece Mobil için görselin üzerinde */}
+                    {device === 'mobile' && formValues.countdown_date && (() => {
+                      const countdown = calculateCountdown(formValues.countdown_date);
+                      if (!countdown) return null;
+                      
+                      if (countdown.expired) {
+                        return (
+                          <div className="countdown-overlay expired">
+                            <div className="countdown-label-small">⏰ Sona Erdi</div>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="countdown-overlay">
+                          <div className="countdown-timer-small">
+                            {countdown.days > 0 ? (
+                              <span className="countdown-compact">{countdown.days}g {countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
+                            ) : countdown.hours > 0 ? (
+                              <span className="countdown-compact">{countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
+                            ) : (
+                              <span className="countdown-compact">{countdown.minutes}d {countdown.seconds}sn</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
                 {/* Başlık ve İçerik */}
                 <div className="announcement-text">
                   <h2 className="announcement-title">{title || 'Duyuru Başlığı'}</h2>
-                  <p className="announcement-description">{content || 'Duyuru içeriği burada görüntülenecek...'}</p>
                   
                   {/* Promosyon/İndirim Bilgisi */}
                   {(type === 'promotion' || type === 'discount') && formValues.discount_type && (
@@ -633,11 +695,54 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Geri Sayım - Sadece tablet ve desktop için */}
+                  {device !== 'mobile' && formValues.countdown_date && (() => {
+                    const countdown = calculateCountdown(formValues.countdown_date);
+                    if (!countdown) return null;
+                    
+                    if (countdown.expired) {
+                      return (
+                        <div className="countdown-info expired">
+                          <div className="countdown-label">⏰ Kampanya Sona Erdi</div>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div className="countdown-info">
+                        <div className="countdown-label">⏰ Kalan Süre:</div>
+                        <div className="countdown-timer">
+                          {countdown.days > 0 && (
+                            <div className="countdown-unit">
+                              <span className="countdown-value">{countdown.days}</span>
+                              <span className="countdown-text">Gün</span>
+                            </div>
+                          )}
+                          <div className="countdown-unit">
+                            <span className="countdown-value">{countdown.hours.toString().padStart(2, '0')}</span>
+                            <span className="countdown-text">Saat</span>
+                          </div>
+                          <div className="countdown-unit">
+                            <span className="countdown-value">{countdown.minutes.toString().padStart(2, '0')}</span>
+                            <span className="countdown-text">Dakika</span>
+                          </div>
+                          <div className="countdown-unit">
+                            <span className="countdown-value">{countdown.seconds.toString().padStart(2, '0')}</span>
+                            <span className="countdown-text">Saniye</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
+                {/* Kapat İkonu */}
+                <div className="close-icon">×</div>
+
                 {/* Aksiyon Butonları */}
-                <div className="announcement-actions">
-                  {formValues.button_text && (
+                {formValues.button_text && (
+                  <div className="announcement-actions">
                     <div 
                       className="action-button primary disabled"
                       style={{ 
@@ -647,11 +752,8 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                     >
                       {formValues.button_text}
                     </div>
-                  )}
-                  <div className="action-button secondary disabled">
-                    Kapat
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -811,6 +913,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
               name="delay"
             >
               <InputNumber min={0} style={{ width: '100%' }} placeholder="5000" />
+            </Form.Item>
+            
+            <Form.Item
+              label="Geri Sayım Tarihi"
+              name="countdown_date"
+              tooltip="Kampanya bitişi için geri sayım göstermek istediğiniz tarih ve saat"
+            >
+              <DatePicker 
+                showTime={{ format: 'HH:mm' }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder="Geri sayım tarihi seçin"
+                style={{ width: '100%' }}
+              />
             </Form.Item>
           </TabPane>
           
