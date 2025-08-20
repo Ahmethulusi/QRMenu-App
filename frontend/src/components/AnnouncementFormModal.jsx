@@ -121,9 +121,10 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     if (announcement) {
       console.log("📋 Düzenlenecek duyuru:", announcement);
       
-      // Tarih alanlarını moment nesnelerine dönüştür
-      const startDate = announcement.start_date ? moment(announcement.start_date) : null;
-      const endDate = announcement.end_date ? moment(announcement.end_date) : null;
+      // Tarih alanlarını moment nesnelerine dönüştür (tarih ve saat dahil)
+      // UTC dönüşümünü engellemek için parse ederken local olarak işle
+      const startDate = announcement.start_date ? moment.utc(announcement.start_date).local() : null;
+      const endDate = announcement.end_date ? moment.utc(announcement.end_date).local() : null;
       
       form.setFieldsValue({
         title: announcement.title,
@@ -131,9 +132,10 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         content: announcement.content,
         priority: announcement.priority || 0,
         is_active: announcement.is_active !== undefined ? announcement.is_active : true,
-        date_range: startDate && endDate ? [startDate, endDate] : undefined,
+        start_date: startDate,
+        end_date: endDate,
         delay: announcement.delay,
-        countdown_date: announcement.countdown_date ? moment(announcement.countdown_date) : null,
+        countdown_date: announcement.countdown_date ? moment.utc(announcement.countdown_date).local() : null,
         
         // Promosyon/İndirim alanları
         discount_type: announcement.discount_type,
@@ -317,10 +319,17 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       submitFormData.append('priority', values.priority || 0);
       submitFormData.append('is_active', values.is_active);
       
-      // Tarih aralığı
-      if (values.date_range && values.date_range.length === 2) {
-        submitFormData.append('start_date', values.date_range[0].format('YYYY-MM-DD'));
-        submitFormData.append('end_date', values.date_range[1].format('YYYY-MM-DD'));
+      // Tarih alanları
+      if (values.start_date) {
+        const startDate = values.start_date.clone().format('YYYY-MM-DD HH:mm:ss');
+        console.log('📅 Başlangıç tarihi:', startDate);
+        submitFormData.append('start_date', startDate);
+      }
+      
+      if (values.end_date) {
+        const endDate = values.end_date.clone().format('YYYY-MM-DD HH:mm:ss');
+        console.log('📅 Bitiş tarihi:', endDate);
+        submitFormData.append('end_date', endDate);
       }
       
       // Gecikme
@@ -330,7 +339,10 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       
       // Geri sayım tarihi
       if (values.countdown_date) {
-        submitFormData.append('countdown_date', values.countdown_date.toISOString());
+        // UTC'ye dönüştürmeden, local olarak formatla
+        const countdownDate = values.countdown_date.clone().format('YYYY-MM-DD HH:mm:ss');
+        console.log('⏰ Geri sayım tarihi:', countdownDate);
+        submitFormData.append('countdown_date', countdownDate);
       }
       
       // Duyuru tipine göre özel alanlar
@@ -808,7 +820,9 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         initialValues={{
           type: 'general',
           priority: 0,
-          is_active: true
+          is_active: true,
+          start_date: null,
+          end_date: null
         }}
       >
         <Tabs activeKey={activeTab} onChange={handleTabChange}>
@@ -887,10 +901,80 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
             </Form.Item>
             
             <Form.Item
-              label="Tarih Aralığı"
-              name="date_range"
+              label="Başlangıç Tarihi ve Saati"
+              name="start_date"
+              tooltip="Duyurunun başlangıç tarihi ve saati"
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value) {
+                      return Promise.resolve();
+                    }
+                    const endDate = getFieldValue('end_date');
+                    if (endDate && value.isAfter(endDate)) {
+                      return Promise.reject(new Error('Başlangıç tarihi bitiş tarihinden sonra olamaz!'));
+                    }
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
             >
-              <RangePicker style={{ width: '100%' }} />
+              <DatePicker 
+                showTime={{ 
+                  format: 'HH:mm',
+                  defaultValue: moment('00:00', 'HH:mm')
+                }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder="Başlangıç tarihi seçin"
+                style={{ width: '100%' }}
+                minuteStep={15}
+                showNow={false}
+                utcOffset={0}
+                onChange={(date) => {
+                  if (date) {
+                    console.log('📅 Başlangıç tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  }
+                }}
+              />
+            </Form.Item>
+            
+            <Form.Item
+              label="Bitiş Tarihi ve Saati"
+              name="end_date"
+              tooltip="Duyurunun bitiş tarihi ve saati"
+              dependencies={['start_date']}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value) {
+                      return Promise.resolve();
+                    }
+                    const startDate = getFieldValue('start_date');
+                    if (startDate && value.isBefore(startDate)) {
+                      return Promise.reject(new Error('Bitiş tarihi başlangıç tarihinden önce olamaz!'));
+                    }
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
+            >
+              <DatePicker 
+                showTime={{ 
+                  format: 'HH:mm',
+                  defaultValue: moment('23:59', 'HH:mm')
+                }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder="Bitiş tarihi seçin"
+                style={{ width: '100%' }}
+                minuteStep={15}
+                showNow={false}
+                utcOffset={0}
+                onChange={(date) => {
+                  if (date) {
+                    console.log('📅 Bitiş tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  }
+                }}
+              />
             </Form.Item>
             
             <Form.Item
@@ -925,6 +1009,12 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                 format="YYYY-MM-DD HH:mm"
                 placeholder="Geri sayım tarihi seçin"
                 style={{ width: '100%' }}
+                utcOffset={0}
+                onChange={(date) => {
+                  if (date) {
+                    console.log('⏰ Seçilen geri sayım tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  }
+                }}
               />
             </Form.Item>
           </TabPane>
