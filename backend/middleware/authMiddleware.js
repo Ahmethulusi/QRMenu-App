@@ -16,7 +16,7 @@ const authenticateToken = async (req, res, next) => {
     }
     console.log(token);
     console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Mevcut' : 'Yok');    // JWT_SECRET için fallback ekle
-    const jwtSecret = process.env.JWT_SECRET || 'your-default-secret';
+    const jwtSecret = process.env.JWT_SECRET;
     const decoded = jwt.verify(token, jwtSecret);
     const user = await User.findByPk(decoded.user_id);
 
