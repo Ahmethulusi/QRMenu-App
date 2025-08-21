@@ -6,6 +6,7 @@ const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
 const { hasPermission } = require('../utils/permissionUtils');
+const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 
 
 exports.updateImageUrl = async (req, res) => {
@@ -258,6 +259,18 @@ exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Önce ürünü bul ve resim bilgisini al
+    const product = await Products.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ error: 'Ürün bulunamadı' });
+    }
+
+    // Eğer ürünün resmi varsa, resmi de sil
+    if (product.image_url) {
+      const imagePath = `public/images/${product.image_url}`;
+      deleteImage(imagePath);
+    }
+
     // Önce branch_products tablosundaki kayıtları sil
     const BranchProduct = require('../models/BranchProduct');
     await BranchProduct.destroy({
@@ -268,10 +281,6 @@ exports.deleteProduct = async (req, res) => {
     const deleted = await Products.destroy({
       where: { product_id: id }
     });
-
-    if (!deleted) {
-      return res.status(404).json({ error: 'Ürün bulunamadı' });
-    }
 
     res.status(200).json({ success: true });
   } catch (error) {

@@ -14,6 +14,7 @@ import PermissionsTable from '../../users_and_permissions/components/Permissions
 import LabelTable from '../../contents/components/LabelTable';
 import Announcements from '../../announcements/components/Announcements';
 import NoPermission from '../../users_and_permissions/components/NoPermission';
+import Settings from './Settings';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -154,6 +155,9 @@ function Content({ selectedComponent }) {
 
     case 'Profile':
       return <ProfileScreen />;
+
+    case 'GeneralSettings':
+      return <Settings />;
 
     case 'TablesAndQR':
       if (!checkComponentPermission('tables', 'read')) {

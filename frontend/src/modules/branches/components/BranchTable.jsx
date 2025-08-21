@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Popconfirm, message, Select, InputNumber } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, ShoppingOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
-import { apiGet, apiPost, apiPut, apiDelete } from '../../../utils/api';
+import { apiGet, apiPost, apiPut, apiDelete } from '../../common/utils/api';
 
 const businessId = 1; // Frontend'den gönderilecek sabit business ID
 const API_URL = import.meta.env.VITE_API_URL;

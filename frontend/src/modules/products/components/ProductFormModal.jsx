@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Select, Radio, AutoComplete, Tabs, Divider, Tooltip } from 'antd';
 import { PlusOutlined, UploadOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import CategorySelector from './components/CategorySelector';
-import LabelSelector from '../../LabelSelector';
+import CategorySelector from '../../categories/components/CategorySelector';
+import LabelSelector from '../../contents/components/LabelSelector';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext ,useMemo} from 'react';
-import '../css/table2.css';
+import '../../../css/table2.css';
 import ProductModal from './NewProductModal';
-import CategoryModal from './components/NewCategoryModal';
+import CategoryModal from '../../categories/components/NewCategoryModal';
 import ProductEditModal from './ProductEditModal';
 // import Select from 'react-select';
 import { Select,Input } from 'antd';

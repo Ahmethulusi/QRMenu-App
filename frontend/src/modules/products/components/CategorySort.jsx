@@ -5,7 +5,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button, Table, Card, Space } from 'antd';
-import { usePermissions } from '../../../hooks/usePermissions';
+import { usePermissions } from '../../common/hooks/usePermissions';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

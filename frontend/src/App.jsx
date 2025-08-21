@@ -1,11 +1,11 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Menu from './components/Menu';
-import Content from './components/Content';
-import Login from './components/Login';
-import ProtectedRoute from './components/ProtectedRoute';
-import { authAPI } from './utils/api';
+import Menu from './modules/common/components/Menu';
+import Content from './modules/common/components/Content';
+import Login from './modules/auth/components/Login';
+import ProtectedRoute from './modules/common/components/ProtectedRoute';
+import { authAPI } from './modules/common/utils/api';
 import './css/App.css';
 import './css/content.css';
 
@@ -174,6 +174,9 @@ function AppContent() {
                 
                 {/* Profil */}
                 <Route path="/profile" element={<Content selectedComponent={selectedComponent} />} />
+                
+                {/* Genel Ayarlar */}
+                <Route path="/settings" element={<Content selectedComponent={selectedComponent} />} />
                 
                 {/* Çıkış Yap */}
                 <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />

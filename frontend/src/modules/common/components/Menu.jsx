@@ -110,6 +110,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Auth';
     } else if (path === '/profile') {
       componentName = 'Profile';
+    } else if (path === '/settings') {
+      componentName = 'Settings';
     }
     
     setSelectedComponent(componentName);
@@ -207,6 +209,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Roles': '/users',
       'Auth': '/auth',
       'Profile': '/profile',
+      'Settings': '/settings',
       'Logout': null, // Çıkış için route yok
     };
     
@@ -288,6 +291,14 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
         { key: 'Auth', label: 'Yetkilendirmeler' }
       ]
     },
+    {
+      key: 'GeneralSettings',
+      icon: <SettingOutlined />,
+      label: 'Genel Ayarlar',
+      children: [
+        { key: 'Settings', label: 'Dil Ayarları' }
+      ]
+    },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
     { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' }
   ];
@@ -328,6 +339,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
               defaultSelectedKeys={['Products']}
+              defaultOpenKeys={['productManagement', 'CategoryManagement', 'ContentManagement', 'TablesAndQRManagement', 'UserManagement', 'GeneralSettings']}
               className="scrollable-menu"
             />
           </div>
@@ -356,6 +368,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
               defaultSelectedKeys={['Products']}
+              defaultOpenKeys={['productManagement', 'CategoryManagement', 'ContentManagement', 'TablesAndQRManagement', 'UserManagement', 'GeneralSettings']}
               className="mobile-menu-content"
             />
           </div>

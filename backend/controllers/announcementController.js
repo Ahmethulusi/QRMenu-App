@@ -1,5 +1,6 @@
 const { Announcement } = require('../models');
 const { Op } = require('sequelize');
+const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 
 // Tüm duyuruları getir
 const getAllAnnouncements = async (req, res) => {
@@ -547,6 +548,17 @@ const deleteAnnouncement = async (req, res) => {
         success: false,
         message: 'Duyuru bulunamadı'
       });
+    }
+    
+    // Eğer duyurunun resimleri varsa, resimleri de sil
+    if (announcement.image_url) {
+      const imagePath = `public/images/${announcement.image_url}`;
+      deleteImage(imagePath);
+    }
+    
+    if (announcement.background_image_url) {
+      const backgroundImagePath = `public/images/${announcement.background_image_url}`;
+      deleteImage(backgroundImagePath);
     }
     
     await announcement.destroy();
