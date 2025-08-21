@@ -251,19 +251,70 @@ QRMenu-App/
 │
 ├── frontend/                     # 🎨 İstemci tarafı kodları
 │   ├── src/
-│   │   ├── components/           # React componentleri
-│   │   │   ├── Login.jsx         # Giriş sayfası
-│   │   │   ├── Menu.jsx          # Yan menü
-│   │   │   ├── Content.jsx       # Ana içerik alanı
-│   │   │   ├── ProductTable.jsx  # Ürün tablosu
-│   │   │   ├── Categories.jsx    # Kategori yönetimi
-│   │   │   ├── LabelTable.jsx    # Etiket yönetimi
-│   │   │   └── ...               # Diğer componentler
+│   │   ├── modules/              # Modüler component yapısı
+│   │   │   ├── auth/             # Kimlik doğrulama modülü
+│   │   │   │   └── components/
+│   │   │   │       └── Login.jsx # Giriş sayfası
+│   │   │   ├── common/           # Ortak componentler
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── Menu.jsx  # Yan menü
+│   │   │   │   │   ├── Content.jsx # Ana içerik alanı
+│   │   │   │   │   └── ProtectedRoute.jsx # Korumalı route
+│   │   │   │   ├── hooks/
+│   │   │   │   │   └── usePermissions.js # Yetki hook'u
+│   │   │   │   └── utils/
+│   │   │   │       ├── api.js    # API çağrıları
+│   │   │   │       └── permissions.js # Yetki kontrolleri
+│   │   │   ├── products/         # Ürün yönetimi modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── Product_Table.jsx # Ürün tablosu
+│   │   │   │       ├── ProductEditModal.jsx # Ürün düzenleme
+│   │   │   │       ├── ProductFormModal.jsx # Ürün ekleme
+│   │   │   │       ├── PriceChange.jsx # Fiyat değişikliği
+│   │   │   │       ├── Sort2.jsx # Ürün sıralama
+│   │   │   │       └── ExcelImportButton.jsx # Excel import
+│   │   │   ├── categories/       # Kategori yönetimi modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── Categories.jsx # Kategori yönetimi
+│   │   │   │       ├── CategoryFormModal.jsx # Kategori ekleme
+│   │   │   │       ├── CategorySelector.jsx # Kategori seçici
+│   │   │   │       ├── CategorySort.jsx # Kategori sıralama
+│   │   │   │       ├── EditCategoryModal.jsx # Kategori düzenleme
+│   │   │   │       ├── NewCategoryModal.jsx # Yeni kategori
+│   │   │   │       └── NewSubCategory.jsx # Alt kategori
+│   │   │   ├── branches/         # Şube yönetimi modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── BranchTable.jsx # Şube tablosu
+│   │   │   │       └── BranchProductMatrix.jsx # Şube-ürün matrisi
+│   │   │   ├── tables_and_QR/    # Masa ve QR yönetimi modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── TablesPage.jsx # Masa yönetimi
+│   │   │   │       ├── Table.jsx # Masa componenti
+│   │   │   │       ├── Non_OrderableQR.jsx # Siparişsiz QR
+│   │   │   │       └── QRDesignsTable.jsx # QR tasarım tablosu
+│   │   │   ├── users_and_permissions/ # Kullanıcı ve yetki modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── UsersTable.jsx # Kullanıcı tablosu
+│   │   │   │       ├── PermissionsTable.jsx # Yetki tablosu
+│   │   │   │       ├── ProfileScreen.jsx # Profil ekranı
+│   │   │   │       └── NoPermission.jsx # Yetki hatası
+│   │   │   ├── contents/         # İçerik yönetimi modülü
+│   │   │   │   └── components/
+│   │   │   │       ├── LabelTable.jsx # Etiket yönetimi
+│   │   │   │       └── LabelSelector.jsx # Etiket seçici
+│   │   │   └── announcements/    # Duyuru yönetimi modülü
+│   │   │       └── components/
+│   │   │           ├── Announcements.jsx # Duyuru listesi
+│   │   │           └── AnnouncementFormModal.jsx # Duyuru ekleme
 │   │   ├── css/                  # Stil dosyaları
-│   │   ├── utils/                # Yardımcı fonksiyonlar
-│   │   │   ├── api.js            # API çağrıları
-│   │   │   └── permissions.js    # Yetki kontrolleri
-│   │   ├── hooks/                # Custom React hooks
+│   │   │   ├── App.css           # Ana stil dosyası
+│   │   │   ├── navbar.css        # Navigasyon stilleri
+│   │   │   ├── Sidebar.css       # Yan menü stilleri
+│   │   │   ├── table.css         # Tablo stilleri
+│   │   │   └── responsive.css    # Responsive tasarım
+│   │   ├── assets/               # Statik dosyalar
+│   │   │   └── react.svg         # React logosu
+│   │   ├── main.jsx              # React uygulaması giriş noktası
 │   │   └── App.jsx               # Ana React componenti
 │   ├── public/                   # Public assets
 │   ├── package.json              # Frontend bağımlılıkları
@@ -277,7 +328,11 @@ QRMenu-App/
 - `backend/server.js`: Ana Express sunucusu
 - `backend/seedPermissions.js`: İlk yetki verilerini oluşturur
 - `frontend/src/App.jsx`: React uygulamasının giriş noktası
-- `frontend/src/utils/api.js`: API çağrılarını yöneten merkezi dosya
+- `frontend/src/main.jsx`: React uygulamasının başlangıç noktası
+- `frontend/src/modules/common/utils/api.js`: API çağrılarını yöneten merkezi dosya
+- `frontend/src/modules/common/utils/permissions.js`: Yetki kontrollerini yöneten dosya
+- `frontend/src/modules/common/components/Content.jsx`: Ana içerik router'ı
+- `frontend/src/modules/common/components/Menu.jsx`: Yan menü navigasyonu
 
 ## 🤝 Katkıda Bulunma
 
