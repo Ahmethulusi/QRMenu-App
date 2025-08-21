@@ -314,6 +314,13 @@ const Categories = () => {
               pagination={false}
               scroll={{ y: 200 }} // 200px dene
               loading={isAnyLoading}
+              rowClassName={(record) => {
+                // Alt kategoriler için daha koyu arka plan
+                if (record.depth > 0) {
+                  return 'subcategory-row';
+                }
+                return '';
+              }}
               expandable={{
                 rowExpandable: record => record.children.length > 0,
                 expandIcon: ({ expanded, onExpand, record }) =>

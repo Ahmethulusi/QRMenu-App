@@ -35,6 +35,26 @@
   opacity: 1;
 }
 
+/* Alt kategori satırları için özel stil */
+.subcategory-row {
+  background-color: #f8f9fa !important; /* Açık gri arka plan */
+}
+
+.subcategory-row:hover {
+  background-color: #e9ecef !important; /* Hover durumunda daha koyu */
+}
+
+/* Alt kategori satırlarında daha belirgin border */
+.subcategory-row td {
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Alt kategori satırlarında daha koyu metin */
+.subcategory-row .ant-table-cell {
+  color: #495057 !important;
+  font-weight: 500;
+}
+
  */
 
 

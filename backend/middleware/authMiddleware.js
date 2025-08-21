@@ -16,7 +16,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // JWT_SECRET için fallback ekle
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = process.env.JWT_SECRET || 'your-default-secret';
     const decoded = jwt.verify(token, jwtSecret);
     const user = await User.findByPk(decoded.user_id);
 
