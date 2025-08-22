@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tabs, message, Spin } from 'antd';
+import { Card, Select, message, Spin, Space } from 'antd';
 import { GlobalOutlined, TranslationOutlined, SettingOutlined } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
@@ -11,11 +11,11 @@ import UserTranslations from './UserTranslations';
 import PermissionTranslations from './PermissionTranslations';
 import '../css/LanguageSettings.css';
 
-const { TabPane } = Tabs;
+const { Option } = Select;
 
 const LanguageSettings = () => {
   const { currentLanguage, changeLanguage, loading: languageLoading } = useLanguage();
-  const [activeTab, setActiveTab] = useState('products');
+  const [selectedModule, setSelectedModule] = useState('products');
 
   const handleSuccess = (messageText) => {
     message.success(messageText || 'İşlem başarılı!');
@@ -25,8 +25,8 @@ const LanguageSettings = () => {
     message.error(messageText || 'Bir hata oluştu!');
   };
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
+  const handleModuleChange = (moduleKey) => {
+    setSelectedModule(moduleKey);
   };
 
   const handleLanguageChange = (newLanguageCode) => {
@@ -52,6 +52,70 @@ const LanguageSettings = () => {
     );
   }
 
+  const moduleOptions = [
+    { key: 'products', label: 'Ürün Çevirileri', icon: <TranslationOutlined /> },
+    { key: 'categories', label: 'Kategori Çevirileri', icon: <TranslationOutlined /> },
+    { key: 'announcements', label: 'Duyuru Çevirileri', icon: <TranslationOutlined /> },
+    { key: 'businesses', label: 'İşletme Çevirileri', icon: <TranslationOutlined /> },
+    { key: 'users', label: 'Kullanıcı Çevirileri', icon: <TranslationOutlined /> },
+    { key: 'permissions', label: 'Yetki Çevirileri', icon: <TranslationOutlined /> }
+  ];
+
+  const renderSelectedModule = () => {
+    switch (selectedModule) {
+      case 'products':
+        return (
+          <ProductTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      case 'categories':
+        return (
+          <CategoryTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      case 'announcements':
+        return (
+          <AnnouncementTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      case 'businesses':
+        return (
+          <BusinessTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      case 'users':
+        return (
+          <UserTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      case 'permissions':
+        return (
+          <PermissionTranslations 
+            currentLanguage={currentLanguage} 
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
+        );
+      default:
+        return <div>Modül seçiniz</div>;
+    }
+  };
+
   return (
     <div className="language-settings">
       <Card 
@@ -64,100 +128,32 @@ const LanguageSettings = () => {
         className="language-settings-card"
       >
         <div style={{ marginBottom: '24px' }}>
-          <LanguageSelector onLanguageChange={handleLanguageChange} />
+          <Space size="large">
+            <LanguageSelector onLanguageChange={handleLanguageChange} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontWeight: 500, color: '#595959' }}>Modül:</span>
+              <Select
+                value={selectedModule}
+                onChange={handleModuleChange}
+                style={{ width: 200 }}
+                placeholder="Modül seçiniz"
+              >
+                {moduleOptions.map(option => (
+                  <Option key={option.key} value={option.key}>
+                    <Space>
+                      {option.icon}
+                      {option.label}
+                    </Space>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </Space>
         </div>
 
-        <Tabs 
-          activeKey={activeTab} 
-          onChange={handleTabChange}
-          type="card"
-          items={[
-            {
-              key: 'products',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  Ürün Çevirileri
-                </span>
-              ),
-              children: <ProductTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            },
-            {
-              key: 'categories',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  Kategori Çevirileri
-                </span>
-              ),
-              children: <CategoryTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            },
-            {
-              key: 'announcements',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  Duyuru Çevirileri
-                </span>
-              ),
-              children: <AnnouncementTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            },
-            {
-              key: 'businesses',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  İşletme Çevirileri
-                </span>
-              ),
-              children: <BusinessTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            },
-            {
-              key: 'users',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  Kullanıcı Çevirileri
-                </span>
-              ),
-              children: <UserTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            },
-            {
-              key: 'permissions',
-              label: (
-                <span>
-                  <TranslationOutlined />
-                  Yetki Çevirileri
-                </span>
-              ),
-              children: <PermissionTranslations 
-                currentLanguage={currentLanguage} 
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            }
-          ]}
-        />
+        <div className="module-content">
+          {renderSelectedModule()}
+        </div>
       </Card>
     </div>
   );

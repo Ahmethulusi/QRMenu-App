@@ -8,6 +8,12 @@ router.get('/products', translationController.getProductTranslations);
 router.get('/categories', translationController.getCategoryTranslations);
 router.get('/businesses', translationController.getBusinessTranslations);
 
+// AI Translation routes
+router.post('/translate', authenticateToken, checkPermission('manage_translations'), translationController.translateText);
+
+// Test endpoint (geçici olarak)
+router.post('/translate-test', translationController.translateTextTest);
+
 // Admin routes
 router.post('/products', authenticateToken, checkPermission('manage_translations'), translationController.upsertProductTranslation);
 router.put('/products', authenticateToken, checkPermission('manage_translations'), translationController.upsertProductTranslation);

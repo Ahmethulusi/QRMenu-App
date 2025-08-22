@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Input, Space, message, Card, Tag, Modal, Form } from 'antd';
-import { EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Input, Space, message, Card, Tag, Modal, Form, Tooltip } from 'antd';
+import { EditOutlined, PlusOutlined, SearchOutlined, RobotOutlined } from '@ant-design/icons';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
-const { Search, TextArea } = Input;
+const { Search } = Input;
 
 const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
+  const { defaultLanguage } = useLanguage();
   const [products, setProducts] = useState([]);
   const [translations, setTranslations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +16,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [translationForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [aiTranslating, setAiTranslating] = useState(false);
 
   useEffect(() => {
     if (currentLanguage) {
@@ -69,9 +72,108 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
     return <Tag color="orange">Çevrilmedi</Tag>;
   };
 
+  // AI ile otomatik çeviri
+  const handleAITranslation = async (product) => {
+    try {
+      console.log('🚀 AI çeviri başlatılıyor...', product);
+      setAiTranslating(true);
+      setSelectedProduct(product);
+      
+      // Google Translate API kullanarak çeviri yap
+      const translatedData = await translateWithAI(product);
+      console.log('✅ AI çeviri tamamlandı:', translatedData);
+      
+      // Form'u çevirilerle doldur
+      translationForm.setFieldsValue({
+        product_name: translatedData.product_name,
+        description: translatedData.description,
+        allergens: translatedData.allergens
+      });
+      
+      setTranslationModal(true);
+      message.success('AI çevirisi tamamlandı! Gerekirse düzenleyip kaydedin.');
+      
+    } catch (error) {
+      console.error('AI çeviri hatası:', error);
+      message.error('AI çevirisi başarısız. Manuel çeviri yapabilirsiniz.');
+      
+      // Hata durumunda normal çeviri modal'ını aç
+      handleEditTranslation(product);
+    } finally {
+      setAiTranslating(false);
+    }
+  };
+
+  // AI çeviri fonksiyonu (Backend API)
+  const translateWithAI = async (product) => {
+    const sourceLang = defaultLanguage?.code || 'tr'; // Dinamik kaynak dil
+    const targetLang = currentLanguage.code;
+    
+    console.log('🌍 Çeviri parametreleri:', { sourceLang, targetLang, product });
+    
+    // Eğer aynı dil ise çeviri yapmaya gerek yok
+    if (sourceLang === targetLang) {
+      console.log('✅ Aynı dil, çeviri yapılmadı');
+      return {
+        product_name: product.product_name,
+        description: product.description,
+        allergens: product.allergens
+      };
+    }
+
+    try {
+      console.log('📡 Backend API çağrılıyor...');
+      // Backend'e çeviri isteği gönder
+      const response = await fetch('/api/translations/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          texts: [
+            product.product_name || '',
+            product.description || '',
+            product.allergens || ''
+          ],
+          sourceLang: sourceLang,
+          targetLang: targetLang
+        })
+      });
+
+      console.log('📥 API yanıtı:', response.status, response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`Translation API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📋 API verisi:', data);
+      
+      const translations = data.translations;
+
+      return {
+        product_name: translations[0]?.translatedText || '',
+        description: translations[1]?.translatedText || '',
+        allergens: translations[2]?.translatedText || ''
+      };
+    } catch (error) {
+      // API hatası durumunda basit çeviri önerisi
+      console.warn('Translation API failed, using fallback:', error);
+      return {
+        product_name: `[${targetLang.toUpperCase()}] ${product.product_name}`,
+        description: `[${targetLang.toUpperCase()}] ${product.description}`,
+        allergens: `[${targetLang.toUpperCase()}] ${product.allergens}`
+      };
+    }
+  };
+
   const handleEditTranslation = (product) => {
     setSelectedProduct(product);
-    const existingTranslation = translations.find(t => t.product_id === product.product_id);
+    const existingTranslation = translations.find(t => 
+      t.product_id === product.product_id && 
+      t.language_code === currentLanguage.code
+    );
     
     if (existingTranslation) {
       translationForm.setFieldsValue({
@@ -101,7 +203,10 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
         ...values
       };
       
-      const existingTranslation = translations.find(t => t.product_id === selectedProduct.product_id);
+      const existingTranslation = translations.find(t => 
+        t.product_id === selectedProduct.product_id && 
+        t.language_code === currentLanguage.code
+      );
       
       let response;
       if (existingTranslation) {
@@ -160,17 +265,31 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
+      width: 160,
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
-            size="small" 
-            icon={<EditOutlined />}
-            onClick={() => handleEditTranslation(record)}
-          >
-            Çeviri
-          </Button>
+          <Tooltip title="AI ile Otomatik Çeviri">
+            <Button 
+              type="primary" 
+              size="small" 
+              icon={<RobotOutlined />}
+              onClick={() => handleAITranslation(record)}
+              loading={aiTranslating}
+              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+            >
+              AI Çeviri
+            </Button>
+          </Tooltip>
+          <Tooltip title="Manuel Çeviri">
+            <Button 
+              type="default" 
+              size="small" 
+              icon={<EditOutlined />}
+              onClick={() => handleEditTranslation(record)}
+            >
+              Manuel
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
@@ -199,17 +318,19 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
         <Table
           columns={columns}
+          size="small"
           dataSource={filteredProducts}
           rowKey="product_id"
           loading={loading}
           pagination={{
-            pageSize: 10,
+            pageSize: 50,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => 
               `${range[0]}-${range[1]} / ${total} ürün`,
           }}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1100, y: 600 }}
+          bordered={false}
         />
       </Card>
 
@@ -245,7 +366,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
             label="Açıklama"
             name="description"
           >
-            <TextArea 
+            <Input.TextArea 
               rows={3} 
               placeholder={`${currentLanguage?.native_name} açıklama`}
             />
@@ -255,12 +376,26 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
             label="Allerjenler"
             name="allergens"
           >
-            <TextArea 
+            <Input.TextArea 
               rows={2} 
               placeholder={`${currentLanguage?.native_name} alerjen bilgisi`}
             />
           </Form.Item>
         </Form>
+        
+        {/* Test Butonu */}
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <Button 
+            type="dashed" 
+            onClick={() => {
+              console.log('🧪 Test: Mevcut form değerleri:', translationForm.getFieldsValue());
+              console.log('🧪 Test: Seçili ürün:', selectedProduct);
+              console.log('🧪 Test: Mevcut dil:', currentLanguage);
+            }}
+          >
+            Form Değerlerini Test Et
+          </Button>
+        </div>
       </Modal>
     </>
   );

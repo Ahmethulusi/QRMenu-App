@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Input, Space, message, Card, Tag, Modal, Form } from 'antd';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { Table, Button, Input, Space, message, Card, Tag, Modal, Form, Tooltip } from 'antd';
+import { EditOutlined, PlusOutlined, RobotOutlined } from '@ant-design/icons';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 const { Search } = Input;
 
 const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
+  const { defaultLanguage } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [translations, setTranslations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +16,7 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [translationForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [aiTranslating, setAiTranslating] = useState(false);
 
   useEffect(() => {
     if (currentLanguage) {
@@ -66,6 +69,77 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
       return <Tag color="green">Çevrildi</Tag>;
     }
     return <Tag color="orange">Çevrilmedi</Tag>;
+  };
+
+  // AI ile otomatik çeviri
+  const handleAITranslation = async (category) => {
+    try {
+      setAiTranslating(true);
+      setSelectedCategory(category);
+      
+      // AI çeviri yap
+      const translatedData = await translateCategoryWithAI(category);
+      
+      // Form'u çevirilerle doldur
+      translationForm.setFieldsValue({
+        category_name: translatedData.category_name
+      });
+      
+      setTranslationModal(true);
+      message.success('AI çevirisi tamamlandı! Gerekirse düzenleyip kaydedin.');
+      
+    } catch (error) {
+      console.error('AI çeviri hatası:', error);
+      message.error('AI çevirisi başarısız. Manuel çeviri yapabilirsiniz.');
+      
+      // Hata durumunda normal çeviri modal'ını aç
+      handleEditTranslation(category);
+    } finally {
+      setAiTranslating(false);
+    }
+  };
+
+  // AI çeviri fonksiyonu (Backend API)
+  const translateCategoryWithAI = async (category) => {
+    const sourceLang = defaultLanguage?.code || 'tr';
+    const targetLang = currentLanguage.code;
+    
+    if (sourceLang === targetLang) {
+      return {
+        category_name: category.category_name
+      };
+    }
+
+    try {
+      // Backend'e çeviri isteği gönder (test endpoint)
+      const response = await fetch('/api/translations/translate-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          texts: [category.category_name || ''],
+          sourceLang: sourceLang,
+          targetLang: targetLang
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Translation API error');
+      }
+
+      const data = await response.json();
+      const translation = data.translations[0];
+
+      return {
+        category_name: translation?.translatedText || ''
+      };
+    } catch (error) {
+      console.warn('Translation API failed, using fallback:', error);
+      return {
+        category_name: `[${targetLang.toUpperCase()}] ${category.category_name}`
+      };
+    }
   };
 
   const handleEditTranslation = (category) => {
@@ -147,17 +221,31 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
+      width: 160,
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
-            size="small" 
-            icon={<EditOutlined />}
-            onClick={() => handleEditTranslation(record)}
-          >
-            Çeviri
-          </Button>
+          <Tooltip title="AI ile Otomatik Çeviri">
+            <Button 
+              type="primary" 
+              size="small" 
+              icon={<RobotOutlined />}
+              onClick={() => handleAITranslation(record)}
+              loading={aiTranslating}
+              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+            >
+              AI Çeviri
+            </Button>
+          </Tooltip>
+          <Tooltip title="Manuel Çeviri">
+            <Button 
+              type="default" 
+              size="small" 
+              icon={<EditOutlined />}
+              onClick={() => handleEditTranslation(record)}
+            >
+              Manuel
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
@@ -190,13 +278,15 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
           rowKey="category_id"
           loading={loading}
           pagination={{
-            pageSize: 10,
+            pageSize: 50,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => 
               `${range[0]}-${range[1]} / ${total} kategori`,
           }}
-          scroll={{ x: 800 }}
+          scroll={{ x: 800, y: 600 }}
+          bordered={false}
+          size="small"
         />
       </Card>
 

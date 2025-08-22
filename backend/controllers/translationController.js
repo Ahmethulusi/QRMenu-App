@@ -233,6 +233,165 @@ const upsertBusinessTranslation = async (req, res) => {
   }
 };
 
+// Test fonksiyonu (geçici olarak)
+const translateTextTest = async (req, res) => {
+  try {
+    console.log('🧪 Test çeviri isteği alındı');
+    console.log('Request body:', req.body);
+    
+    const { texts, sourceLang, targetLang } = req.body;
+    
+    if (!texts || !Array.isArray(texts) || !targetLang) {
+      return res.status(400).json({ error: 'Çevrilecek metinler ve hedef dil gerekli' });
+    }
+    
+    console.log('📝 Çevrilecek metinler:', texts);
+    console.log('🌍 Kaynak dil:', sourceLang);
+    console.log('🎯 Hedef dil:', targetLang);
+    
+    // Eğer aynı dil ise çeviri yapmaya gerek yok
+    if (sourceLang === targetLang) {
+      console.log('✅ Aynı dil, çeviri yapılmadı');
+      return res.json({ 
+        translations: texts.map(text => ({ originalText: text, translatedText: text })),
+        method: 'same-language'
+      });
+    }
+    
+    // translate paketini kullanarak AI çevirisi
+    console.log('🔄 translate paketi yükleniyor...');
+    const translate = require('translate');
+    
+    console.log('⚙️ Çeviri ayarları yapılıyor...');
+    // Çeviri ayarları
+    translate.engine = 'google'; // Google Translate (ücretsiz)
+    translate.from = sourceLang || 'tr';
+    translate.to = targetLang;
+    
+    console.log('🚀 Çeviri başlıyor...');
+    // Tüm metinleri çevir
+    const translations = [];
+    
+    for (const text of texts) {
+      try {
+        if (text && text.trim()) {
+          console.log(`🔄 "${text}" çevriliyor...`);
+          const translatedText = await translate(text);
+          console.log(`✅ "${text}" -> "${translatedText}"`);
+          translations.push({
+            originalText: text,
+            translatedText: translatedText || text
+          });
+        } else {
+          translations.push({
+            originalText: text,
+            translatedText: text
+          });
+        }
+      } catch (translateError) {
+        console.warn(`❌ Çeviri hatası (${text}):`, translateError);
+        // Hata durumunda orijinal metni kullan
+        translations.push({
+          originalText: text,
+          translatedText: text
+        });
+      }
+    }
+    
+    console.log('🎉 Çeviri tamamlandı:', translations);
+    res.json({ 
+      translations, 
+      method: 'ai-translate',
+      sourceLang,
+      targetLang
+    });
+    
+  } catch (error) {
+    console.error('❌ AI çeviri hatası:', error);
+    
+    // Fallback: Basit prefix ekleme
+    const translations = texts.map(text => ({
+      originalText: text,
+      translatedText: `[${targetLang.toUpperCase()}] ${text}`
+    }));
+    
+    res.json({ translations, fallback: true, error: error.message });
+  }
+};
+
+// AI ile çeviri yap (Ücretsiz AI çeviri)
+const translateText = async (req, res) => {
+  try {
+    const { texts, sourceLang, targetLang } = req.body;
+    
+    if (!texts || !Array.isArray(texts) || !targetLang) {
+      return res.status(400).json({ error: 'Çevrilecek metinler ve hedef dil gerekli' });
+    }
+    
+    // Eğer aynı dil ise çeviri yapmaya gerek yok
+    if (sourceLang === targetLang) {
+      return res.json({ 
+        translations: texts.map(text => ({ originalText: text, translatedText: text }))
+      });
+    }
+    
+    // translate paketini kullanarak AI çevirisi
+    const translate = require('translate');
+    
+    // Çeviri ayarları
+    translate.engine = 'google'; // Google Translate (ücretsiz)
+    translate.from = sourceLang || 'tr';
+    translate.to = targetLang;
+    
+    // Tüm metinleri çevir
+    const translations = [];
+    
+    for (const text of texts) {
+      try {
+        if (text && text.trim()) {
+          const translatedText = await translate(text);
+          translations.push({
+            originalText: text,
+            translatedText: translatedText || text
+          });
+        } else {
+          translations.push({
+            originalText: text,
+            translatedText: text
+          });
+        }
+      } catch (translateError) {
+        console.warn(`Çeviri hatası (${text}):`, translateError);
+        // Hata durumunda orijinal metni kullan
+        translations.push({
+          originalText: text,
+          translatedText: text
+        });
+      }
+    }
+    
+    res.json({ 
+      translations, 
+      method: 'ai-translate',
+      sourceLang,
+      targetLang
+    });
+    
+  } catch (error) {
+    console.error('AI çeviri hatası:', error);
+    
+    // Fallback: Basit prefix ekleme
+    const translations = texts.map(text => ({
+      originalText: text,
+      translatedText: `[${targetLang.toUpperCase()}] ${text}`
+    }));
+    
+    res.json({ translations, fallback: true, error: error.message });
+  }
+};
+
+
+
 // Çeviri sil
 const deleteTranslation = async (req, res) => {
   try {
@@ -272,5 +431,7 @@ module.exports = {
   upsertCategoryTranslation,
   getBusinessTranslations,
   upsertBusinessTranslation,
-  deleteTranslation
+  deleteTranslation,
+  translateText,
+  translateTextTest
 };

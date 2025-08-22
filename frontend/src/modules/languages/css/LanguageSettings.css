@@ -243,3 +243,155 @@
   border-color: #ffd591;
   color: #fa8c16;
 }
+
+/* Table container sizing and scrolling */
+.translations-card {
+  height: calc(100vh - 300px);
+  display: flex;
+  flex-direction: column;
+}
+
+.translations-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.translations-card .ant-table-wrapper {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.translations-card .ant-table {
+  height: 100%;
+}
+
+.translations-card .ant-table-container {
+  height: 100%;
+}
+
+.translations-card .ant-table-content {
+  height: 100%;
+}
+
+.translations-card .ant-table-body {
+  max-height: 600px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+/* Fix Ant Design table scrolling issues */
+.translations-card .ant-table {
+  background: transparent;
+}
+
+.translations-card .ant-table-container {
+  border: none;
+  background: transparent;
+}
+
+.translations-card .ant-table-header {
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.translations-card .ant-table-thead > tr > th {
+  background: #fafafa !important;
+  border-bottom: 1px solid #e8e8e8 !important;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.translations-card .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Remove unnecessary borders and fix scroll */
+.translations-card .ant-table-wrapper {
+  border: none;
+}
+
+.translations-card .ant-table-container {
+  border: none;
+}
+
+.translations-card .ant-table-content {
+  border: none;
+}
+
+.translations-card .ant-table-body {
+  border: none;
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9d9 #f5f5f5;
+}
+
+/* Custom scrollbar styling */
+.translations-card .ant-table-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.translations-card .ant-table-body::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.translations-card .ant-table-body::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 4px;
+}
+
+.translations-card .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #bfbfbf;
+}
+
+/* Language settings container sizing */
+.language-settings {
+  height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+}
+
+.language-settings .ant-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.language-settings .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Module content area */
+.module-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Module selector styling */
+.language-settings .ant-select {
+  min-width: 200px;
+}
+
+.language-settings .ant-select-selector {
+  border-radius: 6px;
+}
+
+/* Language selector and module selector layout */
+.language-settings .ant-space {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.language-settings .ant-space-item:last-child {
+  margin-left: auto;
+}
