@@ -5,11 +5,13 @@ import CreateFormModal from './ProductFormModal';
 import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './ProductEditModal';
 import { apiGet, apiPut, apiDelete, apiPost } from '../../common/utils/api';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import '../../../css/tableSizeManager.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product_Table = () => {
+  const { currentLanguage } = useLanguage();
   const [data, setData] = useState([]);  // Verileri burada tutacağız
   const [originalData, setOriginalData] = useState([]);  // Orijinal API verisini burada tutacağız
   const [loading, setLoading] = useState(true);  // Yüklenme durumu için
@@ -25,7 +27,7 @@ const Product_Table = () => {
   useEffect(() => {
     fetchData();
     fetchUserPermissions();
-  }, []);
+  }, [currentLanguage]);
 
   const fetchData = async (showLoading = true) => {
     if (showLoading) {
@@ -34,7 +36,7 @@ const Product_Table = () => {
 
     try {
       console.log('🔄 Ürünler getiriliyor...');
-      const datas = await apiGet('/api/admin/products');
+      const datas = await apiGet('/api/admin/products', currentLanguage?.code);
       console.log('✅ API yanıtı:', datas);
                      console.log('🔍 İlk ürün detayı:', datas[0]);
                console.log('🔍 İlk ürün kategorisi:', datas[0]?.category);

@@ -15,6 +15,7 @@ import LabelTable from '../../contents/components/LabelTable';
 import Announcements from '../../announcements/components/Announcements';
 import NoPermission from '../../users_and_permissions/components/NoPermission';
 import Settings from './Settings';
+import LanguageSettings from '../../languages/components/LanguageSettings';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -158,6 +159,15 @@ function Content({ selectedComponent }) {
 
     case 'GeneralSettings':
       return <Settings />;
+
+    case 'LanguageSettings':
+      if (!checkComponentPermission('system', 'settings')) {
+        return <NoPermission 
+          title="Dil ayarları sayfasına erişim yetkiniz yok"
+          subTitle="Dil ayarlarını yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <LanguageSettings />;
 
     case 'TablesAndQR':
       if (!checkComponentPermission('tables', 'read')) {

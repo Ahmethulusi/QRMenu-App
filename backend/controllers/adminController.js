@@ -1,7 +1,7 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
 const Business = require('../models/Business');
-const { Label, ProductLabel } = require('../models');
+const { Label, ProductLabel, ProductTranslation, CategoryTranslation } = require('../models');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
@@ -64,10 +64,71 @@ exports.getAllProuducts = async (req, res) => {
 };
 exports.getAllProductsOrderBySiraId = async (req,res) => {
     try {
+        const { language_code } = req.query;
+        
+        let includeOptions = [
+            {
+                model: Category,
+                as: 'category',
+                attributes: ['category_id', 'category_name']
+            }
+        ];
+        
+        // Eğer dil kodu belirtilmişse çevirileri de getir
+        if (language_code) {
+            includeOptions.push({
+                model: ProductTranslation,
+                as: 'translations',
+                where: { language_code },
+                required: false,
+                attributes: ['product_name', 'description', 'allergens', 'recommended_with']
+            });
+            
+            includeOptions.push({
+                model: CategoryTranslation,
+                as: 'translations',
+                where: { language_code },
+                required: false,
+                attributes: ['category_name']
+            });
+        }
+        
         const products = await Products.findAll({
+            include: includeOptions,
             order:[['sira_id','ASC']]
-        })
-        res.json(products);
+        });
+        
+        // Çeviri varsa ana alanları çeviri ile değiştir
+        const translatedProducts = products.map(product => {
+            const productData = product.toJSON();
+            
+            if (language_code && product.translations && product.translations.length > 0) {
+                const translation = product.translations[0];
+                if (translation.product_name) {
+                    productData.product_name = translation.product_name;
+                }
+                if (translation.description) {
+                    productData.description = translation.description;
+                }
+                if (translation.allergens) {
+                    productData.allergens = translation.allergens;
+                }
+                if (translation.recommended_with) {
+                    productData.recommended_with = translation.recommended_with;
+                }
+            }
+            
+            if (language_code && product.category && product.category.translations && product.category.translations.length > 0) {
+                const categoryTranslation = product.category.translations[0];
+                if (categoryTranslation.category_name) {
+                    productData.category.category_name = categoryTranslation.category_name;
+                }
+            }
+            
+            return productData;
+        });
+        
+        res.json(translatedProducts);
     } catch (err) {
         console.log(err);
         res.status(500).json({error: 'An error occurred while fetching products.'});
@@ -417,23 +478,88 @@ exports.updateProduct = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Category.findAll();
-        res.json(categories);
+        const { language_code } = req.query;
+        
+        let includeOptions = [];
+        
+        // Eğer dil kodu belirtilmişse çevirileri de getir
+        if (language_code) {
+            includeOptions.push({
+                model: CategoryTranslation,
+                as: 'translations',
+                where: { language_code },
+                required: false,
+                attributes: ['category_name']
+            });
+        }
+        
+        const categories = await Category.findAll({
+            include: includeOptions,
+            order: [['sira_id', 'ASC']]
+        });
+        
+        // Çeviri varsa ana alanları çeviri ile değiştir
+        const translatedCategories = categories.map(category => {
+            const categoryData = category.toJSON();
+            
+            if (language_code && category.translations && category.translations.length > 0) {
+                const translation = category.translations[0];
+                if (translation.category_name) {
+                    categoryData.category_name = translation.category_name;
+                }
+            }
+            
+            return categoryData;
+        });
+        
+        res.json(translatedCategories);
     } catch (error) {
         console.log(error);
+        res.status(500).json({ error: 'Kategoriler alınamadı' });
     }
 }
 
 // Sadece kategori listesi için (yetki kontrolü olmadan) - CategorySelector için
 exports.getCategoriesList = async (req, res) => {
     try {
+        const { language_code } = req.query;
         console.log('🔄 Kategori listesi getiriliyor (yetki kontrolü olmadan)');
+        
+        let includeOptions = [];
+        
+        // Eğer dil kodu belirtilmişse çevirileri de getir
+        if (language_code) {
+            includeOptions.push({
+                model: CategoryTranslation,
+                as: 'translations',
+                where: { language_code },
+                required: false,
+                attributes: ['category_name']
+            });
+        }
+        
         const categories = await Category.findAll({
             attributes: ['category_id', 'category_name'],
+            include: includeOptions,
             order: [['sira_id', 'ASC']]
         });
-        console.log(`✅ ${categories.length} kategori bulundu`);
-        res.json(categories);
+        
+        // Çeviri varsa ana alanları çeviri ile değiştir
+        const translatedCategories = categories.map(category => {
+            const categoryData = category.toJSON();
+            
+            if (language_code && category.translations && category.translations.length > 0) {
+                const translation = category.translations[0];
+                if (translation.category_name) {
+                    categoryData.category_name = translation.category_name;
+                }
+            }
+            
+            return categoryData;
+        });
+        
+        console.log(`✅ ${translatedCategories.length} kategori bulundu`);
+        res.json(translatedCategories);
     } catch (error) {
         console.error('❌ Kategori listesi hatası:', error);
         res.status(500).json({ error: "Kategoriler alınamadı" });

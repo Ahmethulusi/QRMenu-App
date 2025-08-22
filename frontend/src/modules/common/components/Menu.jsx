@@ -23,12 +23,20 @@ import { Menu, Avatar, message } from 'antd';
 import '../../../css/Sidebar.css';
 
 const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
-  const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [collapsed, setCollapsed] = useState(false);
+  const [openKeys, setOpenKeys] = useState([]); // Boş array ile başla
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openKeys, setOpenKeys] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
   const [tokenTimeLeft, setTokenTimeLeft] = useState('');
-  
+
+  // Component yüklendiğinde localStorage'dan selectedComponent'i al
+  useEffect(() => {
+    const savedComponent = localStorage.getItem('selectedComponent');
+    if (savedComponent) {
+      setSelectedComponent(savedComponent);
+    }
+  }, [setSelectedComponent]);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -112,6 +120,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Profile';
     } else if (path === '/settings') {
       componentName = 'Settings';
+    } else if (path === '/language-settings') {
+      componentName = 'LanguageSettings';
     }
     
     setSelectedComponent(componentName);
@@ -210,6 +220,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Auth': '/auth',
       'Profile': '/profile',
       'Settings': '/settings',
+      'LanguageSettings': '/language-settings',
       'Logout': null, // Çıkış için route yok
     };
     
@@ -292,11 +303,11 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       ]
     },
     {
-      key: 'GeneralSettings',
+      key:       'GeneralSettings',
       icon: <SettingOutlined />,
       label: 'Genel Ayarlar',
       children: [
-        { key: 'Settings', label: 'Dil Ayarları' }
+        { key: 'LanguageSettings', label: 'Dil Ayarları' }
       ]
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
@@ -339,7 +350,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
               defaultSelectedKeys={['Products']}
-              defaultOpenKeys={['productManagement', 'CategoryManagement', 'ContentManagement', 'TablesAndQRManagement', 'UserManagement', 'GeneralSettings']}
               className="scrollable-menu"
             />
           </div>
@@ -368,7 +378,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
               defaultSelectedKeys={['Products']}
-              defaultOpenKeys={['productManagement', 'CategoryManagement', 'ContentManagement', 'TablesAndQRManagement', 'UserManagement', 'GeneralSettings']}
               className="mobile-menu-content"
             />
           </div>

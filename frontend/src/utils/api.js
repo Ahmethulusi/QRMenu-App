@@ -62,7 +62,13 @@ export const apiCall = async (endpoint, options = {}) => {
 };
 
 // GET isteği
-export const apiGet = (endpoint) => apiCall(endpoint);
+export const apiGet = (endpoint, languageCode = null) => {
+  if (languageCode) {
+    const separator = endpoint.includes('?') ? '&' : '?';
+    endpoint = `${endpoint}${separator}language_code=${languageCode}`;
+  }
+  return apiCall(endpoint);
+};
 
 // POST isteği
 export const apiPost = (endpoint, data) => {

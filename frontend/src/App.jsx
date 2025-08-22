@@ -6,14 +6,23 @@ import Content from './modules/common/components/Content';
 import Login from './modules/auth/components/Login';
 import ProtectedRoute from './modules/common/components/ProtectedRoute';
 import { authAPI } from './modules/common/utils/api';
+import { LanguageProvider } from './contexts/LanguageContext';
 import './css/App.css';
 import './css/content.css';
 
 function AppContent() {
-  const [selectedComponent, setSelectedComponent] = useState('Foods'); // Varsayılan olarak Foods
+  const [selectedComponent, setSelectedComponent] = useState(() => {
+    // localStorage'dan selectedComponent'i al, yoksa 'Products' kullan
+    return localStorage.getItem('selectedComponent') || 'Products';
+  });
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true); // Yeni state
   const navigate = useNavigate();
+
+  // selectedComponent değiştiğinde localStorage'a kaydet
+  useEffect(() => {
+    localStorage.setItem('selectedComponent', selectedComponent);
+  }, [selectedComponent]);
 
   // Token geçerliliğini kontrol eden fonksiyon
   const validateToken = async () => {
@@ -47,9 +56,9 @@ function AppContent() {
 
   const handleLogin = (userData) => {
     setUser(userData);
-    // Login yapıldığında selectedComponent'i Foods olarak ayarla ve /products'a yönlendir
-    setSelectedComponent('Foods');
-    navigate('/products');
+    // Login yapıldığında selectedComponent'i Products olarak ayarla ve ana sayfaya yönlendir
+    setSelectedComponent('Products');
+    navigate('/');
   };
 
   const handleLogout = () => {
@@ -91,8 +100,12 @@ function AppContent() {
             </div>
             <div className="content">
               <Routes>
-                {/* Ana sayfa - varsayılan olarak Foods'a yönlendir */}
-                <Route path="/" element={<Navigate to="/products" replace />} />
+                {/* Ana sayfa - varsayılan olarak Products'a yönlendir */}
+                <Route path="/" element={
+                  <ProtectedRoute requiredResource="products" requiredAction="read">
+                    <Content selectedComponent="Products" />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Ürün Yönetimi */}
                 <Route path="/products" element={
@@ -178,6 +191,13 @@ function AppContent() {
                 {/* Genel Ayarlar */}
                 <Route path="/settings" element={<Content selectedComponent={selectedComponent} />} />
                 
+                {/* Dil Ayarları */}
+                <Route path="/language-settings" element={
+                  <ProtectedRoute requiredResource="system" requiredAction="settings">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
                 {/* Çıkış Yap */}
                 <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />
                 
@@ -197,7 +217,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </Router>
   );
 }

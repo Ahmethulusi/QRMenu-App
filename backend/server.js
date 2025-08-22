@@ -17,6 +17,8 @@ const authRoute = require('./routes/authRoute');
 const permissionRoute = require('./routes/permissionRoute');
 const labelRoute = require('./routes/labelRoute');
 const announcementRoute = require('./routes/announcementRoute');
+const languageRoute = require('./routes/languageRoute');
+const translationRoute = require('./routes/translationRoute');
 
 // Middleware
 app.use(cors());
@@ -35,6 +37,8 @@ app.use('/api/users', userRoute);
 app.use('/api/permissions', permissionRoute);
 app.use('/api/labels', labelRoute);
 app.use('/api/announcements', announcementRoute);
+app.use('/api/languages', languageRoute);
+app.use('/api/translations', translationRoute);
 
 // Veritabanı bağlantısı ve senkronizasyon
 (async () => {

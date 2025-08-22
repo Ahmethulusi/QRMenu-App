@@ -13,6 +13,10 @@ const Table = require('./Table');
 const Label = require('./Label');
 const ProductLabel = require('./ProductLabel');
 const Announcement = require('./Announcement');
+const Language = require('./Language');
+const ProductTranslation = require('./ProductTranslation');
+const CategoryTranslation = require('./CategoryTranslation');
+const BusinessTranslation = require('./BusinessTranslation');
 
 // Permission - RolePermission association'ları
 RolePermission.belongsTo(Permission, {
@@ -127,6 +131,73 @@ Label.belongsToMany(Products, {
   as: 'products'
 });
 
+// Translation association'ları
+ProductTranslation.belongsTo(Products, {
+  foreignKey: 'product_id',
+  as: 'product'
+});
+
+Products.hasMany(ProductTranslation, {
+  foreignKey: 'product_id',
+  as: 'translations'
+});
+
+ProductTranslation.belongsTo(Language, {
+  foreignKey: 'language_code',
+  targetKey: 'code',
+  as: 'language'
+});
+
+Language.hasMany(ProductTranslation, {
+  foreignKey: 'language_code',
+  sourceKey: 'code',
+  as: 'productTranslations'
+});
+
+CategoryTranslation.belongsTo(Category, {
+  foreignKey: 'category_id',
+  as: 'category'
+});
+
+Category.hasMany(CategoryTranslation, {
+  foreignKey: 'category_id',
+  as: 'translations'
+});
+
+CategoryTranslation.belongsTo(Language, {
+  foreignKey: 'language_code',
+  targetKey: 'code',
+  as: 'language'
+});
+
+Language.hasMany(CategoryTranslation, {
+  foreignKey: 'language_code',
+  sourceKey: 'code',
+  as: 'categoryTranslations'
+});
+
+BusinessTranslation.belongsTo(Business, {
+  foreignKey: 'business_id',
+  as: 'business'
+});
+
+Business.hasMany(BusinessTranslation, {
+  foreignKey: 'business_id',
+  as: 'translations'
+});
+
+BusinessTranslation.belongsTo(Language, {
+  foreignKey: 'language_code',
+  targetKey: 'code',
+  as: 'language'
+});
+
+Language.hasMany(BusinessTranslation, {
+  foreignKey: 'language_code',
+  sourceKey: 'code',
+  as: 'businessTranslations'
+});
+
 module.exports = {
   sequelize,
   Permission,
@@ -142,5 +213,9 @@ module.exports = {
   Table,
   Label,
   ProductLabel,
-  Announcement
+  Announcement,
+  Language,
+  ProductTranslation,
+  CategoryTranslation,
+  BusinessTranslation
 };
