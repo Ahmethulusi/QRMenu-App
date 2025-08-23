@@ -16,7 +16,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [translationForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
-  const [aiTranslating, setAiTranslating] = useState(false);
+  const [aiTranslating, setAiTranslating] = useState({});
 
   useEffect(() => {
     if (currentLanguage) {
@@ -76,10 +76,10 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
   const handleAITranslation = async (product) => {
     try {
       console.log('🚀 AI çeviri başlatılıyor...', product);
-      setAiTranslating(true);
+      setAiTranslating(prev => ({ ...prev, [product.product_id]: true }));
       setSelectedProduct(product);
       
-      // Google Translate API kullanarak çeviri yap
+      // DeepL API kullanarak çeviri yap
       const translatedData = await translateWithAI(product);
       console.log('✅ AI çeviri tamamlandı:', translatedData);
       
@@ -100,7 +100,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
       // Hata durumunda normal çeviri modal'ını aç
       handleEditTranslation(product);
     } finally {
-      setAiTranslating(false);
+      setAiTranslating(prev => ({ ...prev, [product.product_id]: false }));
     }
   };
 
@@ -122,8 +122,21 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
     }
 
     try {
-      console.log('📡 Backend API çağrılıyor...');
-      // Backend'e çeviri isteği gönder
+      console.log('📡 Frontend: DeepL API isteği gönderiliyor...');
+      console.log('📋 İstek detayları:', {
+        url: '/api/translations/translate',
+        method: 'POST',
+        sourceLang,
+        targetLang,
+        texts: [
+          product.product_name || '',
+          product.description || '',
+          product.allergens || ''
+        ],
+        token: localStorage.getItem('token') ? 'Mevcut' : 'Eksik'
+      });
+      
+      // Backend DeepL API'sine çeviri isteği gönder
       const response = await fetch('/api/translations/translate', {
         method: 'POST',
         headers: {
@@ -141,25 +154,42 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
         })
       });
 
-      console.log('📥 API yanıtı:', response.status, response.statusText);
-
+      console.log('📥 Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error(`Translation API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ API Hatası:', response.status, errorText);
+        throw new Error(`Translation API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('📋 API verisi:', data);
+      console.log('📋 DeepL API verisi:', data);
+      
+      if (!data.success || !data.translations) {
+        throw new Error('Invalid DeepL response format');
+      }
       
       const translations = data.translations;
+      console.log('🔄 Çeviri sonuçları:', translations);
 
       return {
-        product_name: translations[0]?.translatedText || '',
-        description: translations[1]?.translatedText || '',
-        allergens: translations[2]?.translatedText || ''
+        product_name: translations[0]?.translatedText || product.product_name || '',
+        description: translations[1]?.translatedText || product.description || '',
+        allergens: translations[2]?.translatedText || product.allergens || ''
       };
     } catch (error) {
       // API hatası durumunda basit çeviri önerisi
-      console.warn('Translation API failed, using fallback:', error);
+      console.warn('DeepL API failed, using fallback:', error);
+      
+      // Hata detaylarını logla
+      if (error.message.includes('401')) {
+        console.error('❌ DeepL API key hatası - Yetkilendirme başarısız');
+      } else if (error.message.includes('429')) {
+        console.error('❌ DeepL API rate limit - Çok fazla istek');
+      } else if (error.message.includes('500')) {
+        console.error('❌ DeepL API sunucu hatası');
+      }
+      
       return {
         product_name: `[${targetLang.toUpperCase()}] ${product.product_name}`,
         description: `[${targetLang.toUpperCase()}] ${product.description}`,
@@ -274,7 +304,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
               size="small" 
               icon={<RobotOutlined />}
               onClick={() => handleAITranslation(record)}
-              loading={aiTranslating}
+              loading={aiTranslating[record.product_id]}
               style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
             >
               AI Çeviri

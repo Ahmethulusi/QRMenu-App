@@ -424,6 +424,205 @@ const deleteTranslation = async (req, res) => {
   }
 };
 
+// DeepL API Test endpoint
+const testDeepLAPI = async (req, res) => {
+  try {
+    console.log('🧪 DeepL API test başlatılıyor...');
+    console.log('📝 Request method:', req.method);
+    console.log('📋 Request body:', req.body);
+    
+    // DeepL API key kontrolü
+    const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
+    
+    if (!DEEPL_API_KEY) {
+      return res.status(500).json({ 
+        error: 'DeepL API key bulunamadı', 
+        message: 'Lütfen .env dosyasına DEEPL_API_KEY ekleyin' 
+      });
+    }
+    
+    console.log('🔑 API Key var, test çevirisi yapılıyor...');
+    
+    // Test parametrelerini al (POST'ta body'den, GET'te default)
+    let testText, targetLang, sourceLang;
+    
+    if (req.method === 'POST' && req.body) {
+      // POST request - body'den parametreleri al
+      testText = req.body.text || 'Merhaba';
+      targetLang = req.body.targetLang || 'EN';
+      sourceLang = req.body.sourceLang || 'TR';
+    } else {
+      // GET request - default değerler
+      testText = 'Merhaba';
+      targetLang = 'EN';
+      sourceLang = 'TR';
+    }
+    
+    console.log('🎯 Test parametreleri:', { testText, sourceLang, targetLang });
+    
+    const deeplUrl = 'https://api-free.deepl.com/v2/translate';
+    
+    const requestBody = {
+      text: [testText],
+      target_lang: targetLang,
+      source_lang: sourceLang
+    };
+    
+    console.log('📡 DeepL API test isteği gönderiliyor...', { url: deeplUrl, body: requestBody });
+    
+    const response = await fetch(deeplUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    console.log('📥 DeepL API yanıt durumu:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ DeepL API hatası:', errorText);
+      return res.status(500).json({ 
+        error: 'DeepL API test başarısız', 
+        details: `${response.status}: ${errorText}`,
+        apiKey: DEEPL_API_KEY ? 'Mevcut' : 'Eksik'
+      });
+    }
+    
+    const data = await response.json();
+    console.log('✅ DeepL API test başarılı:', data);
+    
+    res.json({ 
+      success: true,
+      message: 'DeepL API test başarılı!',
+      testInput: testText,
+      testOutput: data.translations[0]?.text,
+      detectedLanguage: data.translations[0]?.detected_source_language,
+      fullResponse: data
+    });
+    
+  } catch (error) {
+    console.error('❌ DeepL API test hatası:', error);
+    res.status(500).json({ 
+      error: 'DeepL API test başarısız', 
+      details: error.message 
+    });
+  }
+};
+
+// DeepL API ile çeviri
+const translateWithDeepL = async (req, res) => {
+  try {
+    const { texts, sourceLang, targetLang } = req.body;
+    
+    if (!texts || !Array.isArray(texts) || texts.length === 0) {
+      return res.status(400).json({ error: 'Çevrilecek metinler gerekli (array formatında)' });
+    }
+    
+    if (!targetLang) {
+      return res.status(400).json({ error: 'Hedef dil gerekli' });
+    }
+    
+    // DeepL API key - environment variable'dan al
+    const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
+    
+    if (!DEEPL_API_KEY) {
+      return res.status(500).json({ error: 'DeepL API key yapılandırılmamış' });
+    }
+    
+    console.log('🌍 DeepL çeviri başlatılıyor:', { 
+      sourceLang, 
+      targetLang, 
+      textCount: texts.length,
+      apiKeyExists: !!DEEPL_API_KEY,
+      apiKeyLength: DEEPL_API_KEY ? DEEPL_API_KEY.length : 0
+    });
+    
+    // DeepL API dil kodlarını eşle
+    const deeplLangMap = {
+      'tr': 'TR',
+      'en': 'EN',
+      'de': 'DE',
+      'fr': 'FR',
+      'es': 'ES',
+      'it': 'IT',
+      'ru': 'RU',
+      'ar': 'AR',
+      'ja': 'JA',
+      'ko': 'KO',
+      'pt': 'PT'
+    };
+    
+    const sourceLanguage = sourceLang ? deeplLangMap[sourceLang] : null;
+    const targetLanguage = deeplLangMap[targetLang];
+    
+    if (!targetLanguage) {
+      return res.status(400).json({ error: `Desteklenmeyen hedef dil: ${targetLang}` });
+    }
+    
+    // DeepL API'ye istek gönder
+    const deeplUrl = 'https://api-free.deepl.com/v2/translate';
+    
+    const requestBody = {
+      text: texts.filter(text => text && text.trim() !== ''), // Boş metinleri filtrele
+      target_lang: targetLanguage,
+      ...(sourceLanguage && { source_lang: sourceLanguage })
+    };
+    
+    console.log('📡 DeepL API isteği:', { 
+      url: deeplUrl, 
+      body: requestBody,
+      headers: {
+        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY ? '***' + DEEPL_API_KEY.slice(-4) : 'MISSING'}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const response = await fetch(deeplUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ DeepL API hatası:', response.status, errorText);
+      return res.status(500).json({ 
+        error: 'DeepL çeviri başarısız', 
+        details: `${response.status}: ${errorText}` 
+      });
+    }
+    
+    const data = await response.json();
+    console.log('✅ DeepL yanıtı:', data);
+    
+    // DeepL yanıtını uygun formata dönüştür
+    const translations = data.translations.map(translation => ({
+      translatedText: translation.text,
+      detectedSourceLanguage: translation.detected_source_language
+    }));
+    
+    res.json({ 
+      success: true,
+      translations,
+      sourceLang: sourceLanguage,
+      targetLang: targetLanguage
+    });
+    
+  } catch (error) {
+    console.error('❌ DeepL çeviri hatası:', error);
+    res.status(500).json({ 
+      error: 'Çeviri işlemi başarısız', 
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   getProductTranslations,
   upsertProductTranslation,
@@ -433,5 +632,7 @@ module.exports = {
   upsertBusinessTranslation,
   deleteTranslation,
   translateText,
-  translateTextTest
+  translateTextTest,
+  translateWithDeepL,
+  testDeepLAPI
 };

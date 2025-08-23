@@ -16,7 +16,7 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [translationForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
-  const [aiTranslating, setAiTranslating] = useState(false);
+  const [aiTranslating, setAiTranslating] = useState({});
 
   useEffect(() => {
     if (currentLanguage) {
@@ -74,10 +74,11 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
   // AI ile otomatik çeviri
   const handleAITranslation = async (category) => {
     try {
-      setAiTranslating(true);
+      console.log('🚀 Kategori AI çeviri başlatılıyor...', category);
+      setAiTranslating(prev => ({ ...prev, [category.category_id]: true }));
       setSelectedCategory(category);
       
-      // AI çeviri yap
+      // DeepL API ile çeviri yap
       const translatedData = await translateCategoryWithAI(category);
       
       // Form'u çevirilerle doldur
@@ -95,7 +96,7 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
       // Hata durumunda normal çeviri modal'ını aç
       handleEditTranslation(category);
     } finally {
-      setAiTranslating(false);
+      setAiTranslating(prev => ({ ...prev, [category.category_id]: false }));
     }
   };
 
@@ -111,11 +112,22 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
     }
 
     try {
-      // Backend'e çeviri isteği gönder (test endpoint)
-      const response = await fetch('/api/translations/translate-test', {
+      console.log('📡 Frontend: DeepL API isteği gönderiliyor...');
+      console.log('📋 İstek detayları:', {
+        url: '/api/translations/translate',
+        method: 'POST',
+        sourceLang,
+        targetLang,
+        text: category.category_name,
+        token: localStorage.getItem('token') ? 'Mevcut' : 'Eksik'
+      });
+      
+      // Backend DeepL API'sine çeviri isteği gönder
+      const response = await fetch('/api/translations/translate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           texts: [category.category_name || ''],
@@ -124,18 +136,39 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
         })
       });
 
+      console.log('📥 Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('Translation API error');
+        const errorText = await response.text();
+        console.error('❌ API Hatası:', response.status, errorText);
+        throw new Error(`Translation API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('📋 DeepL API verisi (kategori):', data);
+      
+      if (!data.success || !data.translations) {
+        throw new Error('Invalid DeepL response format');
+      }
+      
       const translation = data.translations[0];
+      console.log('🔄 Kategori çeviri sonucu:', translation);
 
       return {
-        category_name: translation?.translatedText || ''
+        category_name: translation?.translatedText || category.category_name || ''
       };
     } catch (error) {
-      console.warn('Translation API failed, using fallback:', error);
+      console.warn('DeepL API failed, using fallback:', error);
+      
+      // Hata detaylarını logla
+      if (error.message.includes('401')) {
+        console.error('❌ DeepL API key hatası - Yetkilendirme başarısız');
+      } else if (error.message.includes('429')) {
+        console.error('❌ DeepL API rate limit - Çok fazla istek');
+      } else if (error.message.includes('500')) {
+        console.error('❌ DeepL API sunucu hatası');
+      }
+      
       return {
         category_name: `[${targetLang.toUpperCase()}] ${category.category_name}`
       };
@@ -230,7 +263,7 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
               size="small" 
               icon={<RobotOutlined />}
               onClick={() => handleAITranslation(record)}
-              loading={aiTranslating}
+              loading={aiTranslating[record.category_id]}
               style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
             >
               AI Çeviri

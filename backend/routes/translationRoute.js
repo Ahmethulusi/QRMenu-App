@@ -9,10 +9,14 @@ router.get('/categories', translationController.getCategoryTranslations);
 router.get('/businesses', translationController.getBusinessTranslations);
 
 // AI Translation routes
-router.post('/translate', authenticateToken, checkPermission('manage_translations'), translationController.translateText);
+router.post('/translate', authenticateToken, checkPermission('manage_translations'), translationController.translateWithDeepL);
 
 // Test endpoint (geçici olarak)
 router.post('/translate-test', translationController.translateTextTest);
+
+// DeepL API Test endpoint
+router.get('/test-deepl', translationController.testDeepLAPI);
+router.post('/test-deepl', translationController.testDeepLAPI);
 
 // Admin routes
 router.post('/products', authenticateToken, checkPermission('manage_translations'), translationController.upsertProductTranslation);
