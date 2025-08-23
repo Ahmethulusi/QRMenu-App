@@ -156,13 +156,24 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
       console.log('📥 Response status:', response.status, response.statusText);
       
+      // Geçici olarak response body'yi kontrol et
+      const responseText = await response.text();
+      console.log('📋 Response body (raw):', responseText);
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Hatası:', response.status, errorText);
-        throw new Error(`Translation API error: ${response.status} - ${errorText}`);
+        console.error('❌ API Hatası:', response.status, responseText);
+        throw new Error(`Translation API error: ${response.status} - ${responseText}`);
       }
 
-      const data = await response.json();
+      // Response body'yi parse et
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ JSON Parse Hatası:', parseError);
+        throw new Error('Invalid JSON response');
+      }
+      
       console.log('📋 DeepL API verisi:', data);
       
       if (!data.success || !data.translations) {

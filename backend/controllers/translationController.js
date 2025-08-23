@@ -607,6 +607,13 @@ const translateWithDeepL = async (req, res) => {
       detectedSourceLanguage: translation.detected_source_language
     }));
     
+    console.log('🚀 Response gönderiliyor:', { 
+      success: true,
+      translations,
+      sourceLang: sourceLanguage,
+      targetLang: targetLanguage
+    });
+    
     res.json({ 
       success: true,
       translations,
