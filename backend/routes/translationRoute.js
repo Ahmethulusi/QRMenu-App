@@ -9,7 +9,7 @@ router.get('/categories', translationController.getCategoryTranslations);
 router.get('/businesses', translationController.getBusinessTranslations);
 
 // AI Translation routes
-router.post('/translate', authenticateToken, checkPermission('manage_translations'), translationController.translateWithDeepL);
+router.post('/translate', translationController.translateWithDeepL);
 
 // Test endpoint (geçici olarak)
 router.post('/translate-test', translationController.translateTextTest);
