@@ -113,6 +113,7 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
     try {
       console.log('📡 Frontend: DeepL API isteği gönderiliyor...');
+      console.log('API URL:', import.meta.env.VITE_API_URL);
       console.log('📋 İstek detayları:', {
         url: '/api/translations/translate',
         method: 'POST',

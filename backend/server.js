@@ -9,6 +9,14 @@ const app = express();
 const db = require('./db');
 const models = require('./models');
 
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Statik dosyalar
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Router'lar
 const adminRouter = require('./routes/adminRoute');
 const tableQrMngRouter = require('./routes/table_qr_route');
@@ -21,13 +29,7 @@ const announcementRoute = require('./routes/announcementRoute');
 const languageRoute = require('./routes/languageRoute');
 const translationRoute = require('./routes/translationRoute');
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Statik dosyalar
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
