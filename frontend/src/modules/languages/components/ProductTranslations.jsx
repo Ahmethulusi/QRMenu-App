@@ -137,7 +137,8 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
       });
       
       // Backend DeepL API'sine çeviri isteği gönder
-      const response = await fetch('/api/translations/translate', {
+      const API_BASE_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_BASE_URL}/api/translations/translate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
