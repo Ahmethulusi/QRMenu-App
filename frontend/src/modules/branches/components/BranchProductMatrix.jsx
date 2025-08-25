@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
-import '../../../css/BranchProductMatrix.css';
+import '../css/BranchProductMatrix.css';
 import { apiGet, apiPut, apiPost } from '../../common/utils/api';
 
 const { Title, Text } = Typography;

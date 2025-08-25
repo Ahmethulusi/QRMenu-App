@@ -3,6 +3,7 @@ import { Table, Button, Input, Space, message, Card, Tag, Modal, Form, Tooltip }
 import { EditOutlined, PlusOutlined, SearchOutlined, RobotOutlined } from '@ant-design/icons';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import '../../tables_and_QR/css/tableSizeManager.css';
 
 const { Search } = Input;
 
@@ -279,24 +280,62 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
       width: 80,
     },
     {
-      title: 'Ürün Adı',
+      title: 'Ürün Adı (Orijinal)',
       dataIndex: 'product_name',
       key: 'product_name',
       width: 200,
     },
     {
-      title: 'Açıklama',
+      title: 'Ürün Adı (Çeviri)',
+      key: 'translated_name',
+      width: 200,
+      render: (_, record) => {
+        const translation = translations.find(t => 
+          t.product_id === record.product_id && 
+          t.language_code === currentLanguage.code
+        );
+        return translation?.product_name || '-';
+      },
+    },
+    {
+      title: 'Açıklama (Orijinal)',
       dataIndex: 'description',
       key: 'description',
-      width: 300,
+      width: 250,
       ellipsis: true,
     },
     {
-      title: 'Allerjenler',
+      title: 'Açıklama (Çeviri)',
+      key: 'translated_description',
+      width: 250,
+      ellipsis: true,
+      render: (_, record) => {
+        const translation = translations.find(t => 
+          t.product_id === record.product_id && 
+          t.language_code === currentLanguage.code
+        );
+        return translation?.description || '-';
+      },
+    },
+    {
+      title: 'Allerjenler (Orijinal)',
       dataIndex: 'allergens',
       key: 'allergens',
-      width: 200,
+      width: 180,
       ellipsis: true,
+    },
+    {
+      title: 'Allerjenler (Çeviri)',
+      key: 'translated_allergens',
+      width: 180,
+      ellipsis: true,
+      render: (_, record) => {
+        const translation = translations.find(t => 
+          t.product_id === record.product_id && 
+          t.language_code === currentLanguage.code
+        );
+        return translation?.allergens || '-';
+      },
     },
     {
       title: 'Çeviri Durumu',
@@ -339,42 +378,39 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
   return (
     <>
-      <Card title="Ürün Çevirileri" className="translations-card">
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Search
-              placeholder="Ürün ara..."
-              allowClear
-              onSearch={handleSearch}
-              style={{ width: 300 }}
-            />
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={() => message.info('Toplu çeviri yakında eklenecek')}
-            >
-              Toplu Çeviri
-            </Button>
-          </Space>
-        </div>
+      <div className='table-content'>
+        <Card 
+          title={
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Ürün Çevirileri</span>
+              <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+                Toplam: {products.length} ürün
+              </span>
+            </div>
+          } 
+          className="translations-card"
+        >
 
         <Table
+          className='ant-table-body'
           columns={columns}
           size="small"
           dataSource={filteredProducts}
           rowKey="product_id"
           loading={loading}
           pagination={{
-            pageSize: 50,
+            pageSizeOptions: ['5', '10', '20', '50'],
             showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} / ${total} ürün`,
+            defaultPageSize: 5,
+            responsive: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+            position: ['bottomRight']
           }}
-          scroll={{ x: 1100, y: 600 }}
+          scroll={{ x: 1400 }}
           bordered={false}
         />
-      </Card>
+        </Card>
+      </div>
 
       {/* Çeviri Modal'ı */}
       <Modal
@@ -424,23 +460,12 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
             />
           </Form.Item>
         </Form>
-        
-        {/* Test Butonu */}
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Button 
-            type="dashed" 
-            onClick={() => {
-              console.log('🧪 Test: Mevcut form değerleri:', translationForm.getFieldsValue());
-              console.log('🧪 Test: Seçili ürün:', selectedProduct);
-              console.log('🧪 Test: Mevcut dil:', currentLanguage);
-            }}
-          >
-            Form Değerlerini Test Et
-          </Button>
-        </div>
       </Modal>
+
+
     </>
   );
 };
 
 export default ProductTranslations;
+

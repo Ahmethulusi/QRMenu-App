@@ -20,7 +20,7 @@ import {
   MenuOutlined
 } from '@ant-design/icons';
 import { Menu, Avatar, message } from 'antd';
-import '../../../css/Sidebar.css';
+import '../css/Sidebar.css';
 
 const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
   const [collapsed, setCollapsed] = useState(false);

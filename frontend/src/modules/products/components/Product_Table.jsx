@@ -6,7 +6,7 @@ import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './ProductEditModal';
 import { apiGet, apiPut, apiDelete, apiPost } from '../../common/utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import '../../../css/tableSizeManager.css';
+import '../../tables_and_QR/css/tableSizeManager.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -454,7 +454,7 @@ const Product_Table = () => {
       <Table
         className='ant-table'
         bordered={true}
-        scroll={{x: 900, y: 400 }}
+        scroll={{x: 900, y: 400}}
         columns={columns(nameFilters, categoryFilters)}
         dataSource={data}
         loading={loading || refreshing}

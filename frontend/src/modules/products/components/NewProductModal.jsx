@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import CategoryModal from '../../categories/components/NewCategoryModal';
-import '../../../css/productModal.css';
+import '../css/productModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const ProductModal = ({ show, handleClose, handleSave }) => {
   const [file, setFile] = useState(null); // Dosyayı saklamak için state

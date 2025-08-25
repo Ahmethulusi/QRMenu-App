@@ -7,8 +7,8 @@ import Login from './modules/auth/components/Login';
 import ProtectedRoute from './modules/common/components/ProtectedRoute';
 import { authAPI } from './modules/common/utils/api';
 import { LanguageProvider } from './contexts/LanguageContext';
-import './css/App.css';
-import './css/content.css';
+import './modules/common/css/App.css';
+import './modules/common/css/content.css';
 
 function AppContent() {
   const [selectedComponent, setSelectedComponent] = useState(() => {

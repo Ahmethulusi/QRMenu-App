@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import '../../../css/categories.css';
+import '../css/categories.css';
 import { Table, Button, message, Modal, Spin } from 'antd';
 import { MinusSquareOutlined, PlusCircleOutlined, PlusOutlined, EditOutlined, DeleteTwoTone } from '@ant-design/icons';
-import '../../../css/tableSizeManager.css';
+import '../../tables_and_QR/css/tableSizeManager.css';
 
 
 const { confirm } = Modal;

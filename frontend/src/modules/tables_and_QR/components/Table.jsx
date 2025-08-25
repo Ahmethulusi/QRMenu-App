@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../../css/table.css';
+import '../css/table.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 

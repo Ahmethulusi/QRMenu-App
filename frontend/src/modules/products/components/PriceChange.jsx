@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Form, message } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
-import "../../../css/pricechange.css";
+import "../../common/css/pricechange.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const EditableCell = ({

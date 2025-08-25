@@ -17,7 +17,7 @@ import {
 import { PlusOutlined, UploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { apiPost, apiPut, apiGet } from '../../common/utils/api';
 import moment from 'moment';
-import '../../../css/announcementFormModal.css';
+import '../css/announcementFormModal.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

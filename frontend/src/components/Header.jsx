@@ -1,5 +1,5 @@
 import React from 'react';
-import '../css/navbar.css';
+import '../modules/common/css/navbar.css';
 import Profile from './ProfileScreen';
 
 const Header = () => {

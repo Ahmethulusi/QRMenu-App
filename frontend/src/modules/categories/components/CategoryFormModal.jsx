@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button, Upload, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import '../../../css/CategoryFormModal.css';
+import '../css/CategoryFormModal.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

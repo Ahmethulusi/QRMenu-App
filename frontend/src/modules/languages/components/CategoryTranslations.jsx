@@ -3,6 +3,7 @@ import { Table, Button, Input, Space, message, Card, Tag, Modal, Form, Tooltip }
 import { EditOutlined, PlusOutlined, RobotOutlined } from '@ant-design/icons';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
+// import '../../tables_and_QR/css/tableSizeManager.css';
 
 const { Search } = Input;
 
@@ -247,10 +248,22 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
       width: 100,
     },
     {
-      title: 'Kategori Adı',
+      title: 'Kategori Adı (Orijinal)',
       dataIndex: 'category_name',
       key: 'category_name',
-      width: 250,
+      width: 200,
+    },
+    {
+      title: 'Kategori Adı (Çeviri)',
+      key: 'translated_name',
+      width: 200,
+      render: (_, record) => {
+        const translation = translations.find(t => 
+          t.category_id === record.category_id && 
+          t.language_code === currentLanguage.code
+        );
+        return translation?.category_name || '-';
+      },
     },
     {
       title: 'Sıra ID',
@@ -299,45 +312,53 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
   return (
     <>
-      <Card title="Kategori Çevirileri" className="translations-card">
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Search
-              placeholder="Kategori ara..."
-              allowClear
-              onSearch={handleSearch}
-              style={{ width: 300 }}
-            />
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={() => message.info('Toplu çeviri yakında eklenecek')}
-            >
-              Toplu Çeviri
-            </Button>
-          </Space>
+      <div className='table-content'>
+        <Card 
+          title={
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Kategori Çevirileri</span>
+              <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+                Toplam: {categories.length} kategori
+              </span>
+            </div>
+          } 
+          className="translations-card"
+        >
+        <div style={{ marginBottom: 5 }}>
+          <Search
+            placeholder="Kategori ara..."
+            allowClear
+            onSearch={handleSearch}
+            style={{ width: 300 }}
+          />
         </div>
 
         <Table
+          className='ant-table-body'
           columns={columns}
           dataSource={filteredCategories}
           rowKey="category_id"
           loading={loading}
           pagination={{
-            pageSize: 50,
+            pageSizeOptions: ['5', '10', '20', '50'],
             showSizeChanger: true,
-            showQuickJumper: true,
+            defaultPageSize: 5,
+            responsive: true,
             showTotal: (total, range) => 
               `${range[0]}-${range[1]} / ${total} kategori`,
+            position: ['topRight']
           }}
-          scroll={{ x: 800, y: 600 }}
-          bordered={false}
+          scroll={{ x: 900 }}
+          bordered={true}
+          
           size="small"
         />
-      </Card>
+        </Card>
+      </div>
 
       {/* Çeviri Modal'ı */}
       <Modal
+        
         title={`${selectedCategory?.category_name} - ${currentLanguage?.native_name} Çevirisi`}
         open={translationModal}
         onOk={handleSaveTranslation}

@@ -30,7 +30,7 @@ import {
 } from '@ant-design/icons';
 import { apiGet, apiDelete, apiPatch } from '../../common/utils/api';
 import AnnouncementFormModal from './AnnouncementFormModal';
-// import '../../../css/announcements.css';
+import '../css/announcements.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const { Title, Text } = Typography;

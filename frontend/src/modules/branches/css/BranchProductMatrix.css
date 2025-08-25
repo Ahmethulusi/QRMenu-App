@@ -1,0 +1,345 @@
+/* BranchProductMatrix Component Styles */
+
+/* Main container styles */
+.branch-product-matrix {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Header section styles */
+.matrix-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.matrix-header h1 {
+  color: white;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.matrix-header .header-actions {
+  margin-top: 16px;
+}
+
+/* Filter card styles */
+.filter-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.filter-card .ant-card-head {
+  background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.filter-card .ant-card-head-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Filter form elements */
+.filter-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.filter-form .ant-select {
+  width: 100%;
+}
+
+.filter-form .ant-btn {
+  height: 40px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Product table styles */
+.product-table-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.product-table-card .ant-card-head {
+  background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.product-table-card .ant-card-head-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Table specific styles */
+.product-matrix-table .ant-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.product-matrix-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 16px 12px;
+}
+
+.product-matrix-table .ant-table-tbody > tr > td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.product-matrix-table .ant-table-tbody > tr:hover > td {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+/* Status indicators */
+.status-available {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.status-unavailable {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+/* Price input styles */
+.price-input .ant-input-number {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.price-input .ant-input-number:hover {
+  border-color: #667eea;
+}
+
+.price-input .ant-input-number:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Switch styles */
+.availability-switch .ant-switch {
+  background-color: #d9d9d9;
+}
+
+.availability-switch .ant-switch-checked {
+  background-color: #52c41a;
+}
+
+/* Button styles */
+.action-button {
+  border-radius: 6px;
+  font-weight: 500;
+  height: 36px;
+  padding: 0 16px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.add-branch-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 24px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.add-branch-button:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.clear-filters-button {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.clear-filters-button:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+/* Modal styles */
+.branch-modal .ant-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+}
+
+.branch-modal .ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.branch-modal .ant-modal-close {
+  color: white;
+}
+
+.branch-modal .ant-modal-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.branch-modal .ant-form-item-label > label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.branch-modal .ant-input {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.2s ease;
+}
+
+.branch-modal .ant-input:hover {
+  border-color: #667eea;
+}
+
+.branch-modal .ant-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .branch-product-matrix {
+    padding: 16px;
+  }
+  
+  .matrix-header {
+    padding: 20px;
+  }
+  
+  .matrix-header h1 {
+    font-size: 24px;
+  }
+  
+  .filter-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .product-table-card .ant-card-body {
+    padding: 12px;
+  }
+  
+  .product-matrix-table .ant-table-thead > tr > th,
+  .product-matrix-table .ant-table-tbody > tr > td {
+    padding: 8px 6px;
+    font-size: 14px;
+  }
+  
+  .add-branch-button {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .branch-product-matrix {
+    padding: 12px;
+  }
+  
+  .matrix-header {
+    padding: 16px;
+  }
+  
+  .matrix-header h1 {
+    font-size: 20px;
+  }
+  
+  .filter-card .ant-card-body {
+    padding: 12px;
+  }
+  
+  .product-table-card .ant-card-body {
+    padding: 8px;
+  }
+  
+  .product-matrix-table .ant-table-thead > tr > th,
+  .product-matrix-table .ant-table-tbody > tr > td {
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+  
+  .add-branch-button {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+}
+
+/* Loading states */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  color: #667eea;
+  font-size: 24px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8c8c8c;
+}
+
+.empty-state .ant-empty-description {
+  color: #8c8c8c;
+}
+
+/* Error state */
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ff4d4f;
+}
+
+.error-state .ant-result-subtitle {
+  color: #ff4d4f;
+}
+
+/* Success message */
+.success-message {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #52c41a;
+}
+
+/* Info message */
+.info-message {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #1890ff;
+}
