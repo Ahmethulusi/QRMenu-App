@@ -152,10 +152,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       if (!collapsed && !isMobile) {
         content.style.marginLeft = '200px';
         content.style.width = 'calc(100% - 200px)';
-      } else if (isMobile && mobileMenuOpen) {
-        content.style.marginLeft = '0';
-        content.style.width = '100%';
       } else {
+        // Mobilde veya collapsed durumunda tam genişlik
         content.style.marginLeft = '0';
         content.style.width = '100%';
       }

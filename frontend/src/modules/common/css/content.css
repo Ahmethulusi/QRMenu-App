@@ -17,24 +17,29 @@
   
 
 
-@media (max-width: 480px) {     .content{
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      padding-top:20% ;
-      overflow-x: scroll;
-    }
-    html, body {
-      overflow-y: auto; 
-    } }
+@media (max-width: 480px) {     
+  .content{
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20%;
+    padding-left: 10%;
+    overflow-x: scroll;
+  }
+  html, body {
+    overflow-y: auto; 
+  } 
+}
 
-@media (min-width: 481px) and (max-width: 1024px) {     .content{
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      padding-top:10% ;
-      padding-left: 10%;
-    } }
+@media (min-width: 481px) and (max-width: 1024px) {     
+  .content{
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    padding-top: 10%;
+    padding-left: 10%;
+  } 
+}
 
 @media (min-width: 1025px) and (max-width: 1368px) {     .content{
       width: 100%;
