@@ -115,6 +115,13 @@
   flex-direction: column;
 }
 
+/* Mobilde sidebar'ı gizle */
+@media screen and (max-width: 900px) {
+  .sidebar-container {
+    display: none;
+  }
+}
+
 .sidebar-container.collapsed {
   width: 80px;
 }
