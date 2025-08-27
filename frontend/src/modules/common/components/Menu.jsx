@@ -23,16 +23,10 @@ import { Menu, Avatar, message } from 'antd';
 import '../css/Sidebar.css';
 
 const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
-  const [collapsed, setCollapsed] = useState(() => {
-    // İlk yüklemede mobil kontrolü yap ve mobilde collapsed olarak başla
-    return window.innerWidth <= 900;
-  });
+  const [collapsed, setCollapsed] = useState(false);
   const [openKeys, setOpenKeys] = useState([]); // Boş array ile başla
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => {
-    // İlk yüklemede mobil kontrolü yap
-    return window.innerWidth <= 900;
-  });
+  const [isMobile, setIsMobile] = useState(false);
   const [tokenTimeLeft, setTokenTimeLeft] = useState('');
 
   // Component yüklendiğinde localStorage'dan selectedComponent'i al
@@ -146,94 +140,27 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       if (isNowMobile) {
         setCollapsed(true);
         setMobileMenuOpen(false);
-        // Mobilde content margin'ini sıfırla
-        const content = document.querySelector('.content');
-        if (content) {
-          content.style.marginLeft = '0';
-          content.style.width = '100%';
-        }
       }
     };
-    
-    // İlk yüklemede de kontrol et
-    handleResize();
-    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Mobil cihazlarda scroll sırasında sidebar'ın açılmamasını sağla
   useEffect(() => {
-    if (isMobile) {
-      const handleScroll = () => {
-        if (mobileMenuOpen) {
-          setMobileMenuOpen(false);
-        }
-      };
-      
-      const handleTouchMove = () => {
-        if (mobileMenuOpen) {
-          setMobileMenuOpen(false);
-        }
-      };
-      
-      const handleWheel = () => {
-        if (mobileMenuOpen) {
-          setMobileMenuOpen(false);
-        }
-      };
-      
-      window.addEventListener('scroll', handleScroll);
-      window.addEventListener('touchmove', handleTouchMove);
-      window.addEventListener('wheel', handleWheel);
-      
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('touchmove', handleTouchMove);
-        window.removeEventListener('wheel', handleWheel);
-      };
-    }
-  }, [isMobile, mobileMenuOpen]);
-
-  // Mobil cihazlarda sayfa yüklendiğinde sidebar'ın kapalı olmasını sağla
-  useEffect(() => {
-    if (isMobile) {
-      setCollapsed(true);
-      setMobileMenuOpen(false);
-      
-      // Content margin'ini sıfırla
-      const content = document.querySelector('.content');
-      if (content) {
+    const content = document.querySelector('.content');
+    if (content) {
+      if (!collapsed && !isMobile) {
+        content.style.marginLeft = '200px';
+        content.style.width = 'calc(100% - 200px)';
+      } else if (isMobile && mobileMenuOpen) {
+        content.style.marginLeft = '0';
+        content.style.width = '100%';
+      } else {
         content.style.marginLeft = '0';
         content.style.width = '100%';
       }
-      
-      // Sidebar'ı tamamen gizle
-      const sidebar = document.querySelector('.sidebar-container');
-      if (sidebar) {
-        sidebar.style.display = 'none';
-        sidebar.style.visibility = 'hidden';
-        sidebar.style.opacity = '0';
-        sidebar.style.transform = 'translateX(-100%)';
-        sidebar.style.width = '0';
-        sidebar.style.height = '0';
-        sidebar.style.overflow = 'hidden';
-      }
     }
-  }, [isMobile]);
-
-  useEffect(() => {
-    const content = document.querySelector('.content');
-    if (content && !isMobile) {
-      if (!collapsed) {
-        content.style.marginLeft = '200px';
-        content.style.width = 'calc(100% - 200px)';
-      } else {
-        content.style.marginLeft = '80px';
-        content.style.width = 'calc(100% - 80px)';
-      }
-    }
-  }, [collapsed, isMobile]);
+  }, [collapsed, isMobile, mobileMenuOpen]);
 
   const handleClick = async (e) => {
     if (e.key === 'Logout') {
@@ -396,7 +323,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
         </div>
       )}
 
-      {/* Desktop sidebar - sadece desktop'ta render et */}
+      {/* Desktop sidebar */}
       {!isMobile && (
         <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
           <div className="sidebar-header">

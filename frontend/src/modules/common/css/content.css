@@ -15,15 +15,7 @@
     overflow-y: hidden; 
   }
   
-  /* Mobil cihazlarda content'in tam genişlikte olmasını sağla */
-  @media screen and (max-width: 900px) {
-    .content {
-      margin-left: 0 !important;
-      width: 100% !important;
-      padding-left: 5%;
-      padding-right: 5%;
-    }
-  }
+
 
 @media (max-width: 480px) {     .content{
       width: 100%;
