@@ -196,6 +196,7 @@ const UsersTable = ({ businessId }) => {
         rowKey="user_id"
         loading={loading}
         pagination={false}
+        scroll={{ x: 1000 }}
       />
 
       {/* Kullanıcı Ekleme/Düzenleme Modal */}

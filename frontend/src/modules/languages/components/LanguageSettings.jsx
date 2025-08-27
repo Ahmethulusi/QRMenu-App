@@ -20,6 +20,19 @@ const LanguageSettings = () => {
   const [bulkTranslating, setBulkTranslating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [bulkStatus, setBulkStatus] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive kontrol
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleSuccess = (messageText) => {
     message.success(messageText || 'İşlem başarılı!');
@@ -330,14 +343,21 @@ const LanguageSettings = () => {
     <div className="language-settings">
       {/* Kontrol Butonları - Product_Table.jsx tarzında */}
       <div style={{ marginBottom: '20px' }}>
-        <Space size="large" style={{ width: '100%', justifyContent: 'flex-start' }}>
-          <LanguageSelector onLanguageChange={handleLanguageChange} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 500, color: '#595959' }}>Modül:</span>
+        {isMobile ? (
+          /* Mobil Layout - Alt alta */
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '12px', 
+            alignItems: 'flex-start',
+            maxWidth: '300px'
+          }}>
+            <LanguageSelector onLanguageChange={handleLanguageChange} showLabel={false} />
+            
             <Select
               value={selectedModule}
               onChange={handleModuleChange}
-              style={{ width: 200 }}
+              style={{ width: '100%' }}
               placeholder="Modül seçiniz"
             >
               {moduleOptions.map(option => (
@@ -349,17 +369,54 @@ const LanguageSettings = () => {
                 </Option>
               ))}
             </Select>
+            
+            <Button
+              type="primary"
+              icon={<RobotOutlined />}
+              onClick={handleBulkTranslate}
+              style={{ 
+                backgroundColor: '#52c41a', 
+                borderColor: '#52c41a',
+                width: '100%'
+              }}
+              disabled={!currentLanguage || currentLanguage.code === defaultLanguage?.code}
+            >
+              Toplu Çeviri
+            </Button>
           </div>
-          <Button
-            type="primary"
-            icon={<RobotOutlined />}
-            onClick={handleBulkTranslate}
-            style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-            disabled={!currentLanguage || currentLanguage.code === defaultLanguage?.code}
-          >
-            Toplu Çeviri
-          </Button>
-        </Space>
+        ) : (
+          /* Desktop Layout - Yan yana */
+          <Space size="large" style={{ width: '100%', justifyContent: 'flex-start' }}>
+            <LanguageSelector onLanguageChange={handleLanguageChange} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontWeight: 500, color: '#595959' }}>Modül:</span>
+              <Select
+                value={selectedModule}
+                onChange={handleModuleChange}
+                style={{ width: 200 }}
+                placeholder="Modül seçiniz"
+              >
+                {moduleOptions.map(option => (
+                  <Option key={option.key} value={option.key}>
+                    <Space>
+                      {option.icon}
+                      {option.label}
+                    </Space>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+            <Button
+              type="primary"
+              icon={<RobotOutlined />}
+              onClick={handleBulkTranslate}
+              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+              disabled={!currentLanguage || currentLanguage.code === defaultLanguage?.code}
+            >
+              Toplu Çeviri
+            </Button>
+          </Space>
+        )}
       </div>
 
       {/* Modül İçeriği */}

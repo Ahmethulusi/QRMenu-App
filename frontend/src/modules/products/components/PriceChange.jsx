@@ -67,6 +67,19 @@ const ProductPriceTable = () => {
   const [loading, setLoading] = useState(false); // Loading state ekleyelim
   const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
   const [permissionsLoading, setPermissionsLoading] = useState(true); // Yetki yükleme durumu
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive kontrol
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -443,34 +456,87 @@ const ProductPriceTable = () => {
       <Form form={form} component={false}>
         {hasPermission('products', 'update') ? (
           <>
-            <Input
-              placeholder="Yüzdelik Fiyat Değişikliği (%)"
-              value={percentageChange}
-              onChange={(e) => setPercentageChange(e.target.value)}
-              style={{ width: '20%', marginRight: '8px' }}
-            />
-            <Button 
-              type="primary" 
-              onClick={applyPriceChange}
-              disabled={selectedRowKeys.length === 0}
-            >
-              Uygula ({selectedRowKeys.length} ürün seçili)
-            </Button>
-            <Button
-              type="primary"
-              onClick={saveAll}
-              style={{ marginLeft: '10px', backgroundColor: 'green', color: 'white' }}
-              disabled={selectedRowKeys.length === 0}
-            >
-              Kaydet
-            </Button>
-            <Button
-              type="primary"
-              onClick={cancelBulkPriceChange}
-              style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
-            >
-              Vazgeç
-            </Button>
+            {isMobile ? (
+              /* Mobil Layout - Alt alta */
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '12px', 
+                alignItems: 'flex-start',
+                maxWidth: '300px',
+                marginBottom: '20px'
+              }}>
+                <Input
+                  placeholder="Yüzdelik Fiyat Değişikliği (%)"
+                  value={percentageChange}
+                  onChange={(e) => setPercentageChange(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+                <Button 
+                  type="primary" 
+                  onClick={applyPriceChange}
+                  disabled={selectedRowKeys.length === 0}
+                  style={{ width: '100%' }}
+                >
+                  Uygula ({selectedRowKeys.length} ürün seçili)
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={saveAll}
+                  style={{ 
+                    backgroundColor: 'green', 
+                    color: 'white',
+                    width: '100%'
+                  }}
+                  disabled={selectedRowKeys.length === 0}
+                >
+                  Kaydet
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={cancelBulkPriceChange}
+                  style={{ 
+                    backgroundColor: 'red', 
+                    color: 'white',
+                    width: '100%'
+                  }}
+                >
+                  Vazgeç
+                </Button>
+              </div>
+            ) : (
+              /* Desktop Layout - Yan yana */
+              <>
+                <Input
+                  placeholder="Yüzdelik Fiyat Değişikliği (%)"
+                  value={percentageChange}
+                  onChange={(e) => setPercentageChange(e.target.value)}
+                  style={{ width: '20%', marginRight: '8px' }}
+                />
+                <Button 
+                  type="primary" 
+                  onClick={applyPriceChange}
+                  disabled={selectedRowKeys.length === 0}
+                >
+                  Uygula ({selectedRowKeys.length} ürün seçili)
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={saveAll}
+                  style={{ marginLeft: '10px', backgroundColor: 'green', color: 'white' }}
+                  disabled={selectedRowKeys.length === 0}
+                >
+                  Kaydet
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={cancelBulkPriceChange}
+                  style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
+                >
+                  Vazgeç
+                </Button>
+              </>
+            )}
           </>
         ) : (
           <div style={{ 
