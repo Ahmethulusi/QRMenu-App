@@ -22,6 +22,32 @@ body {
   height: 50%;
 }
 
+/* Responsive container için mobil ayarlar */
+.responsive-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Mobil cihazlarda sidebar container'ı gizle */
+@media screen and (max-width: 900px) {
+  .responsive-container .menu-container {
+    display: none !important;
+  }
+  
+  .responsive-container .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Mobilde tüm content elementlerinin tam genişlikte olmasını sağla */
+  .responsive-container .content,
+  .responsive-container .content * {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 /* .header {
   display: flex;
   align-items: center;  

@@ -129,6 +129,65 @@
   transform: translateX(0);
 } */
 
+/* Mobil cihazlarda sidebar'ı tamamen gizle */
+@media screen and (max-width: 900px) {
+  .sidebar-container {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: translateX(-100%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Mobilde sidebar'dan etkilenen tüm elementleri sıfırla */
+  .sidebar-container * {
+    display: none !important;
+  }
+  
+  /* Mobilde sidebar'dan etkilenen tüm elementleri gizle */
+  .sidebar-container,
+  .sidebar-container *,
+  .sidebar-container[class*="sidebar"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+  
+  /* Mobilde sidebar'dan etkilenen tüm elementleri tamamen gizle */
+  .sidebar-container,
+  .sidebar-container *,
+  .sidebar-container[class*="sidebar"],
+  .sidebar-container[class*="menu"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Mobilde sidebar'dan etkilenen tüm elementleri tamamen gizle ve content'i etkilememesini sağla */
+  .sidebar-container,
+  .sidebar-container *,
+  .sidebar-container[class*="sidebar"],
+  .sidebar-container[class*="menu"],
+  .sidebar-container[class*="container"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 /* Üst bar (içine ikon yerleşir) */
 .sidebar-header {
   height: 60px;
@@ -245,6 +304,7 @@
   font-size: 18px;
   display: none;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .mobile-menu-icon:hover {
@@ -275,6 +335,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .mobile-bottom-sheet.open {
@@ -402,8 +463,75 @@
 /* Mobile content adjustments */
 @media screen and (max-width: 900px) {
   .content {
-    margin-left: 0;
-    width: 100%;
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  /* Mobilde sidebar'dan etkilenmemesini sağla */
+  .content[style*="margin-left"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Mobilde tüm content elementlerinin tam genişlikte olmasını sağla */
+  .content,
+  .content *,
+  .content[class*="content"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Mobilde sidebar'dan etkilenen tüm elementleri sıfırla */
+  .content[style*="margin-left: 200px"],
+  .content[style*="margin-left: 80px"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Mobilde tüm content elementlerinin sidebar'dan etkilenmemesini sağla */
+  .content,
+  .content *,
+  .content[class*="content"],
+  .content[style*="margin-left"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+  
+  /* Mobilde tüm content elementlerinin sidebar'dan etkilenmemesini garanti altına al */
+  .content,
+  .content *,
+  .content[class*="content"],
+  .content[style*="margin-left"],
+  .content[style*="width"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+  }
+  
+  /* Mobilde tüm content elementlerinin sidebar'dan etkilenmemesini garanti altına al ve override tüm margin değerlerini */
+  .content,
+  .content *,
+  .content[class*="content"],
+  .content[style*="margin-left"],
+  .content[style*="width"],
+  .content[style*="margin"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    transform: none !important;
   }
 }
 
