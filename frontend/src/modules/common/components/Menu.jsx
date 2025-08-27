@@ -35,6 +35,18 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     if (savedComponent) {
       setSelectedComponent(savedComponent);
     }
+    
+    // Sayfa yüklendiğinde mobil kontrolü yap
+    const checkMobileOnLoad = () => {
+      const isNowMobile = window.innerWidth <= 900;
+      setIsMobile(isNowMobile);
+      if (isNowMobile) {
+        setCollapsed(true);
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    checkMobileOnLoad();
   }, [setSelectedComponent]);
 
   const navigate = useNavigate();
