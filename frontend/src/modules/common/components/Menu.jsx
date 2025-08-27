@@ -36,13 +36,23 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       setSelectedComponent(savedComponent);
     }
     
-    // Sayfa yüklendiğinde mobil kontrolü yap
+    /* 
+     * MOBİL KONTROL VE LAYOUT AYARLARI
+     * 
+     * Sorun: Component yüklendiğinde isMobile state'i false olarak başlıyordu
+     * Bu yüzden mobilde hamburger icon görünmüyordu
+     * 
+     * Çözüm: Sayfa yüklendiğinde mobil kontrolü yapılıyor
+     * - isMobile state'i doğru ayarlanıyor
+     * - Mobilde collapsed ve mobileMenuOpen false olarak ayarlanıyor
+     * - Hamburger icon sayfa yüklendiğinde görünür oluyor
+     */
     const checkMobileOnLoad = () => {
       const isNowMobile = window.innerWidth <= 900;
       setIsMobile(isNowMobile);
       if (isNowMobile) {
-        setCollapsed(true);
-        setMobileMenuOpen(false);
+        setCollapsed(true);           /* Mobilde sidebar collapsed */
+        setMobileMenuOpen(false);     /* Mobilde menü kapalı */
       }
     };
     
@@ -158,16 +168,25 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  /* 
+   * RESPONSIVE LAYOUT AYARLARI
+   * 
+   * Açıklama: Content'in margin ve width değerleri dinamik olarak ayarlanıyor
+   * - Desktop: Sidebar yanında content (200px sol margin)
+   * - Mobil: Tam genişlik content (0 sol margin)
+   * 
+   * Not: CSS'deki !important kuralları bu JavaScript ayarlarını override ediyor
+   */
   useEffect(() => {
     const content = document.querySelector('.content');
     if (content) {
       if (!collapsed && !isMobile) {
-        content.style.marginLeft = '200px';
-        content.style.width = 'calc(100% - 200px)';
+        content.style.marginLeft = '200px';           /* Desktop: sidebar yanında */
+        content.style.width = 'calc(100% - 200px)';   /* Desktop: sidebar genişliği çıkarılıyor */
       } else {
         // Mobilde veya collapsed durumunda tam genişlik
-        content.style.marginLeft = '0';
-        content.style.width = '100%';
+        content.style.marginLeft = '0';               /* Sol margin sıfırlanıyor */
+        content.style.width = '100%';                 /* Tam genişlik */
       }
     }
   }, [collapsed, isMobile, mobileMenuOpen]);
@@ -370,11 +389,11 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       {isMobile && (
         <div className={`mobile-bottom-sheet ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-header">
-                          <div className="mobile-user-info">
-                <Avatar size="small" icon={<UserOutlined />} />
-                <span className="mobile-user-email">{user?.email || 'Kullanıcı'}</span>
-                <span className="mobile-token-time-left">Token: {tokenTimeLeft}</span>
-              </div>
+            <div className="mobile-user-info">
+              <Avatar size="small" icon={<UserOutlined />} />
+              <span className="mobile-user-email">{user?.email || 'Kullanıcı'}</span>
+              <span className="mobile-token-time-left">Token: {tokenTimeLeft}</span>
+            </div>
             <span onClick={toggleMobileMenu} className="close-btn">
               ✕
             </span>

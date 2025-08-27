@@ -1,105 +1,13 @@
-/* .menu {
-  position: fixed;
-  top: 80px;
-  left: 0;
-  width: 180px;
-  height: calc(100vh - 80px);
-  background-color: #333;
-  transition: transform 0.3s ease;
-  transform: translateX(-100%);
-  z-index: 1000;
-}
-
-@media screen and (max-width: 768px) {
-  .menu {
-    height: calc(100vh - 80px);
-  }
-}
-
-
-.menu.open {
-  transform: translateX(0); 
-}
-
-.menu ul {
-  list-style: none;
-  padding-top: 0;
-  margin: 0;
-  padding-left: 0;
-}
-
-.menu ul li {
-  margin: 0; 
-}
-
-.menu ul li.side-link {
-  padding: 18px;
-  padding-left: 30px;
-  font-size: 15px;
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
-  background-color: #444; 
-  border-bottom: 1px solid #555; 
-  transition: background-color 0.3s;
-}
-
-.menu ul li.side-link:hover {
-  background-color: #555; 
-}
-
-.menu-icon {
-  position: fixed;
-  top: 25px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  font-size: 30px;
-  color: #ffffff;
-  cursor: pointer;
-  z-index: 1000;
-}
-
-.menu-icon:hover {
-  color: #555;
-}
-
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
-  z-index: 900;
-}
-
-@media screen and (min-width: 769px) {
-  .overlay {
-    display: none;
-  }
-}
-
-.overlay.open {
-  display: block;
-  opacity: 1;
-  visibility: visible;
-}
-
-
-.content {
-  transition: margin-left 0.3s ease, width 0.3s ease;
-  margin-left: 180px; 
-  width: calc(100% - 180px); 
-}
-
-.menu + .content {
-  margin-left: auto; 
-  width: 100%;
-} */
+/* 
+ * MOBİL SİDEBAR GİZLEME VE LAYOUT DÜZENLEMESİ
+ * 
+ * Sorun: Mobilde sidebar görünüyordu ve layout alanı korunuyordu
+ * Çözüm: 900px altında sidebar gizleniyor ve content tam genişlikte
+ * 
+ * Breakpoint: 900px
+ * - Desktop (>900px): Sidebar görünür, content sidebar yanında
+ * - Mobil (≤900px): Sidebar gizli, content tam genişlikte
+ */
 
 /* Sidebar konteyner */
 .sidebar-container {
@@ -115,10 +23,15 @@
   flex-direction: column;
 }
 
-/* Mobilde sidebar'ı gizle */
+/* 
+ * Mobilde sidebar'ı gizle
+ * 
+ * Açıklama: 900px altında sidebar tamamen gizleniyor
+ * Bu sayede mobilde sidebar için ayrılan alan kullanılmıyor
+ */
 @media screen and (max-width: 900px) {
   .sidebar-container {
-    display: none;
+    display: none; /* Sidebar tamamen gizleniyor */
   }
 }
 
@@ -399,18 +312,32 @@
   }
 }
 
-/* İçerik */
+/* 
+ * İçerik layout ayarları
+ * 
+ * Desktop: Sidebar yanında content (200px sol margin)
+ * Mobil: Tam genişlik content (0 sol margin)
+ */
 .content {
   transition: all 0.3s ease;
-  margin-left: 200px;
-  width: calc(100% - 200px);
+  margin-left: 200px;           /* Desktop: sidebar yanında */
+  width: calc(100% - 200px);    /* Desktop: sidebar genişliği çıkarılıyor */
 }
 
-/* Mobile content adjustments - sadece layout, padding'e dokunma */
+/* 
+ * Mobile content adjustments - sadece layout, padding'e dokunma
+ * 
+ * Açıklama: 
+ * - margin-left: 0 - Sidebar için ayrılan sol alan kaldırılıyor
+ * - width: 100% - Content tam ekran genişliğinde
+ * - !important kullanarak JavaScript'teki inline style'ları override ediyor
+ * 
+ * Not: Padding değerleri content.css'de korunuyor (görsel kalite için)
+ */
 @media screen and (max-width: 900px) {
   .content {
-    margin-left: 0 !important;
-    width: 100% !important;
+    margin-left: 0 !important;    /* Sol margin sıfırlanıyor */
+    width: 100% !important;       /* Tam genişlik */
   }
 }
 

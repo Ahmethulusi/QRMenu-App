@@ -1,3 +1,12 @@
+/* 
+ * MOBİL CONTENT PADDING KORUNMASI
+ * 
+ * Açıklama: Layout düzenlenirken görsel kalite korunuyor
+ * Padding değerleri sıfırlanmıyor, sadece genişlik ayarlanıyor
+ * 
+ * Not: Bu dosya content'in görsel düzenini korur
+ * Layout ayarları Sidebar.css'de yapılıyor
+ */
 
 .content {
     align-items:left;
@@ -17,13 +26,21 @@
   
 
 
+/* 
+ * Küçük mobil cihazlar (≤480px)
+ * 
+ * Açıklama: 
+ * - width: 100% - Tam genişlik
+ * - padding-left: 10% - Sol padding korunuyor (görsel kalite için)
+ * - overflow-x: scroll - Yatay scroll eklendi
+ */
 @media (max-width: 480px) {     
   .content{
     width: 100%;
     justify-content: center;
     align-items: center;
     padding-top: 20%;
-    padding-left: 10%;
+    padding-left: 10%;             /* Sol padding korunuyor - görsel kalite için */
     overflow-x: scroll;
   }
   html, body {
@@ -31,13 +48,21 @@
   } 
 }
 
+/* 
+ * Orta boy mobil cihazlar (481px-1024px)
+ * 
+ * Açıklama: 
+ * - width: 100% - Tam genişlik
+ * - padding-left: 10% - Sol padding korunuyor (görsel kalite için)
+ * - Layout düzenlenirken görsel kalite korunuyor
+ */
 @media (min-width: 481px) and (max-width: 1024px) {     
   .content{
     width: 100%;
     justify-content: center;
     align-items: center;
     padding-top: 10%;
-    padding-left: 10%;
+    padding-left: 10%;             /* Sol padding korunuyor - görsel kalite için */
   } 
 }
 
