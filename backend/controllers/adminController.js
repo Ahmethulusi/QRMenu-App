@@ -838,9 +838,23 @@ const stringSimilarity = require('string-similarity');
 
 exports.uploadExcel = async (req, res) => {
   try {
+    console.log('🚀 Excel yükleme başlatıldı');
+    console.log('👤 Kullanıcı bilgileri:', {
+      user_id: req.user?.user_id,
+      email: req.user?.email,
+      business_id: req.user?.business_id
+    });
+    
     if (!req.file) {
+      console.log('❌ Dosya bulunamadı');
       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
     }
+
+    console.log('📁 Dosya bilgileri:', {
+      filename: req.file.filename,
+      path: req.file.path,
+      size: req.file.size
+    });
 
     const columnMapping = {
       "Ürün Adı": "product_name",
@@ -855,12 +869,20 @@ exports.uploadExcel = async (req, res) => {
       "Pişirme Süresi": "cooking_time"
     };
 
+    console.log('📊 Excel dosyası okunuyor...');
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const rawData = xlsx.utils.sheet_to_json(worksheet);
 
+    console.log('📋 Excel verisi okundu:', {
+      sheetName,
+      rowCount: rawData.length,
+      columns: rawData.length > 0 ? Object.keys(rawData[0]) : []
+    });
+
     if (rawData.length === 0) {
+      console.log('❌ Excel dosyası boş');
       return res.status(400).json({ message: 'Excel dosyası boş.' });
     }
 
@@ -869,12 +891,14 @@ exports.uploadExcel = async (req, res) => {
     );
     
     if (unknownColumns.length > 0) {
+      console.log('❌ Bilinmeyen sütunlar:', unknownColumns);
       return res.status(400).json({
         message: "Bilinmeyen sütun başlıkları tespit edildi.",
         unknownColumns
       });
     }
 
+    console.log('🔄 Veri mapping işlemi başlatılıyor...');
     const data = rawData.map(item => {
       const mappedItem = {};
       for (const key in item) {
@@ -886,6 +910,8 @@ exports.uploadExcel = async (req, res) => {
       return mappedItem;
     });
 
+    console.log('✅ Veri mapping tamamlandı, örnek veri:', data[0]);
+
     const missingFields = [];
     data.forEach((item, index) => {
       if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
@@ -894,12 +920,14 @@ exports.uploadExcel = async (req, res) => {
     });
 
     if (missingFields.length > 0) {
+      console.log('❌ Eksik alanlar:', missingFields);
       return res.status(400).json({
         message: 'Zorunlu alanlar eksik:',
         details: missingFields
       });
     }
 
+    console.log('🔍 Veritabanı işlemleri başlatılıyor...');
     const count = await Products.count();
     const duplicateProducts = [];
     const successfulProducts = [];
@@ -911,14 +939,21 @@ exports.uploadExcel = async (req, res) => {
       cat.category_name.toString().trim().toLowerCase()
     );
 
+    console.log('📂 Mevcut kategoriler yüklendi:', allCategoryNames.length);
+
     // 🧠 Tüm ürünler belleğe alınıyor
     const allProducts = await Products.findAll();
     const allProductNames = allProducts.map(p =>
       p.product_name.toString().trim().toLowerCase()
     );
 
+    console.log('📦 Mevcut ürünler yüklendi:', allProductNames.length);
+
+    console.log('🔄 Excel satırları işleniyor...');
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
+      console.log(`📝 Satır ${i + 1} işleniyor:`, item.product_name);
+      
       const incomingName = item.product_name.toString().trim().toLowerCase();
 
       // 🔍 Benzer ürün var mı?
@@ -939,6 +974,7 @@ exports.uploadExcel = async (req, res) => {
       }
 
       if (matchedProduct) {
+        console.log(`⚠️ Duplicate ürün bulundu: ${item.product_name}`);
         duplicateProducts.push(`${item.product_name} (benzer: ${matchedProduct.product_name})`);
         continue;
       }
@@ -949,6 +985,7 @@ exports.uploadExcel = async (req, res) => {
       );
 
       if (!matchedCategory) {
+        console.log(`🔍 Kategori bulunamadı, benzerlik aranıyor: ${item.category_name}`);
         const { bestMatch } = stringSimilarity.findBestMatch(categoryName, allCategoryNames);
         const bestMatchName = bestMatch.target;
         const bestCategory = allCategories.find(cat =>
@@ -956,8 +993,10 @@ exports.uploadExcel = async (req, res) => {
         );
 
         if (bestMatch.rating > 0.8 && bestCategory) {
+          console.log(`✅ Benzer kategori bulundu: ${bestCategory.category_name} (rating: ${bestMatch.rating})`);
           matchedCategory = bestCategory;
         } else {
+          console.log(`🆕 Yeni kategori oluşturuluyor: ${item.category_name}`);
           try {
             matchedCategory = await Category.create({
               category_name: item.category_name.trim(),
@@ -967,7 +1006,9 @@ exports.uploadExcel = async (req, res) => {
             });
             allCategories.push(matchedCategory);
             allCategoryNames.push(matchedCategory.category_name.trim().toLowerCase());
+            console.log(`✅ Yeni kategori oluşturuldu: ${matchedCategory.category_name}`);
           } catch (catErr) {
+            console.error(`❌ Kategori oluşturma hatası:`, catErr);
             categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı.`);
             continue;
           }
@@ -975,6 +1016,12 @@ exports.uploadExcel = async (req, res) => {
       }
 
       try {
+        console.log(`💾 Ürün oluşturuluyor: ${item.product_name}`);
+        
+        // Kullanıcının business_id'sini al
+        const userBusinessId = req.user.business_id;
+        console.log(`🏢 Kullanıcının business_id: ${userBusinessId}`);
+        
         await Products.create({
           product_name: item.product_name,
           price: item.price,
@@ -992,14 +1039,21 @@ exports.uploadExcel = async (req, res) => {
           fat: item.fat || null,
           allergens: item.allergens || null,
           recommended_with: item.recommended_with || null,
-          business_id: 8
+          business_id: userBusinessId // Hardcoded 8 yerine kullanıcının business_id'si
         });
 
         successfulProducts.push(item.product_name);
+        console.log(`✅ Ürün başarıyla oluşturuldu: ${item.product_name}`);
       } catch (createErr) {
+        console.error(`❌ Ürün oluşturma hatası:`, createErr);
         categoryErrors.push(`Satır ${i + 1}: ${item.product_name} ürünü eklenemedi.`);
       }
     }
+
+   console.log('📊 İşlem sonuçları:');
+   console.log('✅ Başarılı ürünler:', successfulProducts.length);
+   console.log('⚠️ Duplicate ürünler:', duplicateProducts.length);
+   console.log('❌ Kategori hataları:', categoryErrors.length);
 
    let responseMessage = '';
 let statusCode = 200;
@@ -1007,11 +1061,20 @@ let statusCode = 200;
 if (successfulProducts.length === 0) {
   responseMessage = 'Hiçbir ürün eklenmedi. Tüm ürünler sistemde zaten mevcut veya hatalıydı.';
   statusCode = 400; // bad request gibi davran
+  console.log('❌ Hiçbir ürün eklenmedi, 400 status döndürülüyor');
 } else if (duplicateProducts.length > 0 || categoryErrors.length > 0) {
   responseMessage = 'Bazı ürünler eklendi fakat bazıları atlandı.';
+  console.log('⚠️ Kısmi başarı, 200 status döndürülüyor');
 } else {
   responseMessage = 'Excel yüklemesi tamamlandı.';
+  console.log('✅ Tam başarı, 200 status döndürülüyor');
 }
+
+console.log('📤 Response gönderiliyor:', {
+  statusCode,
+  message: responseMessage,
+  addedCount: successfulProducts.length
+});
 
 res.status(statusCode).json({
   message: responseMessage,
