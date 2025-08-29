@@ -1,0 +1,61 @@
+/* ERP Module Styles */
+
+.erp-card {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.erp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.erp-card .ant-card-actions {
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+}
+
+.erp-card .ant-card-actions li {
+  margin: 12px 0;
+}
+
+.process-card {
+  text-align: center;
+  height: 100%;
+}
+
+.process-card .ant-card-head-title {
+  text-align: center;
+  font-weight: 600;
+}
+
+.process-card .ant-card-body {
+  padding: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .erp-card {
+    margin-bottom: 16px;
+  }
+  
+  .process-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .erp-card {
+  background: #1f1f1f;
+  border-color: #434343;
+}
+
+[data-theme="dark"] .erp-card .ant-card-actions {
+  background: #262626;
+  border-top-color: #434343;
+}
+
+[data-theme="dark"] .process-card {
+  background: #1f1f1f;
+  border-color: #434343;
+}

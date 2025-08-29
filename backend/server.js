@@ -28,8 +28,8 @@ const labelRoute = require('./routes/labelRoute');
 const announcementRoute = require('./routes/announcementRoute');
 const languageRoute = require('./routes/languageRoute');
 const translationRoute = require('./routes/translationRoute');
-
-
+const erpRoute = require('./routes/erpRoute');
+const erpTestRoute = require('./routes/erpTestRoute');
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
@@ -42,6 +42,10 @@ app.use('/api/labels', labelRoute);
 app.use('/api/announcements', announcementRoute);
 app.use('/api/languages', languageRoute);
 app.use('/api/translations', translationRoute);
+app.use('/api/erp', erpRoute);
+app.use('/api/erp-test', erpTestRoute);
+
+
 
 // Veritabanı bağlantısı ve senkronizasyon
 (async () => {

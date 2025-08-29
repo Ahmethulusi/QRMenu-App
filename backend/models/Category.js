@@ -13,7 +13,7 @@ const Category = sequelize.define('Category', {
   },
   sira_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   parent_id:{
     type: DataTypes.INTEGER,
@@ -22,6 +22,26 @@ const Category = sequelize.define('Category', {
   image_url:{
     type:DataTypes.STRING(200),
     allowNull: true,
+  },
+  // ERP entegrasyonu için gerekli alanlar
+  category_code: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    unique: true,
+    comment: 'ERP sistemindeki stok grup kodu'
+  },
+  business_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'businesses',
+      key: 'id',
+    },
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    comment: 'Kategori aktif mi?'
   }
 }, {
   tableName: 'categories',

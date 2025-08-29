@@ -198,6 +198,11 @@ function AppContent() {
                   </ProtectedRoute>
                 } />
                 
+                {/* ERP Modülü */}
+                <Route path="/erp" element={<Content selectedComponent="ERP" />} />
+                <Route path="/erp/test" element={<Content selectedComponent="ERPTest" />} />
+                <Route path="/erp/integration" element={<Content selectedComponent="ERPIntegration" />} />
+                
                 {/* Çıkış Yap */}
                 <Route path="/logout" element={<Content selectedComponent={selectedComponent} />} />
                 

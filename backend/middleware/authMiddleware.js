@@ -108,6 +108,7 @@ const checkBusinessPermission = (resource, action) => {
   };
 };
 
+
 module.exports = {
   authenticateToken,
   checkPermission,

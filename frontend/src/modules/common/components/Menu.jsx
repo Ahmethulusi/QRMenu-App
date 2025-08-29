@@ -17,7 +17,9 @@ import {
   LogoutOutlined,
   QrcodeOutlined,
   SettingFilled,
-  MenuOutlined
+  MenuOutlined,
+  DatabaseOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import { Menu, Avatar, message } from 'antd';
 import '../css/Sidebar.css';
@@ -250,6 +252,9 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Profile': '/profile',
       'Settings': '/settings',
       'LanguageSettings': '/language-settings',
+      'ERP': '/erp', // Ana ERP route'u
+      'ERPTest': '/erp/test', // ERP Test route'u
+      'ERPIntegration': '/erp/integration', // ERP Integration route'u
       'Logout': null, // Çıkış için route yok
     };
     
@@ -337,6 +342,23 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       label: 'Genel Ayarlar',
       children: [
         { key: 'LanguageSettings', label: 'Dil Ayarları' }
+      ]
+    },
+    {
+      key: 'ERP',
+      icon: <DatabaseOutlined />,
+      label: 'ERP',
+      children: [
+        {
+          key: 'ERPTest',
+          icon: <DatabaseOutlined />,
+          label: 'ERP Test'
+        },
+        {
+          key: 'ERPIntegration',
+          icon: <SyncOutlined />,
+          label: 'ERP Entegrasyon'
+        }
       ]
     },
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },

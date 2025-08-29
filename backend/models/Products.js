@@ -8,7 +8,7 @@ const Product = sequelize.define('Product', {
     autoIncrement: true,
   },
   product_name: {
-    type: DataTypes.STRING(30),
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   price: {
@@ -84,6 +84,18 @@ const Product = sequelize.define('Product', {
     allowNull: true,
     comment: 'Yanında iyi gidecek ürünlerin ID\'leri (JSON array olarak)'
   },
+  // ERP entegrasyonu için gerekli alanlar
+  product_code: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    unique: true,
+    comment: 'ERP sistemindeki stok kodu'
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    comment: 'Ürün aktif mi?'
+  }
 }, {
   tableName: 'products',
   timestamps: false,

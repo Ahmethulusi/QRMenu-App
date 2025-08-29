@@ -16,6 +16,9 @@ import Announcements from '../../announcements/components/Announcements';
 import NoPermission from '../../users_and_permissions/components/NoPermission';
 import Settings from './Settings';
 import LanguageSettings from '../../languages/components/LanguageSettings';
+import ERPTest from '../../ERPTest/ERPTest';
+import ERPIntegration from '../../ERPIntegration/ERPIntegration';
+import ERP from '../../ERP/ERP';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -231,6 +234,13 @@ function Content({ selectedComponent }) {
         />;
       }
       return <QRDesignsTable businessId={1} />;
+    
+    case 'ERP':
+      return <ERP />;
+    case 'ERPTest':
+      return <ERPTest />;
+    case 'ERPIntegration':
+      return <ERPIntegration />;
     
     case 'Auth':
       if (!checkComponentPermission('permissions', 'read')) {

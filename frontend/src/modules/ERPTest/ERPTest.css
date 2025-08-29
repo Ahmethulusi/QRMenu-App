@@ -1,0 +1,157 @@
+.erp-test-container {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.erp-test-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.erp-test-title {
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.erp-test-subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+.erp-test-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.erp-test-card .ant-card-head {
+  background-color: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.erp-test-form {
+  max-width: 800px;
+}
+
+.erp-test-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.erp-test-results {
+  margin-top: 24px;
+}
+
+.erp-test-alert {
+  margin-bottom: 16px;
+}
+
+.erp-test-table {
+  margin-top: 16px;
+}
+
+.erp-test-collapse {
+  margin-top: 16px;
+}
+
+.erp-test-collapse .ant-collapse-header {
+  font-weight: 600;
+}
+
+.erp-test-info-cards {
+  margin-top: 24px;
+}
+
+.erp-test-info-card {
+  text-align: center;
+  height: 100%;
+}
+
+.erp-test-info-card .ant-card-head {
+  background-color: #f0f8ff;
+  border-bottom: 1px solid #d6e4ff;
+}
+
+.erp-test-info-card .ant-card-body {
+  padding: 16px;
+}
+
+.erp-test-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.erp-test-status.success {
+  color: #52c41a;
+}
+
+.erp-test-status.error {
+  color: #ff4d4f;
+}
+
+.erp-test-status.info {
+  color: #1890ff;
+}
+
+.erp-test-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.erp-test-error {
+  color: #ff4d4f;
+  text-align: center;
+  padding: 20px;
+}
+
+.erp-test-success {
+  color: #52c41a;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .erp-test-container {
+    padding: 16px;
+  }
+  
+  .erp-test-buttons {
+    flex-direction: column;
+  }
+  
+  .erp-test-buttons .ant-btn {
+    width: 100%;
+  }
+  
+  .erp-test-form .ant-form-item {
+    margin-bottom: 16px;
+  }
+}
+
+/* Dark mode desteği */
+@media (prefers-color-scheme: dark) {
+  .erp-test-container {
+    background-color: #141414;
+  }
+  
+  .erp-test-card {
+    background-color: #1f1f1f;
+    border-color: #303030;
+  }
+  
+  .erp-test-card .ant-card-head {
+    background-color: #262626;
+    border-bottom-color: #303030;
+  }
+  
+  .erp-test-info-card .ant-card-head {
+    background-color: #1d39aa;
+    border-bottom-color: #2f54eb;
+  }
+}
