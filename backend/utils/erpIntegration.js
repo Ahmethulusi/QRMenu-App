@@ -20,14 +20,14 @@ class ERPIntegration {
       password: userConfig.erp_password,
       port: userConfig.erp_port || 1433,
       options: {
-        encrypt: isProduction && !isLocalNetwork, // Canlı ortamda SSL, local'de kapalı
-        trustServerCertificate: !isProduction || isLocalNetwork, // Local'de güven
+        encrypt: false, // Her ortamda SSL'i kapat (güvenlik için)
+        trustServerCertificate: true, // Her ortamda sertifika güvenini aç
         enableArithAbort: true,
-        // SSL ayarları
-        ssl: isProduction && !isLocalNetwork ? {
+        // SSL ayarları - Her ortamda esnek
+        ssl: {
           rejectUnauthorized: false,
-          minVersion: 'TLSv1.2'
-        } : false
+          minVersion: 'TLSv1.0' // Daha eski TLS versiyonlarını da destekle
+        }
       }
     };
   }

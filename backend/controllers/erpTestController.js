@@ -113,7 +113,7 @@ class ERPTestController {
         server: user.erp_server
       });
 
-      // Test için özel SSL ayarları
+      // Test için özel SSL ayarları - Daha esnek
       const sqlConfig = {
         server: user.erp_server,
         database: user.erp_database,
@@ -121,16 +121,14 @@ class ERPTestController {
         password: user.erp_password,
         port: user.erp_port || 1433,
         options: {
-          encrypt: isProduction && !isLocalNetwork, // Canlı ortamda SSL, local'de kapalı
-          trustServerCertificate: !isProduction || isLocalNetwork, // Local'de güven
+          encrypt: false, // Her ortamda SSL'i kapat (güvenlik için)
+          trustServerCertificate: true, // Her ortamda sertifika güvenini aç
           enableArithAbort: true,
-          connectTimeout: 30000,
-          requestTimeout: 30000,
-          // SSL ayarları
-          ssl: isProduction && !isLocalNetwork ? {
+          // SSL ayarları - Her ortamda esnek
+          ssl: {
             rejectUnauthorized: false,
-            minVersion: 'TLSv1.2'
-          } : false
+            minVersion: 'TLSv1.0' // Daha eski TLS versiyonlarını da destekle
+          }
         }
       };
 
@@ -182,7 +180,7 @@ class ERPTestController {
         });
       }
 
-      // Ortama göre SSL ayarları
+      // Ortama göre SSL ayarları - Daha esnek
       const isProduction = process.env.NODE_ENV === 'production';
       const isLocalNetwork = user.erp_server.includes('192.168.') || 
                            user.erp_server.includes('10.') || 
@@ -197,14 +195,14 @@ class ERPTestController {
         password: user.erp_password,
         port: user.erp_port || 1433,
         options: {
-          encrypt: isProduction && !isLocalNetwork, // Canlı ortamda SSL, local'de kapalı
-          trustServerCertificate: !isProduction || isLocalNetwork, // Local'de güven
+          encrypt: false, // Her ortamda SSL'i kapat (güvenlik için)
+          trustServerCertificate: true, // Her ortamda sertifika güvenini aç
           enableArithAbort: true,
-          // SSL ayarları
-          ssl: isProduction && !isLocalNetwork ? {
+          // SSL ayarları - Her ortamda esnek
+          ssl: {
             rejectUnauthorized: false,
-            minVersion: 'TLSv1.2'
-          } : false
+            minVersion: 'TLSv1.0' // Daha eski TLS versiyonlarını da destekle
+          }
         }
       };
 
@@ -351,7 +349,7 @@ class ERPTestController {
         });
       }
 
-      // Ortama göre SSL ayarları
+      // Ortama göre SSL ayarları - Daha esnek
       const isProduction = process.env.NODE_ENV === 'production';
       const isLocalNetwork = user.erp_server.includes('192.168.') || 
                            user.erp_server.includes('10.') || 
@@ -366,14 +364,14 @@ class ERPTestController {
         password: user.erp_password,
         port: user.erp_port || 1433,
         options: {
-          encrypt: isProduction && !isLocalNetwork, // Canlı ortamda SSL, local'de kapalı
-          trustServerCertificate: !isProduction || isLocalNetwork, // Local'de güven
+          encrypt: false, // Her ortamda SSL'i kapat (güvenlik için)
+          trustServerCertificate: true, // Her ortamda sertifika güvenini aç
           enableArithAbort: true,
-          // SSL ayarları
-          ssl: isProduction && !isLocalNetwork ? {
+          // SSL ayarları - Her ortamda esnek
+          ssl: {
             rejectUnauthorized: false,
-            minVersion: 'TLSv1.2'
-          } : false
+            minVersion: 'TLSv1.0' // Daha eski TLS versiyonlarını da destekle
+          }
         }
       };
 
