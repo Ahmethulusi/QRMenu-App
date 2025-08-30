@@ -48,7 +48,7 @@ const ERPTest = () => {
   const loadConfig = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/erp-test/config', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/config`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -69,7 +69,7 @@ const ERPTest = () => {
   const updateConfig = async (values) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/erp-test/config', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ const ERPTest = () => {
   const testConnection = async () => {
     try {
       setTestLoading(true);
-      const response = await fetch('/api/erp-test/test-connection', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/test-connection`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -122,7 +122,7 @@ const ERPTest = () => {
   const testQueries = async () => {
     try {
       setQueryLoading(true);
-      const response = await fetch('/api/erp-test/test-queries', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/test-queries`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -152,7 +152,7 @@ const ERPTest = () => {
 
     try {
       setQueryLoading(true);
-      const response = await fetch('/api/erp-test/test-custom-query', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/test-custom-query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
