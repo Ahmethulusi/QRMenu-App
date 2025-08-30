@@ -4,6 +4,15 @@ const { Products, Category } = require('../models');
 class ERPIntegration {
   constructor(userConfig) {
     this.userConfig = userConfig;
+    
+    // Ortama göre SSL ayarları
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isLocalNetwork = userConfig.erp_server.includes('192.168.') || 
+                         userConfig.erp_server.includes('10.') || 
+                         userConfig.erp_server.includes('172.') ||
+                         userConfig.erp_server === 'localhost' ||
+                         userConfig.erp_server === '127.0.0.1';
+
     this.sqlConfig = {
       server: userConfig.erp_server,
       database: userConfig.erp_database,
@@ -11,9 +20,14 @@ class ERPIntegration {
       password: userConfig.erp_password,
       port: userConfig.erp_port || 1433,
       options: {
-        encrypt: true,
-        trustServerCertificate: true,
-        enableArithAbort: true
+        encrypt: isProduction && !isLocalNetwork, // Canlı ortamda SSL, local'de kapalı
+        trustServerCertificate: !isProduction || isLocalNetwork, // Local'de güven
+        enableArithAbort: true,
+        // SSL ayarları
+        ssl: isProduction && !isLocalNetwork ? {
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1.2'
+        } : false
       }
     };
   }

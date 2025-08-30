@@ -48,9 +48,16 @@ const ERPTest = () => {
   const loadConfig = async () => {
     try {
       setLoading(true);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Token bulunamadı! Lütfen tekrar giriş yapın.');
+        return;
+      }
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/config`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const data = await response.json();
@@ -97,13 +104,32 @@ const ERPTest = () => {
   const testConnection = async () => {
     try {
       setTestLoading(true);
+      
+      // Token kontrolü ekle
+      const token = localStorage.getItem('token');
+      console.log('🔍 Token kontrolü:', {
+        token: token ? `${token.substring(0, 20)}...` : 'YOK',
+        tokenLength: token ? token.length : 0,
+        hasToken: !!token
+      });
+      
+      if (!token) {
+        message.error('Token bulunamadı! Lütfen tekrar giriş yapın.');
+        return;
+      }
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/erp-test/test-connection`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+      
       const data = await response.json();
+      console.log('📡 Response data:', data);
       
       setConnectionResult(data);
       
@@ -113,6 +139,7 @@ const ERPTest = () => {
         message.error(data.message);
       }
     } catch (error) {
+      console.error('❌ Test connection error:', error);
       message.error('Bağlantı testi sırasında hata oluştu');
     } finally {
       setTestLoading(false);
@@ -374,6 +401,23 @@ const ERPTest = () => {
 
       <Divider />
 
+      {/* Token Durumu */}
+      <Card title="🔑 Token Durumu" style={{ marginBottom: 24 }}>
+        <Alert
+          message="Authentication Bilgileri"
+          description={
+            <div>
+              <p><strong>Token:</strong> {localStorage.getItem('token') ? '✅ Mevcut' : '❌ Yok'}</p>
+              <p><strong>User:</strong> {localStorage.getItem('user') ? '✅ Mevcut' : '❌ Yok'}</p>
+              <p><strong>VITE_API_URL:</strong> {import.meta.env.VITE_API_URL || '❌ Tanımlanmamış'}</p>
+              <p><strong>Target URL:</strong> {import.meta.env.VITE_API_URL}/api/erp-test/test-connection</p>
+            </div>
+          }
+          type="info"
+          showIcon
+        />
+      </Card>
+
       {/* Konfigürasyon Formu */}
       <Card title="🔧 ERP Bağlantı Ayarları" style={{ marginBottom: 24 }}>
         <Form
@@ -388,8 +432,9 @@ const ERPTest = () => {
                 label="SQL Server Adresi"
                 name="erp_server"
                 rules={[{ required: true, message: 'Server adresi gerekli!' }]}
+                extra="Sadece IP adresi veya hostname girin (port dahil etmeyin)"
               >
-                <Input placeholder="localhost veya 192.168.1.100" />
+                <Input placeholder="2x2.17x.x26.24x (port olmadan)" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -397,8 +442,9 @@ const ERPTest = () => {
                 label="Port"
                 name="erp_port"
                 rules={[{ required: true, message: 'Port gerekli!' }]}
+                extra="Port numarasını ayrı olarak girin"
               >
-                <InputNumber min={1} max={65535} style={{ width: '100%' }} />
+                <InputNumber min={1} max={65535} style={{ width: '100%' }} placeholder="3y41" />
               </Form.Item>
             </Col>
           </Row>
@@ -566,6 +612,32 @@ const ERPTest = () => {
             </Card>
           </Col>
         </Row>
+      </Card>
+
+      {/* Bağlantı Bilgisi Kartı */}
+      <Card title="🔗 Bağlantı Formatı" style={{ marginTop: 16 }}>
+        <Alert
+          message="SQL Server Bağlantı Formatı"
+          description={
+            <div>
+              <p><strong>❌ Yanlış Format (SSMS'deki gibi):</strong></p>
+              <code>2x2.17x.x26.24x,y3y41</code>
+              
+              <p style={{ marginTop: 16 }}><strong>✅ Doğru Format:</strong></p>
+              <div style={{ background: '#f6f8fa', padding: '12px', borderRadius: '6px' }}>
+                <p><strong>Server:</strong> 2x2.17x.x26.24x</p>
+                <p><strong>Port:</strong> 3y41</p>
+              </div>
+              
+              <p style={{ marginTop: 16, fontSize: '12px', color: '#666' }}>
+                <strong>Not:</strong> SQL Server Management Studio'da virgül (,) kullanırken, 
+                kod tarafında server ve port ayrı ayrı belirtilmelidir.
+              </p>
+            </div>
+          }
+          type="info"
+          showIcon
+        />
       </Card>
     </div>
   );
