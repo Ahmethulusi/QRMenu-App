@@ -20,10 +20,6 @@
  
   }
   
-  html, body {
-    overflow-y: auto; 
-  }
-  
 
 
 /* 
@@ -43,9 +39,6 @@
     padding-left: 10%;             /* Sol padding korunuyor - görsel kalite için */
     overflow-x: scroll;
   }
-  html, body {
-    overflow-y: auto; 
-  } 
 }
 
 /* 
