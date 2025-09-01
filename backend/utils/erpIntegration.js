@@ -123,7 +123,7 @@ class ERPIntegration {
       const pool = await sql.connect(this.sqlConfig);
       
       // ERP'den stok bilgilerini çek (sadece QR yayınlananlar)
-      // STOK tablosunda ID ve KOD var
+      // STOK tablosunda ID ve KOD var, fiyat bilgisi STOK_STOK_BIRIM_FIYAT tablosundan alınır
       const productsResult = await pool.request()
         .query(`
           SELECT 
@@ -131,12 +131,13 @@ class ERPIntegration {
             s.KOD as product_code,
             s.AD as product_name,
             s.STOK_GRUP as category_id,
-            s.SON_ALIS_FIYAT as price,
+            sbf.FIYAT as price,
             s.KALORI as calorie_count,
             s.PISIRME_SURESI as cooking_time,
             s.SIRA as sira_id
           FROM STOK s
           INNER JOIN STOK_GRUP sg ON s.STOK_GRUP = sg.ID
+          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON s.ID = sbf.STOK_ID
           WHERE s.AKTIF = 1 AND sg.AKTIF = 1 
             AND s.QRYAYINLANIR = 1 AND sg.QRYAYINLANIR = 1
           ORDER BY s.SIRA
@@ -252,10 +253,11 @@ class ERPIntegration {
       const stockResult = await pool.request()
         .query(`
           SELECT 
-            KOD as product_code,
-            SON_ALIS_FIYAT as price
-          FROM STOK 
-          WHERE AKTIF = 1 AND QRYAYINLANIR = 1
+            s.KOD as product_code,
+            sbf.FIYAT as price
+          FROM STOK s
+          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON s.ID = sbf.STOK_ID
+          WHERE s.AKTIF = 1 AND s.QRYAYINLANIR = 1
         `);
 
       const stockData = stockResult.recordset;
