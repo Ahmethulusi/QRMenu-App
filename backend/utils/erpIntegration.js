@@ -123,7 +123,11 @@ class ERPIntegration {
       const pool = await sql.connect(this.sqlConfig);
       
       // ERP'den stok bilgilerini çek (sadece QR yayınlananlar)
-      // STOK tablosunda ID ve KOD var, fiyat bilgisi STOK_STOK_BIRIM_FIYAT tablosundan alınır
+      // ERP'den stok bilgilerini çek (sadece QR yayınlananlar)
+      // Fiyat bilgisi için 3 tablo birleştirmek gerekiyor:
+      // STOK -> STOK_STOK_BIRIM -> STOK_STOK_BIRIM_FIYAT
+      console.log('🔍 3 tablo birleştirme ile fiyat bilgisi alınıyor...');
+      
       const productsResult = await pool.request()
         .query(`
           SELECT 
@@ -131,13 +135,14 @@ class ERPIntegration {
             s.KOD as product_code,
             s.AD as product_name,
             s.STOK_GRUP as category_id,
-            sbf.FIYAT as price,
+            COALESCE(sbf.FIYAT, 0) as price,
             s.KALORI as calorie_count,
             s.PISIRME_SURESI as cooking_time,
             s.SIRA as sira_id
           FROM STOK s
           INNER JOIN STOK_GRUP sg ON s.STOK_GRUP = sg.ID
-          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON s.ID = sbf.STOK_ID
+          LEFT JOIN STOK_STOK_BIRIM ssb ON s.ID = ssb.STOK
+          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON ssb.ID = sbf.STOK_STOK_BIRIM
           WHERE s.AKTIF = 1 AND sg.AKTIF = 1 
             AND s.QRYAYINLANIR = 1 AND sg.QRYAYINLANIR = 1
           ORDER BY s.SIRA
@@ -256,7 +261,8 @@ class ERPIntegration {
             s.KOD as product_code,
             sbf.FIYAT as price
           FROM STOK s
-          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON s.ID = sbf.STOK_ID
+          LEFT JOIN STOK_STOK_BIRIM ssb ON s.ID = ssb.STOK
+          LEFT JOIN STOK_STOK_BIRIM_FIYAT sbf ON ssb.ID = sbf.STOK_STOK_BIRIM
           WHERE s.AKTIF = 1 AND s.QRYAYINLANIR = 1
         `);
 
