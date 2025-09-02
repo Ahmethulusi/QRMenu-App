@@ -121,10 +121,34 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
     if (announcement) {
       console.log("📋 Düzenlenecek duyuru:", announcement);
       
-      // Tarih alanlarını moment nesnelerine dönüştür (tarih ve saat dahil)
-      // UTC dönüşümünü engellemek için parse ederken local olarak işle
-      const startDate = announcement.start_date ? moment.utc(announcement.start_date).local() : null;
-      const endDate = announcement.end_date ? moment.utc(announcement.end_date).local() : null;
+      // Tarih alanlarını moment nesnelerine dönüştür
+      // Backend'den gelen tarih string'lerini moment nesnelerine çevir
+      let startDate = null;
+      let endDate = null;
+      let countdownDate = null;
+      
+      try {
+        if (announcement.start_date) {
+          startDate = moment(announcement.start_date);
+          console.log("📅 Başlangıç tarihi parse edildi:", startDate.format('YYYY-MM-DD HH:mm:ss'));
+        }
+        // Düzenleme modalında tarih yoksa boş bırak (otomatik ilerleme olmasın)
+        
+        if (announcement.end_date) {
+          endDate = moment(announcement.end_date);
+          console.log("📅 Bitiş tarihi parse edildi:", endDate.format('YYYY-MM-DD HH:mm:ss'));
+        }
+        // Düzenleme modalında tarih yoksa boş bırak (otomatik ilerleme olmasın)
+        
+        if (announcement.countdown_date) {
+          countdownDate = moment(announcement.countdown_date);
+          console.log("⏰ Geri sayım tarihi parse edildi:", countdownDate.format('YYYY-MM-DD HH:mm:ss'));
+        }
+        // Düzenleme modalında tarih yoksa boş bırak (otomatik ilerleme olmasın)
+      } catch (error) {
+        console.error("❌ Tarih parse hatası:", error);
+        message.warning("Bazı tarih alanları düzgün yüklenemedi");
+      }
       
       form.setFieldsValue({
         title: announcement.title,
@@ -132,10 +156,10 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
         content: announcement.content,
         priority: announcement.priority || 0,
         is_active: announcement.is_active !== undefined ? announcement.is_active : true,
-        start_date: startDate,
-        end_date: endDate,
+        start_date: undefined, // Tarih alanları boş bırak (placeholder'da göster)
+        end_date: undefined,   // Tarih alanları boş bırak (placeholder'da göster)
         delay: announcement.delay,
-        countdown_date: announcement.countdown_date ? moment.utc(announcement.countdown_date).local() : null,
+        countdown_date: undefined, // Tarih alanları boş bırak (placeholder'da göster)
         
         // Promosyon/İndirim alanları
         discount_type: announcement.discount_type,
@@ -321,14 +345,14 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       
       // Tarih alanları
       if (values.start_date) {
-        const startDate = values.start_date.clone().format('YYYY-MM-DD HH:mm:ss');
-        console.log('📅 Başlangıç tarihi:', startDate);
+        const startDate = values.start_date.format('YYYY-MM-DD HH:mm:ss');
+        console.log('📅 Başlangıç tarihi gönderiliyor:', startDate);
         submitFormData.append('start_date', startDate);
       }
       
       if (values.end_date) {
-        const endDate = values.end_date.clone().format('YYYY-MM-DD HH:mm:ss');
-        console.log('📅 Bitiş tarihi:', endDate);
+        const endDate = values.end_date.format('YYYY-MM-DD HH:mm:ss');
+        console.log('📅 Bitiş tarihi gönderiliyor:', endDate);
         submitFormData.append('end_date', endDate);
       }
       
@@ -339,9 +363,8 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       
       // Geri sayım tarihi
       if (values.countdown_date) {
-        // UTC'ye dönüştürmeden, local olarak formatla
-        const countdownDate = values.countdown_date.clone().format('YYYY-MM-DD HH:mm:ss');
-        console.log('⏰ Geri sayım tarihi:', countdownDate);
+        const countdownDate = values.countdown_date.format('YYYY-MM-DD HH:mm:ss');
+        console.log('⏰ Geri sayım tarihi gönderiliyor:', countdownDate);
         submitFormData.append('countdown_date', countdownDate);
       }
       
@@ -821,8 +844,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
           type: 'general',
           priority: 0,
           is_active: true,
-          start_date: null,
-          end_date: null
+          start_date: undefined,
+          end_date: undefined,
+          countdown_date: undefined,
+          delay: undefined,
+          discount_type: undefined,
+          discount_value: undefined,
+          applicable_products: undefined,
+          applicable_categories: undefined,
+          campaign_condition: undefined,
+          campaign_reward: undefined,
+          button_text: undefined,
+          button_color: '#007bff',
+          button_url: undefined
         }}
       >
         <Tabs activeKey={activeTab} onChange={handleTabChange}>
@@ -921,18 +955,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
             >
               <DatePicker 
                 showTime={{ 
-                  format: 'HH:mm',
-                  defaultValue: moment('00:00', 'HH:mm')
+                  format: 'HH:mm'
                 }}
                 format="YYYY-MM-DD HH:mm"
-                placeholder="Başlangıç tarihi seçin"
+                placeholder={announcement?.start_date ? `Mevcut: ${moment(announcement.start_date).format('DD.MM.YYYY HH:mm')}` : "Başlangıç tarihi seçin"}
                 style={{ width: '100%' }}
                 minuteStep={15}
-                showNow={false}
-                utcOffset={0}
+                allowClear={true}
+                showNow={true}
                 onChange={(date) => {
                   if (date) {
-                    console.log('📅 Başlangıç tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                    console.log('📅 Başlangıç tarihi seçildi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  } else {
+                    console.log('📅 Başlangıç tarihi temizlendi');
                   }
                 }}
               />
@@ -960,18 +995,19 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
             >
               <DatePicker 
                 showTime={{ 
-                  format: 'HH:mm',
-                  defaultValue: moment('23:59', 'HH:mm')
+                  format: 'HH:mm'
                 }}
                 format="YYYY-MM-DD HH:mm"
-                placeholder="Bitiş tarihi seçin"
+                placeholder={announcement?.end_date ? `Mevcut: ${moment(announcement.end_date).format('DD.MM.YYYY HH:mm')}` : "Bitiş tarihi seçin"}
                 style={{ width: '100%' }}
                 minuteStep={15}
-                showNow={false}
-                utcOffset={0}
+                allowClear={true}
+                showNow={true}
                 onChange={(date) => {
                   if (date) {
-                    console.log('📅 Bitiş tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                    console.log('📅 Bitiş tarihi seçildi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  } else {
+                    console.log('📅 Bitiş tarihi temizlendi');
                   }
                 }}
               />
@@ -1007,12 +1043,15 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
               <DatePicker 
                 showTime={{ format: 'HH:mm' }}
                 format="YYYY-MM-DD HH:mm"
-                placeholder="Geri sayım tarihi seçin"
+                placeholder={announcement?.countdown_date ? `Mevcut: ${moment(announcement.countdown_date).format('DD.MM.YYYY HH:mm')}` : "Geri sayım tarihi seçin"}
                 style={{ width: '100%' }}
-                utcOffset={0}
+                allowClear={true}
+                showNow={true}
                 onChange={(date) => {
                   if (date) {
-                    console.log('⏰ Seçilen geri sayım tarihi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                    console.log('⏰ Geri sayım tarihi seçildi:', date.format('YYYY-MM-DD HH:mm:ss'));
+                  } else {
+                    console.log('⏰ Geri sayım tarihi temizlendi');
                   }
                 }}
               />
