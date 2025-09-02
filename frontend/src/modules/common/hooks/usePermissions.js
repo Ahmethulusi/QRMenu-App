@@ -53,11 +53,11 @@ const getUserPermissionsAPI = async () => {
 export const usePermissions = () => {
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const user = getCurrentUser();
-
+  
   useEffect(() => {
     const loadPermissions = async () => {
-      if (user) {
+      const currentUser = getCurrentUser();
+      if (currentUser) {
         try {
           const userPermissions = await getUserPermissionsAPI();
           setPermissions(userPermissions);
@@ -69,11 +69,12 @@ export const usePermissions = () => {
     };
 
     loadPermissions();
-  }, [user]);
+  }, []); // Sadece component mount olduğunda çalışsın
 
   const hasPermission = (resource, action) => {
-    if (!user) return false;
-    if (user.role === 'super_admin') return true;
+    const currentUser = getCurrentUser();
+    if (!currentUser) return false;
+    if (currentUser.role === 'super_admin') return true;
     
     return permissions.some(p => p.resource === resource && p.action === action);
   };
@@ -117,6 +118,6 @@ export const usePermissions = () => {
     hasPermission,
     canPerformAction,
     checkPermissionAsync,
-    user
+    user: getCurrentUser() // Her çağrıda güncel user bilgisini al
   };
 }; 

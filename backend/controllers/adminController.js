@@ -17,7 +17,7 @@ exports.updateImageUrl = async (req, res) => {
         const result = await Products.update({ image_url: imageUrl }, { where: { product_id: productId } });
         res.json(result);
     } catch (err) {
-        console.log(err);
+        console.error('❌ Resim güncelleme hatası:', err);
         res.status(500).json("Internal Server Error");
     }
 }
@@ -26,9 +26,6 @@ exports.updateImageUrl = async (req, res) => {
 // Tüm ürünleri getir
 exports.getAllProuducts = async (req, res) => {
   try {
-    console.log('🔄 Tüm ürünler getiriliyor...');
-    console.log('👤 Kullanıcı:', req.user);
-    
     const products = await Products.findAll({
       include: [
         {
@@ -45,16 +42,6 @@ exports.getAllProuducts = async (req, res) => {
         }
       ]
     });
-    
-    console.log(`✅ ${products.length} ürün bulundu`);
-    if (products.length > 0) {
-      console.log('📦 İlk ürün örneği:', {
-        product_id: products[0].product_id,
-        product_name: products[0].product_name,
-        category: products[0].category ? products[0].category.category_name : 'Yok',
-        labels: products[0].labels ? products[0].labels.length : 0
-      });
-    }
     
     res.json(products);
   } catch (error) {
@@ -514,7 +501,7 @@ exports.getCategories = async (req, res) => {
         
         res.json(translatedCategories);
     } catch (error) {
-        console.log(error);
+        console.error('❌ Kategoriler getirme hatası:', error);
         res.status(500).json({ error: 'Kategoriler alınamadı' });
     }
 }
@@ -523,8 +510,6 @@ exports.getCategories = async (req, res) => {
 exports.getCategoriesList = async (req, res) => {
     try {
         const { language_code } = req.query;
-        console.log('🔄 Kategori listesi getiriliyor (yetki kontrolü olmadan)');
-        
         let includeOptions = [];
         
         // Eğer dil kodu belirtilmişse çevirileri de getir
@@ -558,7 +543,6 @@ exports.getCategoriesList = async (req, res) => {
             return categoryData;
         });
         
-        console.log(`✅ ${translatedCategories.length} kategori bulundu`);
         res.json(translatedCategories);
     } catch (error) {
         console.error('❌ Kategori listesi hatası:', error);
@@ -838,23 +822,9 @@ const stringSimilarity = require('string-similarity');
 
 exports.uploadExcel = async (req, res) => {
   try {
-    console.log('🚀 Excel yükleme başlatıldı');
-    console.log('👤 Kullanıcı bilgileri:', {
-      user_id: req.user?.user_id,
-      email: req.user?.email,
-      business_id: req.user?.business_id
-    });
-    
     if (!req.file) {
-      console.log('❌ Dosya bulunamadı');
       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
     }
-
-    console.log('📁 Dosya bilgileri:', {
-      filename: req.file.filename,
-      path: req.file.path,
-      size: req.file.size
-    });
 
     const columnMapping = {
       "Ürün Adı": "product_name",
@@ -869,20 +839,12 @@ exports.uploadExcel = async (req, res) => {
       "Pişirme Süresi": "cooking_time"
     };
 
-    console.log('📊 Excel dosyası okunuyor...');
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const rawData = xlsx.utils.sheet_to_json(worksheet);
 
-    console.log('📋 Excel verisi okundu:', {
-      sheetName,
-      rowCount: rawData.length,
-      columns: rawData.length > 0 ? Object.keys(rawData[0]) : []
-    });
-
     if (rawData.length === 0) {
-      console.log('❌ Excel dosyası boş');
       return res.status(400).json({ message: 'Excel dosyası boş.' });
     }
 
@@ -891,14 +853,12 @@ exports.uploadExcel = async (req, res) => {
     );
     
     if (unknownColumns.length > 0) {
-      console.log('❌ Bilinmeyen sütunlar:', unknownColumns);
       return res.status(400).json({
         message: "Bilinmeyen sütun başlıkları tespit edildi.",
         unknownColumns
       });
     }
 
-    console.log('🔄 Veri mapping işlemi başlatılıyor...');
     const data = rawData.map(item => {
       const mappedItem = {};
       for (const key in item) {
@@ -910,8 +870,6 @@ exports.uploadExcel = async (req, res) => {
       return mappedItem;
     });
 
-    console.log('✅ Veri mapping tamamlandı, örnek veri:', data[0]);
-
     const missingFields = [];
     data.forEach((item, index) => {
       if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
@@ -920,14 +878,12 @@ exports.uploadExcel = async (req, res) => {
     });
 
     if (missingFields.length > 0) {
-      console.log('❌ Eksik alanlar:', missingFields);
       return res.status(400).json({
         message: 'Zorunlu alanlar eksik:',
         details: missingFields
       });
     }
 
-    console.log('🔍 Veritabanı işlemleri başlatılıyor...');
     const count = await Products.count();
     const duplicateProducts = [];
     const successfulProducts = [];
@@ -939,20 +895,14 @@ exports.uploadExcel = async (req, res) => {
       cat.category_name.toString().trim().toLowerCase()
     );
 
-    console.log('📂 Mevcut kategoriler yüklendi:', allCategoryNames.length);
-
     // 🧠 Tüm ürünler belleğe alınıyor
     const allProducts = await Products.findAll();
     const allProductNames = allProducts.map(p =>
       p.product_name.toString().trim().toLowerCase()
     );
 
-    console.log('📦 Mevcut ürünler yüklendi:', allProductNames.length);
-
-    console.log('🔄 Excel satırları işleniyor...');
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
-      console.log(`📝 Satır ${i + 1} işleniyor:`, item.product_name);
       
       const incomingName = item.product_name.toString().trim().toLowerCase();
 

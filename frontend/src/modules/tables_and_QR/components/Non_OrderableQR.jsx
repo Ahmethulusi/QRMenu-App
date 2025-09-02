@@ -21,11 +21,36 @@ const NonOrderableQR = () => {
     const fetchBranches = async () => {
       setLoadingBranches(true);
       try {
-        const res = await fetch(`${API_URL}/api/branches/1`);
-        if (!res.ok) throw new Error('Şubeler alınamadı');
+        // Token'ı localStorage'dan al
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token bulunamadı, lütfen tekrar giriş yapın');
+        }
+
+        const res = await fetch(`${API_URL}/api/branches/1`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            throw new Error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın');
+          } else if (res.status === 403) {
+            throw new Error('Bu işlem için yetkiniz bulunmuyor');
+          } else {
+            throw new Error(`Şubeler alınamadı (${res.status})`);
+          }
+        }
+        
         const data = await res.json();
+        console.log('✅ Şubeler yüklendi:', data);
+        console.log('🔍 Şube sayısı:', data.length);
+        console.log('🔍 İlk şube örneği:', data[0]);
         setBranches(data);
       } catch (err) {
+        console.error('❌ Şubeler yüklenirken hata:', err);
+        message.error(err.message || 'Şubeler yüklenemedi');
         setBranches([]);
       } finally {
         setLoadingBranches(false);
@@ -97,10 +122,13 @@ const NonOrderableQR = () => {
               <option value="">Şube Seçin</option>
               {branches.map(branch => (
                 <option key={branch.id || branch.branch_id} value={branch.id || branch.branch_id}>
-                  {branch.name}
+                  {branch.name || branch.branch_name || 'İsimsiz Şube'}
                 </option>
               ))}
             </select>
+            {loadingBranches && <div style={{ color: '#1890ff', fontSize: '12px', marginTop: '4px' }}>Şubeler yükleniyor...</div>}
+            {!loadingBranches && branches.length === 0 && <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '4px' }}>Şube bulunamadı</div>}
+            {!loadingBranches && branches.length > 0 && <div style={{ color: '#52c41a', fontSize: '12px', marginTop: '4px' }}>{branches.length} şube bulundu</div>}
           </Form.Item>
           <Form.Item label="Yönlendirme URL'si" name="qr_url" rules={[{ required: true, message: 'URL gerekli' }]}>
             <Input placeholder="https://ornekmenu.com/menu" />

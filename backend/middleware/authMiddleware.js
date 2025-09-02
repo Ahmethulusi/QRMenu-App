@@ -26,7 +26,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     req.user = user;
-    console.log(`✅ Kullanıcı doğrulandı: ${user.username} (${user.role})`);
+    console.log(`✅ Kullanıcı doğrulandı: ${user.username || user.email || 'Bilinmeyen'} (${user.role})`);
     next();
   } catch (error) {
     console.error('❌ Token doğrulama hatası:', error);

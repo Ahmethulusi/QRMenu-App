@@ -86,7 +86,6 @@ exports.getBusinessDetailsWithProducts = async (req, res) => {
 exports.getAllBranchesByBusinessId = async (req, res) => {
     try {
       const { businessId } = req.params;
-      console.log('📦 Gelen parametre:', req.params);
 
       if (!businessId) {
         return res.status(400).json({ error: 'business_id parametresi gerekli' });
@@ -97,10 +96,9 @@ exports.getAllBranchesByBusinessId = async (req, res) => {
         order: [['id', 'ASC']],
       });
 
-      console.log(branches);
       res.json(branches);
     } catch (err) {
-      console.error('Şubeler alınamadı:', err);
+      console.error('❌ Şubeler alınamadı:', err);
       res.status(500).json({ error: 'Şubeler alınamadı' });
     }
   };

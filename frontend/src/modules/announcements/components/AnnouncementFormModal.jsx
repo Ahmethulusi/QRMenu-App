@@ -76,6 +76,13 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState('mobile'); // mobile, tablet, desktop
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Önizleme için mevcut tarihleri tut (placeholder'da gösterilen tarihler)
+  const [previewDates, setPreviewDates] = useState({
+    start_date: null,
+    end_date: null,
+    countdown_date: null
+  });
 
   // Ürünleri ve kategorileri yükle
   useEffect(() => {
@@ -145,6 +152,13 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
           console.log("⏰ Geri sayım tarihi parse edildi:", countdownDate.format('YYYY-MM-DD HH:mm:ss'));
         }
         // Düzenleme modalında tarih yoksa boş bırak (otomatik ilerleme olmasın)
+        
+        // Önizleme için mevcut tarihleri set et
+        setPreviewDates({
+          start_date: startDate,
+          end_date: endDate,
+          countdown_date: countdownDate
+        });
       } catch (error) {
         console.error("❌ Tarih parse hatası:", error);
         message.warning("Bazı tarih alanları düzgün yüklenemedi");
@@ -581,7 +595,7 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
   };
 
   // Responsive önizleme bileşeni
-  const ResponsiveAnnouncementPreview = ({ formValues, device }) => {
+  const ResponsiveAnnouncementPreview = ({ formValues, device, previewDates }) => {
     const { title, content, type } = formValues || {};
     
     // Görsel URL'ini doğru şekilde kullan
@@ -671,33 +685,34 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                       }}
                     />
                     
-                    {/* Geri Sayım - Sadece Mobil için görselin üzerinde */}
-                    {device === 'mobile' && formValues.countdown_date && (() => {
-                      const countdown = calculateCountdown(formValues.countdown_date);
-                      if (!countdown) return null;
-                      
-                      if (countdown.expired) {
-                        return (
-                          <div className="countdown-overlay expired">
-                            <div className="countdown-label-small">⏰ Sona Erdi</div>
-                          </div>
-                        );
-                      }
-                      
+                                      {/* Geri Sayım - Sadece Mobil için görselin üzerinde */}
+                  {device === 'mobile' && (formValues.countdown_date || previewDates?.countdown_date) && (() => {
+                    const countdownDate = formValues.countdown_date || previewDates?.countdown_date;
+                    const countdown = calculateCountdown(countdownDate);
+                    if (!countdown) return null;
+                    
+                    if (countdown.expired) {
                       return (
-                        <div className="countdown-overlay">
-                          <div className="countdown-timer-small">
-                            {countdown.days > 0 ? (
-                              <span className="countdown-compact">{countdown.days}g {countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
-                            ) : countdown.hours > 0 ? (
-                              <span className="countdown-compact">{countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
-                            ) : (
-                              <span className="countdown-compact">{countdown.minutes}d {countdown.seconds}sn</span>
-                            )}
-                          </div>
+                        <div className="countdown-overlay expired">
+                          <div className="countdown-label-small">⏰ Sona Erdi</div>
                         </div>
                       );
-                    })()}
+                    }
+                    
+                    return (
+                      <div className="countdown-overlay">
+                        <div className="countdown-timer-small">
+                          {countdown.days > 0 ? (
+                            <span className="countdown-compact">{countdown.days}g {countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
+                          ) : countdown.hours > 0 ? (
+                            <span className="countdown-compact">{countdown.hours}s {countdown.minutes}d {countdown.seconds}sn</span>
+                          ) : (
+                            <span className="countdown-compact">{countdown.minutes}d {countdown.seconds}sn</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   </div>
                 )}
 
@@ -732,8 +747,9 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                   )}
                   
                   {/* Geri Sayım - Sadece tablet ve desktop için */}
-                  {device !== 'mobile' && formValues.countdown_date && (() => {
-                    const countdown = calculateCountdown(formValues.countdown_date);
+                  {device !== 'mobile' && (formValues.countdown_date || previewDates?.countdown_date) && (() => {
+                    const countdownDate = formValues.countdown_date || previewDates?.countdown_date;
+                    const countdown = calculateCountdown(countdownDate);
                     if (!countdown) return null;
                     
                     if (countdown.expired) {
@@ -827,7 +843,11 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       <div className="announcement-preview">
         <DeviceSelector />
         <div className="preview-content">
-          <ResponsiveAnnouncementPreview formValues={formValues} device={selectedDevice} />
+          <ResponsiveAnnouncementPreview 
+            formValues={formValues} 
+            device={selectedDevice}
+            previewDates={previewDates}
+          />
         </div>
       </div>
     );

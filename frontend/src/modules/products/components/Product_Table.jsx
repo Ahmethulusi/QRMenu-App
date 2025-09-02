@@ -35,11 +35,7 @@ const Product_Table = () => {
     }
 
     try {
-      console.log('🔄 Ürünler getiriliyor...');
       const datas = await apiGet('/api/admin/products', currentLanguage?.code);
-      console.log('✅ API yanıtı:', datas);
-                     console.log('🔍 İlk ürün detayı:', datas[0]);
-               console.log('🔍 İlk ürün kategorisi:', datas[0]?.category);
 
       if (!datas || !Array.isArray(datas)) {
         throw new Error('API geçersiz veri döndürdü');
@@ -75,7 +71,6 @@ const Product_Table = () => {
         };
       });
 
-      console.log('✅ Formatlanmış veri:', formattedData);
       setData(formattedData);
       setOriginalData(datas); // Orijinal API verisini sakla
 
@@ -92,7 +87,6 @@ const Product_Table = () => {
 
     } catch (error) {
       console.error('❌ Ürünler getirilirken hata:', error);
-      console.error('❌ Hata detayı:', error.message);
       setError(`Veriler alınamadı: ${error.message}`);
     } finally {
       setLoading(false);
@@ -115,7 +109,6 @@ const Product_Table = () => {
       if (response.ok) {
         const data = await response.json();
         setUserPermissions(data.permissions);
-        console.log('✅ Kullanıcı yetkileri yüklendi:', data.permissions);
       }
     } catch (error) {
       console.error('❌ Yetkiler yüklenirken hata:', error);
@@ -209,14 +202,10 @@ const Product_Table = () => {
   };
   
   const showEditModal = (record) => {
-    console.log("Edit record:", record); // Debug için
-    
     // Orijinal API verisinden ürünü bul
     const originalApiProduct = originalData.find(item => item.product_id === record.id);
-    console.log("Original API Product:", originalApiProduct); // Debug için
     
     if (!originalApiProduct) {
-      console.error("Orijinal ürün verisi bulunamadı!");
       return;
     }
     
@@ -274,7 +263,7 @@ const Product_Table = () => {
       title: 'İsim',
       dataIndex: 'name',
       key: 'name',
-      width: '10%',
+      width: '15%',
       filters: filterNames,
       filterSearch: true,
       onFilter: (value, record) => record.name.includes(value),
@@ -283,7 +272,7 @@ const Product_Table = () => {
       title: 'Açıklama',
       key: 'description',
       dataIndex: 'description',
-      width: '20%',
+      width: '18%',
     },
     {
       title: 'Fiyat',
@@ -306,7 +295,7 @@ const Product_Table = () => {
       title: 'Etiketler',
       dataIndex: 'labels',
       key: 'labels',
-      width: '15%',
+      width: '12%',
       render: (labels) => (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
           {labels && labels.length > 0 ? (
@@ -501,7 +490,6 @@ const UploadImageButton = ({ productId, onUploadSuccess }) => {
       }
 
       const data = await response.json();
-      console.log('Resim başarıyla yüklendi', data);
       onUploadSuccess();
     } catch (error) {
       console.error('Resim yüklemede bir hata oluştu', error);
