@@ -17,6 +17,7 @@ const Language = require('./Language');
 const ProductTranslation = require('./ProductTranslation');
 const CategoryTranslation = require('./CategoryTranslation');
 const BusinessTranslation = require('./BusinessTranslation');
+const Currency = require('./Currency');
 
 // Permission - RolePermission association'ları
 RolePermission.belongsTo(Permission, {
@@ -198,6 +199,19 @@ Language.hasMany(BusinessTranslation, {
   as: 'businessTranslations'
 });
 
+// Language - Currency association'ları
+Language.belongsTo(Currency, {
+  foreignKey: 'default_currency_code',
+  targetKey: 'code',
+  as: 'defaultCurrency'
+});
+
+Currency.hasMany(Language, {
+  foreignKey: 'default_currency_code',
+  sourceKey: 'code',
+  as: 'languages'
+});
+
 module.exports = {
   sequelize,
   Permission,
@@ -217,5 +231,6 @@ module.exports = {
   Language,
   ProductTranslation,
   CategoryTranslation,
-  BusinessTranslation
+  BusinessTranslation,
+  Currency
 };

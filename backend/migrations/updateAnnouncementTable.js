@@ -1,4 +1,4 @@
-const sequelize = require('./db');
+const sequelize = require('../db');
 
 /**
  * Bu script, Announcement tablosunu SQL komutları ile günceller.

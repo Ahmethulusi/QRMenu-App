@@ -9,6 +9,9 @@ const app = express();
 const db = require('./db');
 const models = require('./models');
 
+// Cron job servisleri
+const { startCurrencyCronJobs } = require('./services/currencyCronService');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -30,6 +33,7 @@ const languageRoute = require('./routes/languageRoute');
 const translationRoute = require('./routes/translationRoute');
 const erpRoute = require('./routes/erpRoute');
 const erpTestRoute = require('./routes/erpTestRoute');
+const currencyRoute = require('./routes/currencyRoute');
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
@@ -44,6 +48,7 @@ app.use('/api/languages', languageRoute);
 app.use('/api/translations', translationRoute);
 app.use('/api/erp', erpRoute);
 app.use('/api/erp-test', erpTestRoute);
+app.use('/api/currencies', currencyRoute);
 
 
 
@@ -55,6 +60,9 @@ app.use('/api/erp-test', erpTestRoute);
 
     await db.sync({ force: false });
     console.log('✅ Veritabanı senkronize edildi.');
+
+    // Cron job'ları başlat
+    startCurrencyCronJobs();
 
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {

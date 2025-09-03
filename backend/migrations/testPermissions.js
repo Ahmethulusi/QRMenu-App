@@ -1,8 +1,8 @@
-const Permission = require('./models/Permission');
-const RolePermission = require('./models/RolePermission');
-const User = require('./models/User');
-const { checkPermission } = require('./middleware/authMiddleware');
-const sequelize = require('./db');
+const Permission = require('../models/Permission');
+const RolePermission = require('../models/RolePermission');
+const User = require('../models/User');
+const { checkPermission } = require('../middleware/authMiddleware');
+const sequelize = require('../db');
 
 async function testPermissions() {
   try {

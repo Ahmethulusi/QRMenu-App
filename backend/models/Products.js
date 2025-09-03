@@ -15,6 +15,12 @@ const Product = sequelize.define('Product', {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+  currency_code: {
+    type: DataTypes.STRING(3),
+    allowNull: false,
+    defaultValue: 'TRY',
+    comment: 'Fiyatın para birimi (TRY, USD, EUR, vb.)'
+  },
   category_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

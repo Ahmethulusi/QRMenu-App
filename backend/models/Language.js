@@ -31,6 +31,14 @@ const Language = sequelize.define('Language', {
   direction: {
     type: DataTypes.ENUM('ltr', 'rtl'), // left-to-right, right-to-left
     defaultValue: 'ltr',
+  },
+  default_currency_code: {
+    type: DataTypes.STRING(3), // USD, EUR, TRY, GBP
+    allowNull: true,
+    references: {
+      model: 'currencies',
+      key: 'code'
+    }
   }
 }, {
   tableName: 'languages',

@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const Branch = sequelize.define('Branch', {
+  branch_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -15,7 +20,7 @@ const Branch = sequelize.define('Branch', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'id',
+      key: 'business_id',
     },
   },
 }, {
@@ -24,7 +29,7 @@ const Branch = sequelize.define('Branch', {
 });
 
 Branch.associate = models => {
-  Branch.belongsTo(models.Business, { foreignKey: 'business_id',targetKey:"id"});
+  Branch.belongsTo(models.Business, { foreignKey: 'business_id', targetKey: 'business_id'});
   Branch.hasMany(models.BranchProduct, { 
     foreignKey: 'branch_id',
     as: 'BranchProducts' // Alias ekledik

@@ -19,7 +19,8 @@ import {
   SettingFilled,
   MenuOutlined,
   DatabaseOutlined,
-  SyncOutlined
+  SyncOutlined,
+  DollarCircleOutlined
 } from '@ant-design/icons';
 import { Menu, Avatar, message } from 'antd';
 import '../css/Sidebar.css';
@@ -146,6 +147,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Settings';
     } else if (path === '/language-settings') {
       componentName = 'LanguageSettings';
+    } else if (path === '/currencies') {
+      componentName = 'Currencies';
     }
     
     setSelectedComponent(componentName);
@@ -252,6 +255,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Profile': '/profile',
       'Settings': '/settings',
       'LanguageSettings': '/language-settings',
+      'Currencies': '/currencies',
       'ERP': '/erp', // Ana ERP route'u
       'ERPTest': '/erp/test', // ERP Test route'u
       'ERPIntegration': '/erp/integration', // ERP Integration route'u
@@ -341,7 +345,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       icon: <SettingOutlined />,
       label: 'Genel Ayarlar',
       children: [
-        { key: 'LanguageSettings', label: 'Dil Ayarları' }
+        { key: 'LanguageSettings', label: 'Dil Ayarları' },
+        { key: 'Currencies', label: 'Para Birimleri' }
       ]
     },
     {

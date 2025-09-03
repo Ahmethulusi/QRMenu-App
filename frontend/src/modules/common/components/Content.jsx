@@ -19,6 +19,7 @@ import LanguageSettings from '../../languages/components/LanguageSettings';
 import ERPTest from '../../ERPTest/ERPTest';
 import ERPIntegration from '../../ERPIntegration/ERPIntegration';
 import ERP from '../../ERP/ERP';
+import Currencies from '../../currencies/components/Currencies';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -171,6 +172,15 @@ function Content({ selectedComponent }) {
         />;
       }
       return <LanguageSettings />;
+
+    case 'Currencies':
+      if (!checkComponentPermission('system', 'settings')) {
+        return <NoPermission 
+          title="Para birimleri sayfasına erişim yetkiniz yok"
+          subTitle="Para birimlerini yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <Currencies />;
 
     case 'TablesAndQR':
       if (!checkComponentPermission('tables', 'read')) {

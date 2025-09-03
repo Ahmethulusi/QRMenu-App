@@ -6,7 +6,7 @@ const {
   listUploadTypes,
   formatFileSize,
   customizeErrorMessages
-} = require('./middleware/uploadMiddleware');
+} = require('../middleware/uploadMiddleware');
 
 console.log('🚀 Upload Middleware Test Başlıyor...\n');
 

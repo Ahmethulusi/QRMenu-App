@@ -6,12 +6,14 @@ import ExcelImportButton from './ExcelImportButton';
 import EditFormModal from './ProductEditModal';
 import { apiGet, apiPut, apiDelete, apiPost } from '../../common/utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { useCurrencies } from '../../currencies/hooks/useCurrencies';
 import '../../tables_and_QR/css/tableSizeManager.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product_Table = () => {
   const { currentLanguage } = useLanguage();
+  const { currencies } = useCurrencies();
   const [data, setData] = useState([]);  // Verileri burada tutacağız
   const [originalData, setOriginalData] = useState([]);  // Orijinal API verisini burada tutacağız
   const [loading, setLoading] = useState(true);  // Yüklenme durumu için
@@ -23,11 +25,41 @@ const Product_Table = () => {
   const [recordToEdit, setRecordToEdit] = useState(null); // Düzenlenecek kayıt bilgileri
   const [refreshing, setRefreshing] = useState(false); // Sadece tablo yenileme için
   const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
+  const [selectedCurrency, setSelectedCurrency] = useState('USD'); // Seçili para birimi
 
   useEffect(() => {
     fetchData();
     fetchUserPermissions();
   }, [currentLanguage]);
+
+  // Mevcut dilin varsayılan para birimini ayarla
+  useEffect(() => {
+    if (currentLanguage?.defaultCurrency?.code) {
+      setSelectedCurrency(currentLanguage.defaultCurrency.code);
+    }
+  }, [currentLanguage]);
+
+  // Fiyat dönüştürme fonksiyonu
+  const convertPrice = (price, fromCurrency = 'TRY', toCurrency = selectedCurrency) => {
+    if (!price || fromCurrency === toCurrency) return price;
+    
+    const fromCurr = currencies.find(c => c.code === fromCurrency);
+    const toCurr = currencies.find(c => c.code === toCurrency);
+    
+    if (!fromCurr || !toCurr) return price;
+    
+    // USD üzerinden dönüştürme
+    const priceInUSD = price / fromCurr.rate_to_usd;
+    const convertedPrice = priceInUSD * toCurr.rate_to_usd;
+    
+    return convertedPrice;
+  };
+
+  // Para birimi sembolünü getir
+  const getCurrencySymbol = (currencyCode) => {
+    const currency = currencies.find(c => c.code === currencyCode);
+    return currency ? currency.symbol : currencyCode;
+  };
 
   const fetchData = async (showLoading = true) => {
     if (showLoading) {
@@ -275,12 +307,54 @@ const Product_Table = () => {
       width: '18%',
     },
     {
-      title: 'Fiyat',
+      title: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ cursor: 'pointer', userSelect: 'none' }}>Fiyat</span>
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{
+              padding: '4px 8px',
+              border: '1px solid #d9d9d9',
+              borderRadius: '6px',
+              fontSize: '12px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#1890ff';
+              e.target.style.boxShadow = '0 2px 4px rgba(24,144,255,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#d9d9d9';
+              e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+            }}
+          >
+            {currencies.map(currency => (
+              <option key={currency.code} value={currency.code}>
+                {currency.symbol} {currency.code}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
       dataIndex: 'price',
       key: 'price',
       defaultSortOrder: 'descend',
-      width: '13%',
+      width: '15%',
       sorter: (a, b) => a.price - b.price,
+      render: (price) => {
+        const convertedPrice = convertPrice(price);
+        return (
+          <span style={{ fontWeight: 'bold', color: '#1890ff' }}>
+            {getCurrencySymbol(selectedCurrency)}{Math.round(convertedPrice)}
+          </span>
+        );
+      },
     },
     {
       title: 'Kategori',

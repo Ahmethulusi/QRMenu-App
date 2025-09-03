@@ -1,10 +1,15 @@
-const { Language, ProductTranslation, CategoryTranslation, BusinessTranslation } = require('../models');
+const { Language, ProductTranslation, CategoryTranslation, BusinessTranslation, Currency } = require('../models');
 
 // Tüm aktif dilleri getir
 const getAllLanguages = async (req, res) => {
   try {
     const languages = await Language.findAll({
       where: { is_active: true },
+      include: [{
+        model: Currency,
+        as: 'defaultCurrency',
+        attributes: ['code', 'name', 'symbol']
+      }],
       order: [['is_default', 'DESC'], ['name', 'ASC']]
     });
     
@@ -68,7 +73,7 @@ const addLanguage = async (req, res) => {
 const updateLanguage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, native_name, direction, is_active } = req.body;
+    const { name, native_name, direction, is_active, default_currency_code } = req.body;
     
     const language = await Language.findByPk(id);
     if (!language) {
@@ -80,14 +85,32 @@ const updateLanguage = async (req, res) => {
       return res.status(400).json({ error: 'Varsayılan dil pasif yapılamaz' });
     }
     
+    // Para birimi kodu geçerli mi kontrol et
+    if (default_currency_code) {
+      const currency = await Currency.findOne({ where: { code: default_currency_code } });
+      if (!currency) {
+        return res.status(400).json({ error: 'Geçersiz para birimi kodu' });
+      }
+    }
+    
     await language.update({
       name: name || language.name,
       native_name: native_name || language.native_name,
       direction: direction || language.direction,
-      is_active: is_active !== undefined ? is_active : language.is_active
+      is_active: is_active !== undefined ? is_active : language.is_active,
+      default_currency_code: default_currency_code !== undefined ? default_currency_code : language.default_currency_code
     });
     
-    res.json(language);
+    // Güncellenmiş dili para birimi bilgisiyle birlikte döndür
+    const updatedLanguage = await Language.findByPk(id, {
+      include: [{
+        model: Currency,
+        as: 'defaultCurrency',
+        attributes: ['code', 'name', 'symbol']
+      }]
+    });
+    
+    res.json(updatedLanguage);
   } catch (error) {
     console.error('Dil güncellenirken hata:', error);
     res.status(500).json({ error: 'Dil güncellenemedi' });

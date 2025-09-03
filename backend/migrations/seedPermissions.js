@@ -1,5 +1,5 @@
-const { Permission, RolePermission } = require('./models');
-const sequelize = require('./db');
+const { Permission, RolePermission } = require('../models');
+const sequelize = require('../db');
 
 // Tüm izinleri tanımla
 const permissions = [

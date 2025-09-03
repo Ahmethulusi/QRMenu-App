@@ -1,5 +1,5 @@
-const sequelize = require('./db');
-const Products = require('./models/Products');
+const sequelize = require('../db');
+const Products = require('../models/Products');
 
 async function syncProductsTable() {
   try {

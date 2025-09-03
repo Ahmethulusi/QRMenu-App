@@ -1,0 +1,288 @@
+.currencies-container {
+  padding: 15px;
+  background-color: #f5f5f5;
+  min-height: 85vh;
+}
+
+.currencies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.currencies-header h2 {
+  margin: 0;
+  color: #1890ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.currencies-header .ant-btn {
+  margin-left: 8px;
+}
+
+/* İstatistik kartları */
+.ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+}
+
+.ant-statistic-content {
+  color: #262626;
+  font-weight: 600;
+}
+
+/* Tablo stilleri */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+  color: #262626;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* .ant-table-body {
+  max-height: 65vh !important;
+  overflow-y: auto;
+} */
+
+
+.ant-table-body {
+  max-height: 480px !important;
+  min-height: 200px !important;
+  /* overflow-y: auto !important; */
+}
+
+/* Para birimi sembolü */
+.currency-symbol {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+/* Kur değeri */
+.exchange-rate {
+  font-weight: bold;
+  color: #1890ff;
+  font-family: 'Courier New', monospace;
+}
+
+/* Durum etiketi */
+.status-tag {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* İşlem butonları */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons .ant-btn {
+  border-radius: 4px;
+}
+
+/* Modal stilleri */
+.ant-modal-header {
+  background-color: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-modal-title {
+  color: #262626;
+  font-weight: 600;
+}
+
+/* Form stilleri */
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: #262626;
+}
+
+.ant-input,
+.ant-select-selector {
+  border-radius: 6px;
+}
+
+.ant-input:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Switch stilleri */
+.ant-switch-checked {
+  background-color: #52c41a;
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .currencies-container {
+    padding: 16px;
+  }
+  
+  .currencies-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .currencies-header h2 {
+    text-align: center;
+  }
+  
+  .currencies-header .ant-space {
+    justify-content: center;
+  }
+  
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 576px) {
+  .currencies-container {
+    padding: 12px;
+  }
+  
+  .ant-card {
+    margin-bottom: 12px;
+  }
+  
+  .ant-statistic-title {
+    font-size: 12px;
+  }
+  
+  .ant-statistic-content-value {
+    font-size: 18px;
+  }
+}
+
+/* Loading animasyonu */
+.ant-spin-container {
+  min-height: 200px;
+}
+
+/* Başarı mesajları */
+.ant-message-success {
+  background-color: #f6ffed;
+  border: 1px solid #b7eb8f;
+}
+
+/* Hata mesajları */
+.ant-message-error {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+}
+
+/* Popconfirm stilleri */
+.ant-popover-inner {
+  border-radius: 8px;
+}
+
+.ant-popover-buttons .ant-btn {
+  border-radius: 4px;
+}
+
+/* Tooltip stilleri */
+.ant-tooltip-inner {
+  background-color: #262626;
+  border-radius: 6px;
+}
+
+/* Pagination stilleri */
+.ant-pagination {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.ant-pagination-item {
+  border-radius: 4px;
+}
+
+.ant-pagination-item-active {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+/* Select dropdown stilleri */
+.ant-select-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-select-item {
+  border-radius: 4px;
+  margin: 2px 4px;
+}
+
+.ant-select-item-option-selected {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+/* Card stilleri */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f0f0f0;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-card-body {
+  padding: 16px;
+}
+
+/* Space component stilleri */
+.ant-space {
+  display: flex;
+  align-items: center;
+}
+
+/* Button stilleri */
+.ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.ant-btn-primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.ant-btn-dangerous {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.ant-btn-dangerous:hover {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}

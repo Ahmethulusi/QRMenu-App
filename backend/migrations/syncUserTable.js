@@ -1,5 +1,5 @@
-const sequelize = require('./db');
-const User = require('./models/User');
+const sequelize = require('../db');
+const User = require('../models/User');
 
 async function syncUserTable() {
   try {

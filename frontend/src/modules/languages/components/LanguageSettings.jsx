@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Select, message, Spin, Space, Button, Modal, Progress } from 'antd';
-import { GlobalOutlined, TranslationOutlined, SettingOutlined, RobotOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { GlobalOutlined, TranslationOutlined, SettingOutlined, RobotOutlined, ExclamationCircleOutlined, DollarCircleOutlined } from '@ant-design/icons';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ProductTranslations from './ProductTranslations';
@@ -9,12 +9,14 @@ import AnnouncementTranslations from './AnnouncementTranslations';
 import BusinessTranslations from './BusinessTranslations';
 import UserTranslations from './UserTranslations';
 import PermissionTranslations from './PermissionTranslations';
+import { useCurrencies } from '../../currencies/hooks/useCurrencies';
 import '../css/LanguageSettings.css';
 
 const { Option } = Select;
 
 const LanguageSettings = () => {
   const { currentLanguage, changeLanguage, loading: languageLoading, defaultLanguage } = useLanguage();
+  const { currencies, loading: currenciesLoading } = useCurrencies();
   const [selectedModule, setSelectedModule] = useState('products');
   const [bulkTranslateModal, setBulkTranslateModal] = useState(false);
   const [bulkTranslating, setBulkTranslating] = useState(false);
@@ -50,6 +52,34 @@ const LanguageSettings = () => {
     console.log('🌐 Dil değişti:', newLanguageCode);
     // Dil değiştiğinde tab'ları yeniden yükle
     // Bu sayede çeviri durumları güncellenecek
+  };
+
+  // Para birimi güncelleme
+  const handleCurrencyChange = async (currencyCode) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/languages/${currentLanguage.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          default_currency_code: currencyCode
+        })
+      });
+
+      if (response.ok) {
+        message.success('Para birimi başarıyla güncellendi');
+        // Dil listesini yenile
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        message.error(errorData.error || 'Para birimi güncellenemedi');
+      }
+    } catch (error) {
+      console.error('Para birimi güncelleme hatası:', error);
+      message.error('Para birimi güncellenirken hata oluştu');
+    }
   };
 
   // Toplu çeviri başlat
@@ -354,6 +384,26 @@ const LanguageSettings = () => {
           }}>
             <LanguageSelector onLanguageChange={handleLanguageChange} showLabel={false} />
             
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+              <span style={{ fontWeight: 500, color: '#595959', minWidth: '80px' }}>Para Birimi:</span>
+              <Select
+                value={currentLanguage?.defaultCurrency?.code || ''}
+                onChange={handleCurrencyChange}
+                style={{ flex: 1 }}
+                placeholder="Para birimi seçiniz"
+                loading={currenciesLoading}
+              >
+                {currencies.map(currency => (
+                  <Option key={currency.code} value={currency.code}>
+                    <Space>
+                      <span style={{ fontSize: '16px' }}>{currency.symbol}</span>
+                      {currency.name} ({currency.code})
+                    </Space>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+            
             <Select
               value={selectedModule}
               onChange={handleModuleChange}
@@ -388,6 +438,27 @@ const LanguageSettings = () => {
           /* Desktop Layout - Yan yana */
           <Space size="large" style={{ width: '100%', justifyContent: 'flex-start' }}>
             <LanguageSelector onLanguageChange={handleLanguageChange} />
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontWeight: 500, color: '#595959' }}>Para Birimi:</span>
+              <Select
+                value={currentLanguage?.defaultCurrency?.code || ''}
+                onChange={handleCurrencyChange}
+                style={{ width: 200 }}
+                placeholder="Para birimi seçiniz"
+                loading={currenciesLoading}
+              >
+                {currencies.map(currency => (
+                  <Option key={currency.code} value={currency.code}>
+                    <Space>
+                      <span style={{ fontSize: '16px' }}>{currency.symbol}</span>
+                      {currency.name} ({currency.code})
+                    </Space>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+            
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontWeight: 500, color: '#595959' }}>Modül:</span>
               <Select

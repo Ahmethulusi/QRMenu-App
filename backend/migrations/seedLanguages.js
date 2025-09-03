@@ -1,5 +1,5 @@
-const { Language } = require('./models');
-const db = require('./db');
+const { Language } = require('../models');
+const db = require('../db');
 
 const defaultLanguages = [
   {

@@ -198,6 +198,13 @@ function AppContent() {
                   </ProtectedRoute>
                 } />
                 
+                {/* Para Birimleri */}
+                <Route path="/currencies" element={
+                  <ProtectedRoute requiredResource="system" requiredAction="settings">
+                    <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                
                 {/* ERP Modülü */}
                 <Route path="/erp" element={<Content selectedComponent="ERP" />} />
                 <Route path="/erp/test" element={<Content selectedComponent="ERPTest" />} />
