@@ -1,29 +1,29 @@
-/* Basic styling for language settings */
-.language-settings {
-  padding: 10px;
-}
-
+/* Basic styling for language settings - Simplified */
 .language-settings-card {
   margin-bottom: 7px;
 }
 
-.module-content {
-  margin-top: 16px;
+/* Simplified table styling - Product_Table.jsx tarzında */
+
+.ant-table-body {
+  max-height: 420px !important;
+  min-height: 200px !important;
+  overflow-y: auto !important;
 }
 
-/* Basic table styling */
-.translations-card {
-  margin-top: 16px;
+/* Sticky table header for better UX */
+.ant-table-thead > tr > th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #fafafa !important;
+  border-bottom: 1px solid #f0f0f0 !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .language-settings {
-    padding: 16px;
-  }
+/* Ensure table header stays visible during scroll */
+.ant-table-thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
 }
-
-/* .ant-table-body{
-  max-height: 400px !important;
-  overflow-y: scroll !important;
-} */

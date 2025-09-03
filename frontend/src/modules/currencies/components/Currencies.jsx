@@ -326,6 +326,7 @@ const Currencies = () => {
       {/* Para birimleri tablosu */}
       <Card>
         <Table
+        // height={200}
           // className='ant-table-body'
           columns={columns}
           dataSource={currencies}

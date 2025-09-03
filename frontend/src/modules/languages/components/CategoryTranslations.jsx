@@ -312,49 +312,49 @@ const CategoryTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
   return (
     <>
-      <div className='table-content'>
-        <Card 
-          title={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Kategori Çevirileri</span>
-              <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
-                Toplam: {categories.length} kategori
-              </span>
-            </div>
-          } 
-          className="translations-card"
-        >
-        <div style={{ marginBottom: 5 }}>
-          <Search
-            placeholder="Kategori ara..."
-            allowClear
-            onSearch={handleSearch}
-            style={{ width: 300 }}
-          />
-        </div>
-
-        <Table
-          className='ant-table-body'
-          columns={columns}
-          dataSource={filteredCategories}
-          rowKey="category_id"
-          loading={loading}
-          pagination={{
-            pageSizeOptions: ['5', '10', '20', '50'],
-            showSizeChanger: true,
-            defaultPageSize: 5,
-            responsive: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} / ${total} kategori`,
-            position: ['topRight']
-          }}
-          scroll={{ x: 900 }}
-          bordered={true}
-          
-          size="small"
-        />
-        </Card>
+      {/* Başlık ve veri sayısı - Product_Table.jsx tarzında */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Kategori Çevirileri</h2>
+        <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+          Toplam: {categories.length} kategori
+        </span>
       </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Search
+          placeholder="Kategori ara..."
+          allowClear
+          onSearch={handleSearch}
+          style={{ width: 300 }}
+        />
+      </div>
+
+      <Table
+        className='ant-table'
+        columns={columns}
+        dataSource={filteredCategories}
+        rowKey="category_id"
+        loading={loading}
+        pagination={{
+          pageSizeOptions: ['5', '10', '20', '50'],
+          showSizeChanger: true,
+          defaultPageSize: 5,
+          responsive: true,
+          showTotal: (total, range) => 
+            `${range[0]}-${range[1]} / ${total} kategori`,
+          position: ['topRight']
+        }}
+        scroll={{ x: 900, y: 300 }}
+        bordered={true}
+        sticky={{ offsetHeader: 0 }}
+        virtual={false}
+        size="small"
+      />
 
       {/* Çeviri Modal'ı */}
       <Modal

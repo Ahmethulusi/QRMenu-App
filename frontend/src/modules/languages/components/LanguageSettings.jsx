@@ -391,7 +391,7 @@ const LanguageSettings = () => {
   };
 
   return (
-    <div className="language-settings">
+    <>
       {/* Kontrol Butonları - Product_Table.jsx tarzında */}
       <div style={{ marginBottom: '20px' }}>
         {isMobile ? (
@@ -525,10 +525,8 @@ const LanguageSettings = () => {
         )}
       </div>
 
-      {/* Modül İçeriği */}
-      <div className="module-content">
-        {renderSelectedModule()}
-      </div>
+      {/* Modül İçeriği - Direkt render */}
+      {renderSelectedModule()}
 
       {/* Toplu Çeviri Modal'ı */}
       <Modal
@@ -590,7 +588,7 @@ const LanguageSettings = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 };
 

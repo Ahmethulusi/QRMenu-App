@@ -55,11 +55,11 @@
 } */
 
 
-.ant-table-body {
-  max-height: 480px !important;
+/* .ant-table-body {
+  max-height: 400px !important;
   min-height: 200px !important;
-  /* overflow-y: auto !important; */
-}
+  overflow-y: auto !important;
+} */
 
 /* Para birimi sembolü */
 .currency-symbol {

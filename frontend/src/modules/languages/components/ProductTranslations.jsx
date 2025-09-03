@@ -3,7 +3,9 @@ import { Table, Button, Input, Space, message, Card, Tag, Modal, Form, Tooltip }
 import { EditOutlined, PlusOutlined, SearchOutlined, RobotOutlined } from '@ant-design/icons';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import '../../tables_and_QR/css/tableSizeManager.css';
+// import '../../tables_and_QR/css/tableSizeManager.css';
+
+import '../css/LanguageSettings.css';
 
 const { Search } = Input;
 
@@ -273,12 +275,7 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
   };
 
   const columns = [
-    {
-      title: 'Ürün ID',
-      dataIndex: 'product_id',
-      key: 'product_id',
-      width: 80,
-    },
+   
     {
       title: 'Ürün Adı (Orijinal)',
       dataIndex: 'product_name',
@@ -378,39 +375,38 @@ const ProductTranslations = ({ currentLanguage, onSuccess, onError }) => {
 
   return (
     <>
-      <div className='table-content'>
-        <Card 
-          title={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Ürün Çevirileri</span>
-              <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
-                Toplam: {products.length} ürün
-              </span>
-            </div>
-          } 
-          className="translations-card"
-        >
+      {/* Başlık ve veri sayısı - Product_Table.jsx tarzında */}
+      {/* <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        // marginBottom: '20px'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Ürün Çevirileri</h2>
+        <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+          Toplam: {products.length} ürün
+        </span>
+      </div> */}
 
-        <Table
-          className='ant-table-body'
-          columns={columns}
-          size="small"
-          dataSource={filteredProducts}
-          rowKey="product_id"
-          loading={loading}
-          pagination={{
-            pageSizeOptions: ['5', '10', '20', '50'],
-            showSizeChanger: true,
-            defaultPageSize: 5,
-            responsive: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-            position: ['bottomRight']
-          }}
-          scroll={{ x: 1400 }}
-          bordered={false}
-        />
-        </Card>
-      </div>
+      <Table
+        className='ant-table'
+        columns={columns}
+        dataSource={filteredProducts}
+        rowKey="product_id"
+        loading={loading}
+        pagination={{
+          pageSizeOptions: ['5', '10', '20', '50'],
+          showSizeChanger: true,
+          defaultPageSize: 10,
+          responsive: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+          position: ['bottomRight']
+        }}
+        scroll={{ x: 1200, y: 500 }}
+        bordered={true}
+        // sticky={{ offsetHeader: 0 }}
+        // virtual={false}
+      />
 
       {/* Çeviri Modal'ı */}
       <Modal
