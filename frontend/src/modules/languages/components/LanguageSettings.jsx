@@ -17,12 +17,16 @@ const { Option } = Select;
 const LanguageSettings = () => {
   const { currentLanguage, changeLanguage, loading: languageLoading, defaultLanguage } = useLanguage();
   const { currencies, loading: currenciesLoading } = useCurrencies();
+  
+
   const [selectedModule, setSelectedModule] = useState('products');
   const [bulkTranslateModal, setBulkTranslateModal] = useState(false);
   const [bulkTranslating, setBulkTranslating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [bulkStatus, setBulkStatus] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState(currentLanguage?.defaultCurrency?.code || 'TRY');
+  const [savingCurrency, setSavingCurrency] = useState(false);
 
   // Responsive kontrol
   useEffect(() => {
@@ -35,6 +39,13 @@ const LanguageSettings = () => {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // currentLanguage değiştiğinde selectedCurrency'yi güncelle
+  useEffect(() => {
+    if (currentLanguage?.defaultCurrency?.code) {
+      setSelectedCurrency(currentLanguage.defaultCurrency.code);
+    }
+  }, [currentLanguage]);
 
   const handleSuccess = (messageText) => {
     message.success(messageText || 'İşlem başarılı!');
@@ -54,24 +65,32 @@ const LanguageSettings = () => {
     // Bu sayede çeviri durumları güncellenecek
   };
 
-  // Para birimi güncelleme
-  const handleCurrencyChange = async (currencyCode) => {
+  // Para birimi seçimi
+  const handleCurrencySelect = (currencyCode) => {
+    setSelectedCurrency(currencyCode);
+  };
+
+  // Para birimi kaydetme
+  const handleSaveCurrency = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/languages/${currentLanguage.id}`, {
+      setSavingCurrency(true);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/languages/update/${currentLanguage.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          default_currency_code: currencyCode
+          default_currency_code: selectedCurrency
         })
       });
 
       if (response.ok) {
         message.success('Para birimi başarıyla güncellendi');
-        // Dil listesini yenile
-        window.location.reload();
+        // currentLanguage'i güncelle
+        if (currentLanguage) {
+          currentLanguage.defaultCurrency = currencies.find(c => c.code === selectedCurrency);
+        }
       } else {
         const errorData = await response.json();
         message.error(errorData.error || 'Para birimi güncellenemedi');
@@ -79,6 +98,8 @@ const LanguageSettings = () => {
     } catch (error) {
       console.error('Para birimi güncelleme hatası:', error);
       message.error('Para birimi güncellenirken hata oluştu');
+    } finally {
+      setSavingCurrency(false);
     }
   };
 
@@ -387,21 +408,28 @@ const LanguageSettings = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
               <span style={{ fontWeight: 500, color: '#595959', minWidth: '80px' }}>Para Birimi:</span>
               <Select
-                value={currentLanguage?.defaultCurrency?.code || ''}
-                onChange={handleCurrencyChange}
+                value={selectedCurrency}
+                onChange={handleCurrencySelect}
                 style={{ flex: 1 }}
                 placeholder="Para birimi seçiniz"
                 loading={currenciesLoading}
+                showSearch
+                allowClear
               >
                 {currencies.map(currency => (
                   <Option key={currency.code} value={currency.code}>
-                    <Space>
-                      <span style={{ fontSize: '16px' }}>{currency.symbol}</span>
-                      {currency.name} ({currency.code})
-                    </Space>
+                    {currency.name} ({currency.code})
                   </Option>
                 ))}
               </Select>
+              <Button
+                type="primary"
+                onClick={handleSaveCurrency}
+                loading={savingCurrency}
+                disabled={!selectedCurrency}
+              >
+                Kaydet
+              </Button>
             </div>
             
             <Select
@@ -442,21 +470,28 @@ const LanguageSettings = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontWeight: 500, color: '#595959' }}>Para Birimi:</span>
               <Select
-                value={currentLanguage?.defaultCurrency?.code || ''}
-                onChange={handleCurrencyChange}
+                value={selectedCurrency}
+                onChange={handleCurrencySelect}
                 style={{ width: 200 }}
                 placeholder="Para birimi seçiniz"
                 loading={currenciesLoading}
+                showSearch
+                allowClear
               >
                 {currencies.map(currency => (
                   <Option key={currency.code} value={currency.code}>
-                    <Space>
-                      <span style={{ fontSize: '16px' }}>{currency.symbol}</span>
-                      {currency.name} ({currency.code})
-                    </Space>
+                    {currency.name} ({currency.code})
                   </Option>
                 ))}
               </Select>
+              <Button
+                type="primary"
+                onClick={handleSaveCurrency}
+                loading={savingCurrency}
+                disabled={!selectedCurrency}
+              >
+                Kaydet
+              </Button>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

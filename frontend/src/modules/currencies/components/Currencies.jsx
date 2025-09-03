@@ -366,9 +366,6 @@ const Currencies = () => {
                 <Select
                   placeholder="Para birimi seçin"
                   showSearch
-                  filterOption={(input, option) =>
-                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }
                 >
                   {availableCurrencies.map(currency => (
                     <Option key={currency.code} value={currency.code}>
