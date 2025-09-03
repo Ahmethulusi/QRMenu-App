@@ -4,6 +4,7 @@ import {
   Button, 
   Modal, 
   Form, 
+  Input,
   Select, 
   Switch, 
   message, 
@@ -126,7 +127,10 @@ const Currencies = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          rate_to_usd: values.rate_to_usd,
+          is_active: values.is_active
+        }),
       });
 
       if (response.ok) {
@@ -172,7 +176,7 @@ const Currencies = () => {
     
     if (currency) {
       form.setFieldsValue({
-        rate_to_usd: currency.rate_to_usd,
+        rate_to_usd: parseFloat(currency.rate_to_usd),
         is_active: currency.is_active
       });
     } else {
@@ -386,6 +390,36 @@ const Currencies = () => {
                 💡 <strong>Bilgi:</strong> Seçilen para biriminin güncel USD kuru otomatik olarak API'den çekilecektir.
               </div>
             </>
+          )}
+
+          {editingCurrency && (
+            <Form.Item
+              name="rate_to_usd"
+              label="USD Kuru"
+              rules={[
+                { required: true, message: 'USD kuru gerekli' },
+                { 
+                  validator: (_, value) => {
+                    const numValue = parseFloat(value);
+                    if (isNaN(numValue) || numValue <= 0) {
+                      return Promise.reject(new Error('Kur 0\'dan büyük olmalı'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input
+                type="number"
+                step="0.000001"
+                placeholder="USD kuru girin"
+                addonAfter="USD"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  form.setFieldValue('rate_to_usd', value ? parseFloat(value) : '');
+                }}
+              />
+            </Form.Item>
           )}
 
 
