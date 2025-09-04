@@ -79,11 +79,13 @@ Products.hasMany(BranchProduct, {
 
 BranchProduct.belongsTo(Branch, {
   foreignKey: 'branch_id',
+  targetKey: 'id', // Branch tablosundaki id kolonunu referans al
   as: 'Branch'
 });
 
 Branch.hasMany(BranchProduct, {
   foreignKey: 'branch_id',
+  sourceKey: 'id', // Branch tablosundaki id kolonunu kullan
   as: 'BranchProducts'
 });
 
@@ -101,11 +103,13 @@ Category.hasMany(Section, {
 // QRCode - Branch association'ları
 QRCode.belongsTo(Branch, {
   foreignKey: 'branch_id',
+  targetKey: 'id', // Branch tablosundaki id kolonunu referans al
   as: 'Branch'
 });
 
 Branch.hasMany(QRCode, {
   foreignKey: 'branch_id',
+  sourceKey: 'id', // Branch tablosundaki id kolonunu kullan
   as: 'qrcodes'
 });
 

@@ -109,7 +109,7 @@ const Categories = () => {
                   onClick={() => handleAddSubCategory(record.id)}
                   disabled={isAnyLoading}
                 >
-                  <PlusOutlined/> Add
+                  <PlusOutlined/> Ekle
                 </Button>
               )}
               {hasPermission('categories', 'update') && (
@@ -118,7 +118,7 @@ const Categories = () => {
                   onClick={() => showEditModal(record)}
                   disabled={isAnyLoading}
                 >
-                  <EditOutlined/> Edit
+                  <EditOutlined/> Düzenle
                 </Button>
               )}
               {hasPermission('categories', 'delete') && (
@@ -127,7 +127,7 @@ const Categories = () => {
                   onClick={() => handleDelete(record.id)}
                   disabled={isAnyLoading}
                 >
-                  <DeleteTwoTone/> Delete
+                  <DeleteTwoTone/> Sil
                 </Button>
               )}
             </div>
@@ -271,7 +271,7 @@ const Categories = () => {
           style={{ marginBottom: '10px', marginTop: '10px', position: 'relative' }}
           disabled={isAnyLoading}
         >
-          <PlusOutlined/> Create a Category
+          <PlusOutlined/> Kategori Ekle
         </Button>
       )}
       

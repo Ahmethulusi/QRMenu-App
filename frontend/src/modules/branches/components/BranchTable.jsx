@@ -51,7 +51,19 @@ const fetchAvailableProducts = async () => {
       // Yeni endpoint: şubeye henüz eklenmemiş ürünleri getir
       const data = await apiGet(`/api/branches/${selectedBranchIdForProducts}/${businessId}/available-products`);
       console.log('Available products for branch:', data);
-      setAvailableProducts(data);
+      console.log('Product IDs:', data.map(p => p.product_id));
+      
+      // Null ID'li ürünleri tespit et
+      const nullProducts = data.filter(p => p.product_id == null);
+      if (nullProducts.length > 0) {
+        console.warn('Null product_id olan ürünler:', nullProducts);
+      }
+      
+      // Geçerli ürünleri filtrele
+      const validProducts = data.filter(p => p.product_id != null && p.product_name);
+      console.log('Valid products:', validProducts.length, 'of', data.length);
+      
+      setAvailableProducts(validProducts);
     } catch (err) {
       console.error('Ürün yükleme hatası:', err);
       message.error('Ürünler yüklenemedi');
@@ -128,6 +140,7 @@ const fetchAvailableProducts = async () => {
 
 const openAddProductToBranchModal = () => {
   addProductForm.resetFields(); // Formu temizle
+  addProductForm.setFieldsValue({ product_ids: [] }); // Açıkça boş dizi set et
   fetchAvailableProducts(); // Ürünleri yeniden yükle
   setAddProductToBranchModalVisible(true);
 };
@@ -170,6 +183,7 @@ const handleSaveProductToBranch = async () => {
 
     // Formu sıfırla ve modalı kapat
     addProductForm.resetFields();
+    addProductForm.setFieldsValue({ product_ids: [] }); // Açıkça boş dizi set et
     setAddProductToBranchModalVisible(false);
 
     // Şube ürünlerini güncelle
@@ -510,6 +524,7 @@ const handleSaveProductToBranch = async () => {
   onCancel={() => {
     setAddProductToBranchModalVisible(false);
     addProductForm.resetFields(); // Formu temizle
+    addProductForm.setFieldsValue({ product_ids: [] }); // Açıkça boş dizi set et
   }}
   onOk={handleSaveProductToBranch}
   okText="Ekle"
@@ -523,7 +538,7 @@ const handleSaveProductToBranch = async () => {
   rules={[{ required: true, message: 'Lütfen en az bir ürün seçin' }]}
 >
   <Select
-    mode="multiple" // Bu satır çoklu seçimi aktif eder
+    mode="multiple"
     showSearch
     placeholder="Ürünleri seçiniz"
     optionFilterProp="children"
@@ -531,9 +546,12 @@ const handleSaveProductToBranch = async () => {
     allowClear
   >
     {availableProducts.map(product => (
-      <Option key={product.product_id} value={product.product_id}>
+      <Select.Option 
+        key={`product-${product.product_id}`} 
+        value={product.product_id}
+      >
         {product.product_name}
-      </Option>
+      </Select.Option>
     ))}
   </Select>
 </Form.Item>

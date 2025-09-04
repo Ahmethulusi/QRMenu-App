@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Upload, Row, Col, Slider, message, Typography, Card } from 'antd';
+import { Form, Input, Button, Upload, Row, Col, Slider, message, Typography, Card, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import QRCode from 'react-qr-code';
 
@@ -16,6 +16,8 @@ const NonOrderableQR = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -59,32 +61,68 @@ const NonOrderableQR = () => {
     fetchBranches();
   }, []);
 
-  const handleGenerate = async (values) => {
+  const handleGenerate = async () => {
     try {
+      console.log('Seçilen değerler:', { selectedBranchId, qrUrl });
+      
+      // Manuel kontrol - form yerine state kullan
+      if (!selectedBranchId) {
+        message.error('Lütfen bir şube seçin');
+        return;
+      }
+      
+      if (!qrUrl) {
+        message.error('Lütfen bir URL girin');
+        return;
+      }
+      
+      // Token kontrolü
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('Oturum bilgisi bulunamadı, lütfen tekrar giriş yapın');
+        return;
+      }
+      
+      console.log('Token:', token);
+      
       const formData = new FormData();
       formData.append('business_id', 1); // test için
       formData.append('type', 'nonorderable');
-      formData.append('qr_url', values.qr_url);
+      formData.append('qr_url', qrUrl);
       formData.append('color', color);
       formData.append('size', size);
-      formData.append('logo_size_percent', 20);
-      if (values.branch_id) {
-        formData.append('branch_id', values.branch_id);
-      }
+      formData.append('logo_size_percent', logoSizePercent);
+      formData.append('branch_id', selectedBranchId);
+      
       if (logoFile) {
         formData.append('logo', logoFile);
       }
+      
+      console.log('FormData içeriği:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
       const response = await fetch(`${API_URL}/api/table_qr`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
-      if (!response.ok) throw new Error('Sunucu hatası');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Sunucu hatası:', response.status, errorText);
+        throw new Error(`Sunucu hatası: ${response.status}`);
+      }
+      
       const data = await response.json();
       setQrFilePath(data.file_path);
       message.success('QR kodu başarıyla oluşturuldu!');
     } catch (err) {
-      console.error(err);
-      message.error('QR oluşturulurken bir hata oluştu!');
+      console.error('QR oluşturma hatası:', err);
+      message.error('QR oluşturulurken bir hata oluştu: ' + err.message);
     }
   };
   
@@ -116,23 +154,46 @@ const NonOrderableQR = () => {
     <Row gutter={32}>
       <Col xs={24} md={12}>
         <Title level={3}>Siparişsiz QR Oluştur</Title>
-        <Form layout="vertical" form={form} onFinish={handleGenerate}>
-          <Form.Item label="Şube" name="branch_id" rules={[{ required: true, message: 'Şube seçimi gerekli' }]}> 
-            <select disabled={loadingBranches} style={{ width: '100%', padding: 8, borderRadius: 4 }}>
-              <option value="">Şube Seçin</option>
-              {branches.map(branch => (
-                <option key={branch.id || branch.branch_id} value={branch.id || branch.branch_id}>
-                  {branch.name || branch.branch_name || 'İsimsiz Şube'}
-                </option>
-              ))}
-            </select>
+        <div>
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+              <span style={{ color: '#ff4d4f', marginRight: '4px' }}>*</span>
+              Şube
+            </div>
+            <Select
+              loading={loadingBranches}
+              placeholder="Şube Seçin"
+              style={{ width: '100%' }}
+              value={selectedBranchId}
+              options={branches.map(branch => ({
+                value: branch.id || branch.branch_id,
+                label: branch.name || branch.branch_name || 'İsimsiz Şube'
+              }))}
+              onChange={(value) => {
+                console.log('Seçilen şube ID:', value);
+                setSelectedBranchId(value);
+              }}
+              status={!selectedBranchId && 'error'}
+            />
+            {!selectedBranchId && <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '4px' }}>Şube seçimi gerekli</div>}
             {loadingBranches && <div style={{ color: '#1890ff', fontSize: '12px', marginTop: '4px' }}>Şubeler yükleniyor...</div>}
             {!loadingBranches && branches.length === 0 && <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '4px' }}>Şube bulunamadı</div>}
             {!loadingBranches && branches.length > 0 && <div style={{ color: '#52c41a', fontSize: '12px', marginTop: '4px' }}>{branches.length} şube bulundu</div>}
-          </Form.Item>
-          <Form.Item label="Yönlendirme URL'si" name="qr_url" rules={[{ required: true, message: 'URL gerekli' }]}>
-            <Input placeholder="https://ornekmenu.com/menu" />
-          </Form.Item>
+          </div>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+              <span style={{ color: '#ff4d4f', marginRight: '4px' }}>*</span>
+              Yönlendirme URL'si
+            </div>
+            <Input 
+              placeholder="https://ornekmenu.com/menu" 
+              value={qrUrl}
+              onChange={(e) => setQrUrl(e.target.value)}
+              status={!qrUrl && 'error'}
+            />
+            {!qrUrl && <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '4px' }}>URL gerekli</div>}
+          </div>
 
           <Form.Item label="Renk">
             <Input type="color" value={color} onChange={e => setColor(e.target.value)} />
@@ -164,8 +225,8 @@ const NonOrderableQR = () => {
             />
           </Form.Item>
 
-          <Button type="primary" htmlType="submit">QR Oluştur</Button>
-        </Form>
+          <Button type="primary" onClick={handleGenerate}>QR Oluştur</Button>
+        </div>
       </Col>
 
       <Col xs={24} md={12} style={{ textAlign: 'center' }}>
@@ -183,7 +244,7 @@ const NonOrderableQR = () => {
           >
             <div style={{ width: size, height: size, position: 'relative', margin: '0 auto' }}>
               <QRCode
-                value={form.getFieldValue('qr_url') || 'https://ornekmenu.com'}
+                value={qrUrl || 'https://ornekmenu.com'}
                 bgColor="#ffffff"
                 fgColor={color}
                 size={size}

@@ -402,7 +402,7 @@ const Product_Table = () => {
       ),
     },
     {
-      title: 'Action',
+      title: 'İşlemler',
       dataIndex: '',
       key: 'id',
       width: '14%',
@@ -410,7 +410,7 @@ const Product_Table = () => {
         <div className='action-buttons-container'>
           {hasPermission('products', 'update') && (
             <Button style={{ color: 'green' }} onClick={() => showEditModal(record)}>
-              <EditOutlined /> Edit
+              <EditOutlined /> Düzenle
             </Button>
           )}
           
@@ -422,7 +422,7 @@ const Product_Table = () => {
               cancelText="Hayır"
             >
               <Button style={{ color: 'red' }}>
-                <DeleteTwoTone /> Delete
+                <DeleteTwoTone /> Sil
               </Button>
             </Popconfirm>
           )}
@@ -430,7 +430,7 @@ const Product_Table = () => {
       ),
     },
     {
-      title: 'Status',
+      title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       width: '8%',
@@ -453,7 +453,7 @@ const Product_Table = () => {
       ),
     },
     {
-      title: 'Showcase',
+      title: 'Vitrin',
       dataIndex: 'showcase',
       key: 'showcase',
       width: '8%',

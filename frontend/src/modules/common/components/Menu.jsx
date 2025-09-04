@@ -196,88 +196,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     }
   }, [collapsed, isMobile, mobileMenuOpen]);
 
-  const handleClick = async (e) => {
-    if (e.key === 'Logout') {
-      // Çıkış yapma işlemi
-      try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const token = localStorage.getItem('token');
-        
-        if (token) {
-          await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-        }
-        
-        // LocalStorage'ı temizle
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        message.success('Çıkış başarılı!');
-        
-        // App.jsx'teki onLogout fonksiyonunu çağır
-        if (onLogout) {
-          onLogout();
-        }
-        
-        return;
-      } catch (error) {
-        console.error('Çıkış hatası:', error);
-        message.error('Çıkış yapılırken hata oluştu!');
-      }
-    }
-
-    setSelectedComponent(e.key);
-    if (isMobile) {
-      setMobileMenuOpen(false);
-    }
-    
-    // Navigation mapping
-    const navigationMap = {
-      'Products': '/products',
-      'Sort': '/products/sort',
-      'Categories': '/categories',
-      'Labels': '/labels',
-      'Announcements': '/announcements',
-      'Campaigns': '/campaigns',
-      'DailyMenu': '/daily-menu',
-      'Ingredients': '/ingredients',
-      'Branches': '/branches',
-      'GeneralQR': '/qr/general',
-      'QRDesigns': '/qr/designs',
-      'Price Changing': '/price-change',
-      'Roles': '/users',
-      'Auth': '/auth',
-      'Profile': '/profile',
-      'Settings': '/settings',
-      'LanguageSettings': '/language-settings',
-      'Currencies': '/currencies',
-      'ERP': '/erp', // Ana ERP route'u
-      'ERPTest': '/erp/test', // ERP Test route'u
-      'ERPIntegration': '/erp/integration', // ERP Integration route'u
-      'Logout': null, // Çıkış için route yok
-    };
-    
-    const targetPath = navigationMap[e.key];
-    if (targetPath) {
-      navigate(targetPath);
-    }
-  };
-
-  const handleOpenChange = (keys) => {
-    // Accordion tarzında çalışması için sadece son açılan menüyü açık tut
-    const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
-    if (latestOpenKey) {
-      setOpenKeys([latestOpenKey]);
-    } else {
-      setOpenKeys([]);
-    }
-  };
-
   // Basit statik menü yapısı
   const items = [
     {
@@ -375,6 +293,117 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
     { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
     { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' }
   ];
+
+  // Bir menü anahtarının alt menü olup olmadığını kontrol eden yardımcı fonksiyon
+  const isChildKey = (key) => {
+    // Tüm menü öğelerini kontrol et
+    for (const item of items) {
+      if (item.children) {
+        // Doğrudan alt menü kontrolü
+        const isDirectChild = item.children.some(child => child.key === key);
+        if (isDirectChild) return true;
+        
+        // İç içe alt menü kontrolü (2. seviye)
+        const hasNestedChild = item.children.some(subItem => 
+          subItem.children && subItem.children.some(nestedItem => nestedItem.key === key)
+        );
+        if (hasNestedChild) return true;
+      }
+    }
+    return false;
+  };
+  
+  const handleOpenChange = (keys) => {
+    // En son açılan menü anahtarını bul
+    const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
+    
+    if (!latestOpenKey) {
+      // Eğer bir menü kapatılıyorsa, keys'i olduğu gibi ayarla
+      setOpenKeys(keys);
+      return;
+    }
+    
+    // Açılan menü bir alt menü mü kontrol et
+    if (isChildKey(latestOpenKey)) {
+      // Alt menü açıldığında, mevcut açık menüleri koru ve yeni menüyü ekle
+      setOpenKeys(keys);
+    } else {
+      // Ana menü açıldığında accordion davranışı: Sadece son açılan menüyü aç
+      setOpenKeys([latestOpenKey]);
+    }
+  };
+
+  const handleClick = async (e) => {
+    if (e.key === 'Logout') {
+      // Çıkış yapma işlemi
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+        
+        // LocalStorage'ı temizle
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        message.success('Çıkış başarılı!');
+        
+        // App.jsx'teki onLogout fonksiyonunu çağır
+        if (onLogout) {
+          onLogout();
+        }
+        
+        return;
+      } catch (error) {
+        console.error('Çıkış hatası:', error);
+        message.error('Çıkış yapılırken hata oluştu!');
+      }
+    }
+
+    setSelectedComponent(e.key);
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
+    
+    // Navigation mapping
+    const navigationMap = {
+      'Products': '/products',
+      'Sort': '/products/sort',
+      'Categories': '/categories',
+      'Labels': '/labels',
+      'Announcements': '/announcements',
+      'Campaigns': '/campaigns',
+      'DailyMenu': '/daily-menu',
+      'Ingredients': '/ingredients',
+      'Branches': '/branches',
+      'GeneralQR': '/qr/general',
+      'QRDesigns': '/qr/designs',
+      'Price Changing': '/price-change',
+      'Roles': '/users',
+      'Auth': '/auth',
+      'Profile': '/profile',
+      'Settings': '/settings',
+      'LanguageSettings': '/language-settings',
+      'Currencies': '/currencies',
+      'ERP': '/erp', // Ana ERP route'u
+      'ERPTest': '/erp/test', // ERP Test route'u
+      'ERPIntegration': '/erp/integration', // ERP Integration route'u
+      'Logout': null, // Çıkış için route yok
+    };
+    
+    const targetPath = navigationMap[e.key];
+    if (targetPath) {
+      navigate(targetPath);
+    }
+  };
    
   return (
     <>
