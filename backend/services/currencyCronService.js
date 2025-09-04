@@ -53,15 +53,6 @@ const updateRates = async () => {
 const startCurrencyCronJobs = () => {
   console.log('🚀 Para birimi cron job\'ları başlatılıyor...');
 
-  // Her gün saat 09:00'da kurları güncelle
-  cron.schedule('0 9 * * *', () => {
-    console.log('⏰ Günlük döviz kuru güncelleme zamanı geldi');
-    updateRates();
-  }, {
-    scheduled: true,
-    timezone: "Europe/Istanbul"
-  });
-
   // Her 6 saatte bir kurları güncelle (günde 4 kez)
   cron.schedule('0 */6 * * *', () => {
     console.log('⏰ 6 saatlik döviz kuru güncelleme zamanı geldi');
@@ -70,12 +61,6 @@ const startCurrencyCronJobs = () => {
     scheduled: true,
     timezone: "Europe/Istanbul"
   });
-
-  // Sunucu başladığında bir kez güncelle
-  setTimeout(() => {
-    console.log('🔄 Sunucu başlangıcında döviz kurları güncelleniyor...');
-    updateRates();
-  }, 5000); // 5 saniye bekle
 
   console.log('✅ Para birimi cron job\'ları başlatıldı');
 };

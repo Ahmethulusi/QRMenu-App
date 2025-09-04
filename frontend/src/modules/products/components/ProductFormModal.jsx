@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Sel
 import { PlusOutlined, UploadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
+import PortionManager from './PortionManager';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -17,6 +18,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [activeTab, setActiveTab] = useState('1');
   const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [portions, setPortions] = useState([]);
 
   // Ürünleri çek
   useEffect(() => {
@@ -69,6 +71,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
     setFile(null);
     setSelectedLabels([]);
     setSearchValue('');
+    setPortions([]);
     onCancel();
   };
 
@@ -152,6 +155,25 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       if (!response.ok) {
         throw new Error(data.error || 'Ürün oluşturulurken bir hata oluştu');
       }
+      
+      // Eğer porsiyonlar varsa, bunları da ekle
+      if (portions.length > 0 && data.product_id) {
+        for (const portion of portions) {
+          await fetch(`${API_URL}/api/portions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              product_id: data.product_id,
+              name: portion.name,
+              quantity: portion.quantity,
+              price: portion.price
+            })
+          });
+        }
+      }
   
       message.success('Ürün başarıyla oluşturuldu!');
       form.resetFields();  // Formu sıfırla
@@ -159,6 +181,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       setSelectedLabels([]);
       setSearchValue('');
       setRecommendedProducts([]);
+      setPortions([]);
       onOk();
     } catch (error) {
       console.error('❌ Form hatası:', error);
@@ -183,6 +206,11 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   // Önerilen ürünleri seçme fonksiyonu
   const handleRecommendedProductsChange = (selectedProductIds) => {
     setRecommendedProducts(selectedProductIds);
+  };
+  
+  // Porsiyonları güncelleme fonksiyonu
+  const handlePortionsChange = (newPortions) => {
+    setPortions(newPortions);
   };
 
   return (
@@ -462,6 +490,10 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
             </Select>
           </Form.Item>
         </Form>
+      </TabPane>
+      <TabPane tab="Porsiyonlar" key="3">
+        {/* Porsiyon Yönetimi */}
+        <PortionManager onPortionsChange={handlePortionsChange} />
       </TabPane>
     </Tabs>
   </Modal>

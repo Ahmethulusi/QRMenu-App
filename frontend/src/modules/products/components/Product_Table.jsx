@@ -85,11 +85,7 @@ const Product_Table = () => {
               <img src={imageUrl} style={{ width: '50px', height: '50px', cursor: 'pointer' }} />
             </Popover>
           ) : (
-            hasPermission('products', 'image_upload') ? (
-              <UploadImageButton productId={item.product_id} onUploadSuccess={() => refreshTable()} />
-            ) : (
-              <span style={{ color: 'gray', fontSize: '12px' }}>Resim Yok</span>
-            )
+            <UploadImageButton productId={item.product_id} onUploadSuccess={() => refreshTable()} />
           ),
           id: item.product_id,
           name: item.product_name,

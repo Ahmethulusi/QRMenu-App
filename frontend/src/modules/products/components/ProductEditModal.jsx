@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Sel
 import { PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
+import PortionManager from './PortionManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -470,6 +471,11 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
               </Select>
             </Form.Item>
           </Form>
+        </TabPane>
+        
+        <TabPane tab="Porsiyonlar" key="3">
+          {/* Porsiyon Yönetimi */}
+          <PortionManager productId={record?.product_id} />
         </TabPane>
       </Tabs>
     </Modal>

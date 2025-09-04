@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { Modal, Form, Input, Button, Upload, message, InputNumber, Col, Row, Select, Tabs, Divider, Tooltip } from 'antd';
+import { PlusOutlined, InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import CategoryModal from '../../categories/components/NewCategoryModal';
+import PortionManager from './PortionManager';
 import '../css/productModal.css';
+
 const API_URL = import.meta.env.VITE_API_URL;
+const { TabPane } = Tabs;
+
 const ProductModal = ({ show, handleClose, handleSave }) => {
-  const [file, setFile] = useState(null); // Dosyayı saklamak için state
-  const [fileName, setFileName] = useState('Dosya Seçilmedi'); // Başlangıçta "Dosya Seçilmedi" metni
-  const [productName, setProductName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [category_id, setCategoryId] = useState('');
+  const [form] = Form.useForm();
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState('Dosya Seçilmedi');
   const [categories, setCategories] = useState([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-
-  
-  
+  const [activeTab, setActiveTab] = useState('1');
+  const [portions, setPortions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -34,40 +37,74 @@ const ProductModal = ({ show, handleClose, handleSave }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    // Yeni ürünü veri tabanına ekle
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append('productName',productName);
-    formData.append('description',description),
-    formData.append('price',price);
-    formData.append('category_id',category_id);
-    formData.append('resim',file);
-    
+  const handleSubmit = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/admin/products/create`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      setLoading(true);
+      const values = await form.validateFields();
+      
+      const formData = new FormData();
+      formData.append('productName', values.productName);
+      formData.append('description', values.description || '');
+      formData.append('price', values.price);
+      formData.append('category_id', values.category_id);
+      
+      if (file) {
+        formData.append('resim', file);
+      }
+      
+      // Besin değerleri ve detayları ekle (varsa)
+      if (values.calorie_count) formData.append('calorie_count', values.calorie_count);
+      if (values.cooking_time) formData.append('cooking_time', values.cooking_time);
+      if (values.carbs) formData.append('carbs', values.carbs);
+      if (values.protein) formData.append('protein', values.protein);
+      if (values.fat) formData.append('fat', values.fat);
+      if (values.allergens) formData.append('allergens', values.allergens);
+      if (values.stock) formData.append('stock', values.stock);
+      
+      const response = await fetch(`${API_URL}/api/admin/products/create`, {
+        method: 'POST',
+        body: formData,
+      });
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Ürün eklenirken bir hata oluştu');
       }
 
-      // Yeni ürün eklendikten sonra formu temizleyin
-      setProductName('');
-      setDescription('');
-      setPrice('');
-      setCategoryId('');
+      const newProduct = await response.json();
+      
+      // Eğer porsiyonlar varsa, bunları da ekle
+      if (portions.length > 0) {
+        const token = localStorage.getItem('token');
+        
+        for (const portion of portions) {
+          await fetch(`${API_URL}/api/portions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              product_id: newProduct.product_id,
+              name: portion.name,
+              quantity: portion.quantity,
+              price: portion.price
+            })
+          });
+        }
+      }
+
+      message.success('Ürün başarıyla eklendi!');
+      form.resetFields();
       setFile(null);
       setFileName('Dosya Seçilmedi');
+      setPortions([]);
+      setActiveTab('1');
       handleSave();
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error('Ürün ekleme hatası:', error);
+      message.error('Ürün eklenemedi, lütfen tekrar deneyin!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,153 +119,243 @@ const ProductModal = ({ show, handleClose, handleSave }) => {
     } catch (error) {
       console.error('Kategoriler alınamadı', error);
     }
-  }
-
-  // const filterMainCategories = (categories) => {
-  //   return categories.filter(category => category.parent_id !== null);
-  // }
-
+  };
 
   const handleSaveforPlus = async () => {
-  // Yeni kategori eklendikten sonra kategorileri yeniden fetch et
- 
     fetchCategories();
     const lastCategory = await fetchLastCategory();
-    setCategoryId(lastCategory.category_id);
+    form.setFieldsValue({ category_id: lastCategory.category_id });
     setShowCategoryModal(false);
-  
   };
 
   const handleModalClose = () => {
-    setProductName('');
-    setDescription('');
-    setPrice('');
-    setCategoryId('');
+    form.resetFields();
+    setFile(null);
+    setFileName('Dosya Seçilmedi');
+    setPortions([]);
+    setActiveTab('1');
     handleClose();
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    setFile(file);
-    if (file) {
-      setFileName(file.name); // Seçilen dosyanın ismini göster
+  const handleFileChange = (info) => {
+    if (info.file) {
+      setFile(info.file.originFileObj);
+      setFileName(info.file.name || 'Dosya Seçildi');
     } else {
+      setFile(null);
       setFileName('Dosya Seçilmedi');
     }
   };
+
+  const handlePortionsChange = (newPortions) => {
+    setPortions(newPortions);
+  };
+
   return (
-    <div className={`modal ${show ? 'show' : ''}`} style={{ display: show ? 'block' : 'none' }} tabIndex="-1">
-      <div className="modal-dialog">
-        <div className="modal-content" >
-          <div className="modal-header">
-            <h5 className="modal-title">Yeni Ürün Ekle</h5>
-            <button type="button" className="btn-close" onClick={handleModalClose} ></button>
-          </div>
-          <div className="modal-body">
-            <form onSubmit={handleSubmit} enctype="multipart/form-data">
-              <div className="mb-3">
-                <label htmlFor="productName" className="form-label">Ürün Adı</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="productName"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="description" className="form-label">Açıklama</label>
-                <input
+    <Modal
+      title="Yeni Ürün Ekle"
+      open={show}
+      onCancel={handleModalClose}
+      onOk={handleSubmit}
+      okText="Kaydet"
+      cancelText="İptal"
+      width={700}
+      confirmLoading={loading}
+      style={{ top: 20 }}
+      styles={{
+        body: {
+          maxHeight: '75vh', 
+          overflowY: 'auto',
+          padding: '20px'
+        }
+      }}
+    >
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane tab="Temel Bilgiler" key="1">
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label="Ürün Adı"
+              name="productName"
+              rules={[{ required: true, message: 'Lütfen ürün adını girin!' }]}
+            >
+              <Input placeholder="Ürün adını girin" />
+            </Form.Item>
+
+            <Form.Item
+              label="Açıklama"
+              name="description"
+            >
+              <Input.TextArea 
+                rows={3} 
+                placeholder="Ürün açıklaması girin" 
                 style={{
                   textAlign: "left",
                   verticalAlign: "top",
                   whiteSpace: "pre-wrap",
                   overflowWrap: "break-word",
                 }}
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Fiyat"
+                  name="price"
+                  rules={[{ required: true, message: 'Lütfen fiyat girin!' }]}
+                >
+                  <InputNumber placeholder="Fiyat" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Stok"
+                  name="stock"
+                >
+                  <InputNumber placeholder="Stok miktarı" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              label="Kategori"
+              name="category_id"
+              rules={[{ required: true, message: 'Lütfen kategori seçin!' }]}
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Select
+                  placeholder="Kategori seçin"
+                  style={{ flex: 1 }}
+                >
+                  {categories.map(cat => (
+                    <Select.Option key={cat.category_id} value={cat.category_id}>
+                      {cat.category_name}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Button 
+                  type="primary" 
+                  style={{ marginLeft: 8 }}
+                  onClick={() => setShowCategoryModal(true)}
+                  icon={<FontAwesomeIcon icon={faPlus} />}
                 />
               </div>
-              <div className="mb-3">
-                <label htmlFor="price" className="form-label">Fiyat</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="category" className="form-label">Kategori</label>
-                <div   style={{ display: 'flex', alignItems: 'center' } }>
-                  <select
-                    className="form-control category-selector"
-                    id="category"
-                    value={category_id}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    required
-                    style={{ flex: 1 }}
-                  >
-                    <option value="" >Kategori Seçin</option>
-                  
-                    
-                    {(categories).map(cat => (
-                      <option key={cat.category_id} value={cat.category_id}>
-                        {cat.category_name}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" className='btn btn-outline-primary' onClick={() => setShowCategoryModal(true)}>
-                  <FontAwesomeIcon
-                    icon={faPlus}
-                    className='plus-icon'
-                    style={{ marginLeft: '10px', cursor: 'pointer' }}
-                    
-                  />
-                  </button>
-                  
-                </div>
-                <div className='row mb-3' style={{width: '510px' ,height: '150px' , marginTop: '5px' ,marginLeft: '2px'}}>
-                  <label className='col-sm-3 col-form-label' style={{marginBottom: '0px'}}>Resim</label>
-                  <div className='col-sm-10' style={{display: 'flex', alignItems: 'center' ,marginTop: '-40px' ,border: '2px solid #ccc', padding: '10px', borderRadius: '5px'}}>
-                    <div className="custom-file">
-                      <input
-                        type="file"
-                        className="custom-file-input"
-                        id="resim"
-                        name="resim"
-                        onChange={handleFileChange}
-                        style={{ display: 'none' }} // Dosya yükleme inputunu gizle
-                      />
-                        <label htmlFor="resim" className="btn btn-primary"style={{ marginRight: '50px' }}>
-                          Dosya Seç
-                        </label>
-                        <span className="ml-2">{fileName}</span> {/* Seçilen dosyanın adını göster */}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <div className="modal-footer">
-                <button type="submit" className="btn btn-primary" style={{ width: '70%', marginBottom: '100px'}}>Kaydet</button>
-              </div>
-                  
-            </form>
-          </div>
-        </div>
-      </div>
+            </Form.Item>
+
+            <Form.Item
+              label="Resim"
+              name="resim"
+            >
+              <Upload
+                beforeUpload={() => false}
+                onChange={handleFileChange}
+                showUploadList={false}
+                maxCount={1}
+              >
+                <Button icon={<UploadOutlined />}>Dosya Seç</Button>
+                <span style={{ marginLeft: 8 }}>{fileName}</span>
+              </Upload>
+            </Form.Item>
+          </Form>
+        </TabPane>
+
+        <TabPane tab="Besin Değerleri ve Detaylar" key="2">
+          <Form form={form} layout="vertical">
+            <Divider orientation="left" orientationMargin={0}>Besin Değerleri</Divider>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      Kalori Miktarı
+                      <Tooltip title="Ürünün kalori değeri (kcal)">
+                        <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                      </Tooltip>
+                    </span>
+                  }
+                  name="calorie_count"
+                >
+                  <InputNumber placeholder="Kalori (kcal)" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      Pişirme Süresi
+                      <Tooltip title="Ürünün hazırlanma süresi (dakika)">
+                        <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                      </Tooltip>
+                    </span>
+                  }
+                  name="cooking_time"
+                >
+                  <InputNumber placeholder="Dakika" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Divider orientation="left" orientationMargin={0}>Makro Besinler</Divider>
+            
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="Karbonhidrat (g)"
+                  name="carbs"
+                >
+                  <InputNumber placeholder="Karbonhidrat miktarı" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              
+              <Col span={8}>
+                <Form.Item
+                  label="Protein (g)"
+                  name="protein"
+                >
+                  <InputNumber placeholder="Protein miktarı" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              
+              <Col span={8}>
+                <Form.Item
+                  label="Yağ (g)"
+                  name="fat"
+                >
+                  <InputNumber placeholder="Yağ miktarı" style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Form.Item
+              label={
+                <span>
+                  Alerjenler
+                  <Tooltip title="Ürünün içerdiği alerjenler (gluten, süt, fındık, vb.)">
+                    <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                  </Tooltip>
+                </span>
+              }
+              name="allergens"
+            >
+              <Input.TextArea rows={2} placeholder="Alerjen bilgilerini girin (örn: gluten, süt, fındık)" />
+            </Form.Item>
+          </Form>
+        </TabPane>
+        
+        <TabPane tab="Porsiyonlar" key="3">
+          {/* Porsiyon Yönetimi */}
+          <PortionManager onPortionsChange={handlePortionsChange} />
+        </TabPane>
+      </Tabs>
+
       <CategoryModal
         show={showCategoryModal}
         handleClose={() => setShowCategoryModal(false)}
         handleSave={handleSaveforPlus}
       />
-    </div>
+    </Modal>
   );
 };
 

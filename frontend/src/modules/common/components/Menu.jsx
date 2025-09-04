@@ -269,7 +269,13 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
   };
 
   const handleOpenChange = (keys) => {
-    setOpenKeys(keys);
+    // Accordion tarzında çalışması için sadece son açılan menüyü açık tut
+    const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
+    if (latestOpenKey) {
+      setOpenKeys([latestOpenKey]);
+    } else {
+      setOpenKeys([]);
+    }
   };
 
   // Basit statik menü yapısı
