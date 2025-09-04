@@ -52,6 +52,13 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     fetchAllProducts();
   }, []);
 
+  // Modal açıldığında ilk sekmeye dön
+  useEffect(() => {
+    if (visible) {
+      setActiveTab('1');
+    }
+  }, [visible]);
+
   // Record değiştiğinde form alanlarını doldur
   useEffect(() => {
     if (record) {
@@ -109,6 +116,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     setFile(null);
     setImageRemoved(false);
     setSelectedLabels([]);
+    setActiveTab('1'); // İlk sekmeye dön
     onCancel();
   };
 
@@ -443,7 +451,11 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
         
         <TabPane tab="Yanında İyi Gider" key="4">
           {/* Yanında İyi Gider Ürünleri */}
-          <RecommendedProductManager productId={record?.product_id} onRecommendationsChange={setRecommendedProducts} />
+          <RecommendedProductManager 
+            productId={record?.product_id} 
+            onRecommendationsChange={setRecommendedProducts}
+            visible={visible && activeTab === '4'} 
+          />
         </TabPane>
       </Tabs>
     </Modal>

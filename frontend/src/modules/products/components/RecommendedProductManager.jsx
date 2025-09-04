@@ -6,7 +6,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const API_URL = import.meta.env.VITE_API_URL;
 
-const RecommendedProductManager = ({ productId, onRecommendationsChange }) => {
+const RecommendedProductManager = ({ productId, onRecommendationsChange, visible = true }) => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -44,6 +44,21 @@ const RecommendedProductManager = ({ productId, onRecommendationsChange }) => {
       setCategoryProducts([]);
     }
   }, [selectedCategory]);
+  
+  // productId değiştiğinde veya null olduğunda kategori seçimini sıfırla
+  useEffect(() => {
+    setSelectedCategory(null);
+    setCategoryProducts([]);
+  }, [productId]);
+  
+  // visible değiştiğinde (bileşen gösterildiğinde/gizlendiğinde) kategori seçimini sıfırla
+  useEffect(() => {
+    // Bileşen görünür hale geldiğinde kategori seçimini sıfırla
+    if (visible) {
+      setSelectedCategory(null);
+      setCategoryProducts([]);
+    }
+  }, [visible]);
 
   const fetchRecommendedProducts = async () => {
     if (!productId) return;
