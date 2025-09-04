@@ -5,6 +5,7 @@ import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
 import RecommendedProductManager from './RecommendedProductManager';
+import IngredientManager from './IngredientManager';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -20,11 +21,19 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   const [activeTab, setActiveTab] = useState('1');
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [portions, setPortions] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
 
   // Ürünleri çek
   useEffect(() => {
     fetchProducts();
   }, []);
+  
+  // Modal açıldığında ilk sekmeye dön
+  useEffect(() => {
+    if (visible) {
+      setActiveTab('1'); // İlk sekmeye dön
+    }
+  }, [visible]);
 
   const fetchProducts = async () => {
     try {
@@ -73,6 +82,8 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
     setSelectedLabels([]);
     setSearchValue('');
     setPortions([]);
+    setIngredients([]);
+    setActiveTab('1'); // İlk sekmeye dön
     onCancel();
   };
 
@@ -183,6 +194,7 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       setSearchValue('');
       setRecommendedProducts([]);
       setPortions([]);
+      setIngredients([]);
       onOk();
     } catch (error) {
       console.error('❌ Form hatası:', error);
@@ -212,6 +224,11 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
   // Porsiyonları güncelleme fonksiyonu
   const handlePortionsChange = (newPortions) => {
     setPortions(newPortions);
+  };
+  
+  // Malzemeleri güncelleme fonksiyonu
+  const handleIngredientsChange = (newIngredients) => {
+    setIngredients(newIngredients);
   };
 
   return (
@@ -471,7 +488,17 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
       </TabPane>
       <TabPane tab="Yanında İyi Gider" key="4">
         {/* Yanında İyi Gider Ürünleri */}
-        <RecommendedProductManager onRecommendationsChange={setRecommendedProducts} />
+        <RecommendedProductManager 
+          onRecommendationsChange={setRecommendedProducts}
+          visible={visible && activeTab === '4'}
+        />
+      </TabPane>
+      <TabPane tab="Ekstra & Çıkarılacak Malzemeler" key="5">
+        {/* Ekstra ve Çıkarılacak Malzemeler */}
+        <IngredientManager 
+          onIngredientsChange={handleIngredientsChange}
+          visible={visible} // Sadece modal'ın açık/kapalı durumunu ilet, tab değişimini değil
+        />
       </TabPane>
     </Tabs>
   </Modal>

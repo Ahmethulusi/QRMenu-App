@@ -1,63 +1,4 @@
-/* .ant-table-thead > tr > th {
-  height: 70px !important;
-  padding: 8px !important;
-  white-space: nowrap;
-  text-align: center !important;
-  vertical-align: middle !important;
-}
 
-.ant-table-tbody > tr > td {
-  text-align: center !important;
-  vertical-align: middle !important;
-}
-
-.ant-table-tbody > tr > td:nth-child(2), 
-.ant-table-tbody > tr > td:nth-child(3) { 
-  text-align: left !important;
-  padding-left: 12px !important;
-}
-
-.ant-table-thead > tr > th:nth-child(2), 
-.ant-table-thead > tr > th:nth-child(3) { 
-  text-align: left !important;
-  padding-left: 12px !important;
-}
-
-.ant-table-thead > tr > th,
-.ant-table-tbody > tr > td {
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-.ant-table-body {
-  max-height: 65vh !important;
-  overflow-y: auto;
-}
-
-.action-buttons-container {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 120px;
-}
-
-
-
-.status-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 60px;
-}
-
-.showcase-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 60px;
-}
-
- */
 
 
  .ant-table-thead > tr > th {
@@ -69,5 +10,25 @@
 .ant-table-body {
   max-height: 65vh !important;
   overflow-y: auto;
+}
+
+/* Sabit satır yüksekliği */
+.fixed-height-row td {
+  height: 70px !important; /* Tüm satırlar için sabit yükseklik */
+  padding: 8px !important;
+  white-space: normal !important; /* İçerik çok uzunsa alt satıra geçmesine izin ver */
+  vertical-align: middle !important; /* İçeriği dikey olarak ortala */
+}
+
+/* Kısaltılmış açıklama metni için stil */
+.truncated-description {
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Maksimum 2 satır göster */
+  line-clamp: 2; /* Standart özellik */
+  -webkit-box-orient: vertical;
+  cursor: help; /* Üzerine gelindiğinde yardım imleci göster */
 }
 

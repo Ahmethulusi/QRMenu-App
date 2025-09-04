@@ -19,6 +19,7 @@ const CategoryTranslation = require('./CategoryTranslation');
 const BusinessTranslation = require('./BusinessTranslation');
 const Currency = require('./Currency');
 const Portion = require('./Portion');
+const Ingredient = require('./Ingredient');
 const RecommendedProduct = require('./RecommendedProduct');
 
 // Permission - RolePermission association'ları
@@ -145,6 +146,17 @@ Products.hasMany(Portion, {
   as: 'portions'
 });
 
+// Products - Ingredients One-to-Many association
+Ingredient.belongsTo(Products, {
+  foreignKey: 'product_id',
+  as: 'product'
+});
+
+Products.hasMany(Ingredient, {
+  foreignKey: 'product_id',
+  as: 'ingredients'
+});
+
 // Products - RecommendedProduct associations
 RecommendedProduct.belongsTo(Products, {
   foreignKey: 'product_id',
@@ -268,5 +280,6 @@ module.exports = {
   BusinessTranslation,
   Currency,
   Portion,
-  RecommendedProduct
+  RecommendedProduct,
+  Ingredient
 };

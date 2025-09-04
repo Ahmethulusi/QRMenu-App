@@ -5,6 +5,7 @@ import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
 import RecommendedProductManager from './RecommendedProductManager';
+import IngredientManager from './IngredientManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -19,6 +20,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [activeTab, setActiveTab] = useState('1');
   const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
 
   // Select component için tüm ürünleri çek
@@ -117,6 +119,7 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
     setImageRemoved(false);
     setSelectedLabels([]);
     setActiveTab('1'); // İlk sekmeye dön
+    setIngredients([]); // Malzemeleri sıfırla
     onCancel();
   };
 
@@ -455,6 +458,15 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
             productId={record?.product_id} 
             onRecommendationsChange={setRecommendedProducts}
             visible={visible && activeTab === '4'} 
+          />
+        </TabPane>
+        
+        <TabPane tab="Ekstra & Çıkarılacak Malzemeler" key="5">
+          {/* Ekstra ve Çıkarılacak Malzemeler */}
+          <IngredientManager 
+            productId={record?.product_id}
+            onIngredientsChange={setIngredients}
+            visible={visible} // Sadece modal'ın açık/kapalı durumunu ilet, tab değişimini değil
           />
         </TabPane>
       </Tabs>

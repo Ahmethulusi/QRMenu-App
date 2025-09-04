@@ -301,6 +301,15 @@ const Product_Table = () => {
       key: 'description',
       dataIndex: 'description',
       width: '18%',
+      render: (text) => {
+        if (!text) return '-';
+        // Açıklamayı belirli bir karakter sayısıyla sınırla
+        return (
+          <div className="truncated-description" title={text}>
+            {text.length > 70 ? `${text.substring(0, 70)}...` : text}
+          </div>
+        );
+      }
     },
     {
       title: (
@@ -517,6 +526,7 @@ const Product_Table = () => {
         columns={columns(nameFilters, categoryFilters)}
         dataSource={data}
         loading={loading || refreshing}
+        rowClassName={() => 'fixed-height-row'}
         pagination={{
           pageSizeOptions: ['5', '10', '20', '50'],
           showSizeChanger: true,

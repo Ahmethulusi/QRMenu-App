@@ -35,6 +35,7 @@ const erpRoute = require('./routes/erpRoute');
 const erpTestRoute = require('./routes/erpTestRoute');
 const currencyRoute = require('./routes/currencyRoute');
 const portionRoute = require('./routes/portionRoute');
+const ingredientRoute = require('./routes/ingredientRoute');
 const recommendedProductRoute = require('./routes/recommendedProductRoute');
 
 // Router kullanımı
@@ -52,6 +53,7 @@ app.use('/api/erp', erpRoute);
 app.use('/api/erp-test', erpTestRoute);
 app.use('/api/currencies', currencyRoute);
 app.use('/api/portions', portionRoute);
+app.use('/api/ingredients', ingredientRoute);
 app.use('/api/recommended-products', recommendedProductRoute);
 
 
