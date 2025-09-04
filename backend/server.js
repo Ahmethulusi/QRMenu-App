@@ -35,6 +35,7 @@ const erpRoute = require('./routes/erpRoute');
 const erpTestRoute = require('./routes/erpTestRoute');
 const currencyRoute = require('./routes/currencyRoute');
 const portionRoute = require('./routes/portionRoute');
+const recommendedProductRoute = require('./routes/recommendedProductRoute');
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
@@ -51,7 +52,7 @@ app.use('/api/erp', erpRoute);
 app.use('/api/erp-test', erpTestRoute);
 app.use('/api/currencies', currencyRoute);
 app.use('/api/portions', portionRoute);
-
+app.use('/api/recommended-products', recommendedProductRoute);
 
 
 // Veritabanı bağlantısı ve senkronizasyon

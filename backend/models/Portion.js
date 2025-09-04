@@ -30,7 +30,7 @@ const Portion = sequelize.define('Portion', {
   price: {
     type: DataTypes.DOUBLE,
     allowNull: true,
-    comment: 'Porsiyona özel fiyat (opsiyonel)'
+    comment: 'Ana ürün fiyatına eklenecek ek fiyat (opsiyonel, + veya - değer olabilir)'
   }
 }, {
   tableName: 'portions',

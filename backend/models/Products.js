@@ -85,11 +85,6 @@ const Product = sequelize.define('Product', {
     allowNull: true,
     comment: 'Alerjen bilgileri'
   },
-  recommended_with: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Yanında iyi gidecek ürünlerin ID\'leri (JSON array olarak)'
-  },
   // ERP entegrasyonu için gerekli alanlar
   product_code: {
     type: DataTypes.STRING(50),
@@ -126,6 +121,16 @@ Product.associate = models => {
   Product.hasMany(models.BranchProduct, { 
     foreignKey: 'product_id',
     as: 'BranchProducts' // Alias ekledik
+  });
+  
+  // Yanında iyi gider ürün ilişkileri
+  Product.hasMany(models.RecommendedProduct, {
+    foreignKey: 'product_id',
+    as: 'RecommendedProducts'
+  });
+  Product.hasMany(models.RecommendedProduct, {
+    foreignKey: 'recommended_product_id',
+    as: 'RecommendedForProducts'
   });
 };
 

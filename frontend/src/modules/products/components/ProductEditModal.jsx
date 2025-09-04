@@ -4,6 +4,7 @@ import { PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
+import RecommendedProductManager from './RecommendedProductManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -82,18 +83,8 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
         setSelectedLabels([]);
       }
       
-      // Önerilen ürünleri ayarla
-      if (record.recommended_with) {
-        try {
-          const recommendedIds = JSON.parse(record.recommended_with);
-          setRecommendedProducts(recommendedIds);
-        } catch (e) {
-          console.error('Önerilen ürünler parse hatası:', e);
-          setRecommendedProducts([]);
-        }
-      } else {
-        setRecommendedProducts([]);
-      }
+      // Artık yanında iyi gider ürünleri RecommendedProductManager bileşeni tarafından yönetiliyor
+      // Eski recommended_with alanını kullanmıyoruz
       
       // Eğer resim varsa göster
       if (record.image_url) {
@@ -442,40 +433,17 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
               <Input.TextArea rows={2} placeholder="Alerjen bilgilerini girin (örn: gluten, süt, fındık)" />
             </Form.Item>
             
-            <Form.Item
-              label={
-                <span>
-                  Yanında İyi Gider
-                  <Tooltip title="Bu ürünle birlikte sunulabilecek veya iyi gidecek diğer ürünler">
-                    <InfoCircleOutlined style={{ marginLeft: 8 }} />
-                  </Tooltip>
-                </span>
-              }
-            >
-              <Select
-                mode="multiple"
-                placeholder="Önerilen ürünleri seçin"
-                style={{ width: '100%' }}
-                onChange={handleRecommendedProductsChange}
-                value={recommendedProducts}
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {allProducts.map((product) => (
-                  <Select.Option key={product.product_id} value={product.product_id}>
-                    {product.product_name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
           </Form>
         </TabPane>
         
         <TabPane tab="Porsiyonlar" key="3">
           {/* Porsiyon Yönetimi */}
           <PortionManager productId={record?.product_id} />
+        </TabPane>
+        
+        <TabPane tab="Yanında İyi Gider" key="4">
+          {/* Yanında İyi Gider Ürünleri */}
+          <RecommendedProductManager productId={record?.product_id} onRecommendationsChange={setRecommendedProducts} />
         </TabPane>
       </Tabs>
     </Modal>

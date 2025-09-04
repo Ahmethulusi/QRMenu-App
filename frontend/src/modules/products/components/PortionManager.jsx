@@ -11,6 +11,8 @@ const PortionManager = ({ productId, onPortionsChange }) => {
   const [editingPortion, setEditingPortion] = useState(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [basePrice, setBasePrice] = useState(0);
+  const [currencyCode, setCurrencyCode] = useState('TRY');
 
   // Ürüne ait porsiyonları yükle (eğer productId varsa)
   useEffect(() => {
@@ -45,7 +47,15 @@ const PortionManager = ({ productId, onPortionsChange }) => {
       }
 
       const data = await response.json();
-      setPortions(data);
+      // Backend'den gelen veri yapısı değişti - artık base_price ve portions içeriyor
+      if (data.portions) {
+        setPortions(data.portions);
+        setBasePrice(data.base_price || 0);
+        setCurrencyCode(data.currency_code || 'TRY');
+      } else {
+        // Eski API yanıtı için geriye dönük uyumluluk
+        setPortions(data);
+      }
     } catch (error) {
       console.error('Porsiyon yükleme hatası:', error);
       message.error('Porsiyonlar yüklenemedi');
@@ -184,10 +194,14 @@ const PortionManager = ({ productId, onPortionsChange }) => {
       render: (text) => text || '-'
     },
     {
-      title: 'Fiyat',
+      title: 'Ek Fiyat',
       dataIndex: 'price',
       key: 'price',
-      render: (text) => text ? `${text} ₺` : '-'
+      render: (text) => {
+        if (text === null || text === undefined) return '-';
+        const sign = text >= 0 ? '+' : '';
+        return `${sign}${text} ₺`;
+      }
     },
     {
       title: 'İşlemler',
@@ -215,12 +229,19 @@ const PortionManager = ({ productId, onPortionsChange }) => {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={5} style={{ margin: 0 }}>
-          Porsiyonlar
-          <Tooltip title="Ürün için farklı porsiyon seçenekleri ekleyebilirsiniz (ör: küçük, orta, büyük)">
-            <InfoCircleOutlined style={{ marginLeft: 8 }} />
-          </Tooltip>
-        </Title>
+        <div>
+          <Title level={5} style={{ margin: 0 }}>
+            Porsiyonlar
+            <Tooltip title="Ürün için farklı porsiyon seçenekleri ekleyebilirsiniz (ör: küçük, orta, büyük)">
+              <InfoCircleOutlined style={{ marginLeft: 8 }} />
+            </Tooltip>
+          </Title>
+          {productId && basePrice > 0 && (
+            <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+              Ana ürün fiyatı: {basePrice} {currencyCode}
+            </div>
+          )}
+        </div>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
@@ -266,13 +287,24 @@ const PortionManager = ({ productId, onPortionsChange }) => {
           
           <Form.Item
             name="price"
-            label="Fiyat (Opsiyonel)"
+            label={
+              <span>
+                Ek Fiyat (Opsiyonel)
+                <Tooltip title="Ana ürün fiyatına eklenecek tutar. Pozitif değer (+) ekstra ücret, negatif değer (-) indirim anlamına gelir.">
+                  <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                </Tooltip>
+              </span>
+            }
           >
             <InputNumber 
-              placeholder="Fiyat" 
+              placeholder="Ek fiyat" 
               style={{ width: '100%' }} 
-              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={value => value.replace(/\$\s?|(,*)/g, '')}
+              formatter={value => {
+                if (value === null || value === undefined) return '';
+                const sign = Number(value) >= 0 ? '+' : '';
+                return `${sign}${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+              }}
+              parser={value => value.replace(/\+|\$\s?|(,*)/g, '')}
             />
           </Form.Item>
         </Form>

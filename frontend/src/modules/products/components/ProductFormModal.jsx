@@ -4,6 +4,7 @@ import { PlusOutlined, UploadOutlined, InfoCircleOutlined } from '@ant-design/ic
 import CategorySelector from '../../categories/components/CategorySelector';
 import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
+import RecommendedProductManager from './RecommendedProductManager';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -462,38 +463,15 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
             <Input.TextArea rows={2} placeholder="Alerjen bilgilerini girin (örn: gluten, süt, fındık)" />
           </Form.Item>
           
-          <Form.Item
-            label={
-              <span>
-                Yanında İyi Gider
-                <Tooltip title="Bu ürünle birlikte sunulabilecek veya iyi gidecek diğer ürünler">
-                  <InfoCircleOutlined style={{ marginLeft: 8 }} />
-                </Tooltip>
-              </span>
-            }
-            name="recommended_with"
-          >
-            <Select
-              mode="multiple"
-              placeholder="Önerilen ürünleri seçin"
-              style={{ width: '100%' }}
-              onChange={handleRecommendedProductsChange}
-              value={recommendedProducts}
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {products.map((product, index) => (
-                <Select.Option key={index} value={index}>{product}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
         </Form>
       </TabPane>
       <TabPane tab="Porsiyonlar" key="3">
         {/* Porsiyon Yönetimi */}
         <PortionManager onPortionsChange={handlePortionsChange} />
+      </TabPane>
+      <TabPane tab="Yanında İyi Gider" key="4">
+        {/* Yanında İyi Gider Ürünleri */}
+        <RecommendedProductManager onRecommendationsChange={setRecommendedProducts} />
       </TabPane>
     </Tabs>
   </Modal>

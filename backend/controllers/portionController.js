@@ -15,7 +15,14 @@ exports.getProductPortions = async (req, res) => {
       order: [['portion_id', 'ASC']]
     });
 
-    res.json(portions);
+    // Porsiyon bilgilerini ana ürün fiyatıyla birlikte gönder
+    const result = {
+      base_price: product.price,
+      currency_code: product.currency_code,
+      portions: portions
+    };
+
+    res.json(result);
   } catch (error) {
     console.error('❌ Porsiyonları getirme hatası:', error);
     res.status(500).json({ error: 'Porsiyonlar getirilemedi' });

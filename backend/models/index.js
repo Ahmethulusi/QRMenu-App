@@ -19,6 +19,7 @@ const CategoryTranslation = require('./CategoryTranslation');
 const BusinessTranslation = require('./BusinessTranslation');
 const Currency = require('./Currency');
 const Portion = require('./Portion');
+const RecommendedProduct = require('./RecommendedProduct');
 
 // Permission - RolePermission association'ları
 RolePermission.belongsTo(Permission, {
@@ -144,6 +145,27 @@ Products.hasMany(Portion, {
   as: 'portions'
 });
 
+// Products - RecommendedProduct associations
+RecommendedProduct.belongsTo(Products, {
+  foreignKey: 'product_id',
+  as: 'MainProduct'
+});
+
+RecommendedProduct.belongsTo(Products, {
+  foreignKey: 'recommended_product_id',
+  as: 'RecommendedProduct'
+});
+
+Products.hasMany(RecommendedProduct, {
+  foreignKey: 'product_id',
+  as: 'RecommendedProducts'
+});
+
+Products.hasMany(RecommendedProduct, {
+  foreignKey: 'recommended_product_id',
+  as: 'RecommendedForProducts'
+});
+
 // Translation association'ları
 ProductTranslation.belongsTo(Products, {
   foreignKey: 'product_id',
@@ -244,6 +266,7 @@ module.exports = {
   ProductTranslation,
   CategoryTranslation,
   BusinessTranslation,
-  Currency
-  , Portion
+  Currency,
+  Portion,
+  RecommendedProduct
 };
