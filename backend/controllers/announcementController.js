@@ -5,7 +5,7 @@ const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 // Tüm duyuruları getir
 const getAllAnnouncements = async (req, res) => {
   try {
-    console.log('🔍 Tüm duyurular getiriliyor...');
+    console.log('🔍 Tüm duyurular gesdfriliyor...');
     
     const announcements = await Announcement.findAll({
       order: [['priority', 'DESC'], ['created_at', 'DESC']]

@@ -8,7 +8,6 @@ import { apiGet, apiPut, apiDelete, apiPost } from '../../common/utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useCurrencies } from '../../currencies/hooks/useCurrencies';
 import '../../tables_and_QR/css/tableSizeManager.css';
-
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product_Table = () => {
@@ -280,6 +279,7 @@ const Product_Table = () => {
     setIsEditModalVisible(false);
   };
 
+  // Tablo sütunları
   const columns = (filterNames, categoryFilters) => [
     {
       title: 'Resim',
@@ -489,29 +489,34 @@ const Product_Table = () => {
     },
   ];
 
+  // Hata durumunda gösterilecek mesaj
   if (error) {
     return <div>{error}</div>;
   }
 
+  // Content içeriği
   return (
     <div className='table-content'>
+      {/* Yeni ürün ekleme butonu */}
       {hasPermission('products', 'create') && (
         <Button type="primary" onClick={showCreateModal} style={{ marginBottom: '20px', position: 'relative' }}>
           <PlusOutlined/> Yeni
         </Button>
       )}
 
+      {/* Excel içe aktarma butonu */}
       {hasPermission('system', 'settings') && (
         <ExcelImportButton onSuccess={refreshTable} />
       )}
 
-      {/* ModalForm'u burada kullanıyoruz */}
+      {/* Ürün ekleme modal formu */}
       <CreateFormModal
         visible={isCreateModalVisible}
         onCancel={handleCreateCancel}
         onOk={handleOk}
       />
 
+      {/* Ürün düzenleme modal formu */}
       <EditFormModal
         visible={isEditModalVisible}
         onCancel={handleEditCancel}
@@ -519,6 +524,7 @@ const Product_Table = () => {
         record={recordToEdit}
       />
 
+      {/* Tablo */}
       <Table
         className='ant-table'
         bordered={true}
