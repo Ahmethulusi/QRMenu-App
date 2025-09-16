@@ -8,6 +8,8 @@ import CategorySortTable from '../../categories/components/CategorySort';
 import TablesPage from '../../tables_and_QR/components/TablesPage';
 import NonOrderableQR from '../../tables_and_QR/components/Non_OrderableQR';
 import QRDesignsTable from '../../tables_and_QR/components/QRDesignsTable';
+import SectionManagement from '../../tables_and_QR/components/SectionManagement';
+import TableQRManagement from '../../tables_and_QR/components/TableQRManagement';
 import BranchProductMatrix from '../../branches/components/BranchProductMatrix';
 import UsersTable from '../../users_and_permissions/components/UsersTable';
 import PermissionsTable from '../../users_and_permissions/components/PermissionsTable';
@@ -20,6 +22,7 @@ import ERPTest from '../../ERPTest/ERPTest';
 import ERPIntegration from '../../ERPIntegration/ERPIntegration';
 import ERP from '../../ERP/ERP';
 import Currencies from '../../currencies/components/Currencies';
+import DesignSettings from './DesignSettings';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -237,13 +240,40 @@ function Content({ selectedComponent }) {
       return <UsersTable businessId={1} />;
       
     case 'QRDesigns':
-      if (!checkComponentPermission('qrcodes', 'read')) {
+      if (!checkComponentPermission('qr', 'read')) {
         return <NoPermission 
           title="QR Tasarımları sayfasına erişim yetkiniz yok"
           subTitle="QR tasarımlarını görüntülemek için gerekli yetkilere sahip değilsiniz."
         />;
       }
       return <QRDesignsTable businessId={1} />;
+      
+    case 'TableSections':
+      if (!checkComponentPermission('qr', 'read')) {
+        return <NoPermission 
+          title="Bölümler sayfasına erişim yetkiniz yok"
+          subTitle="Bölümleri görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <SectionManagement />;
+      
+    case 'Tables':
+      if (!checkComponentPermission('qr', 'read')) {
+        return <NoPermission 
+          title="Masalar sayfasına erişim yetkiniz yok"
+          subTitle="Masaları görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <TableQRManagement />;
+      
+    case 'DesignSettings':
+      if (!checkComponentPermission('qr', 'read')) {
+        return <NoPermission 
+          title="QR Tasarım Ayarları sayfasına erişim yetkiniz yok"
+          subTitle="QR tasarım ayarlarını görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <DesignSettings />;
     
     case 'ERP':
       return <ERP />;

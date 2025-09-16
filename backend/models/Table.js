@@ -3,8 +3,8 @@ const sequelize = require('../db');
 const Branch = require('./Branch');
 
 const Table = sequelize.define('Table', {
-  table_name: {
-    type: DataTypes.STRING,
+  table_no: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   branch_id:{

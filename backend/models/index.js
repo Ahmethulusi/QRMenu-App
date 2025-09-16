@@ -55,6 +55,17 @@ Business.hasMany(Branch, {
   as: 'branches'
 });
 
+// Products - Business association'ları
+Products.belongsTo(Business, {
+  foreignKey: 'business_id',
+  as: 'business'
+});
+
+Business.hasMany(Products, {
+  foreignKey: 'business_id',
+  as: 'products'
+});
+
 // Products - Category association'ları
 Products.belongsTo(Category, {
   foreignKey: 'category_id',
@@ -66,21 +77,16 @@ Category.hasMany(Products, {
   as: 'products'
 });
 
-// BranchProduct association'ları
-BranchProduct.belongsTo(Products, {
-  foreignKey: 'product_id',
-  as: 'Product'
-});
-
-Products.hasMany(BranchProduct, {
-  foreignKey: 'product_id',
-  as: 'BranchProducts'
-});
-
+// BranchProduct - Branch association'ları
 BranchProduct.belongsTo(Branch, {
   foreignKey: 'branch_id',
-  targetKey: 'id', // Branch tablosundaki id kolonunu referans al
-  as: 'Branch'
+  targetKey: 'id' // Branch tablosundaki id kolonunu referans al
+});
+
+BranchProduct.belongsTo(Products, {
+  foreignKey: 'product_id',
+  targetKey: 'product_id', // Products tablosundaki product_id kolonunu referans al
+  as: 'Product'
 });
 
 Branch.hasMany(BranchProduct, {
@@ -89,15 +95,46 @@ Branch.hasMany(BranchProduct, {
   as: 'BranchProducts'
 });
 
-// Section - Category association'ları
-Section.belongsTo(Category, {
-  foreignKey: 'category_id',
-  as: 'category'
+// NOT: Section modelinde category_id alanı bulunmuyor, bu ilişki kaldırıldı
+// Section - Category association'ları artık kullanılmıyor
+
+// Branch - Section association'ları
+Section.belongsTo(Branch, {
+  foreignKey: 'branch_id',
+  targetKey: 'id',
+  as: 'Branch'
 });
 
-Category.hasMany(Section, {
-  foreignKey: 'category_id',
+Branch.hasMany(Section, {
+  foreignKey: 'branch_id',
+  sourceKey: 'id',
   as: 'sections'
+});
+
+// Table - Section association'ları
+Table.belongsTo(Section, {
+  foreignKey: 'section_id',
+  targetKey: 'id',
+  as: 'Section'
+});
+
+Section.hasMany(Table, {
+  foreignKey: 'section_id',
+  sourceKey: 'id',
+  as: 'tables'
+});
+
+// Table - Branch association'ları
+Table.belongsTo(Branch, {
+  foreignKey: 'branch_id',
+  targetKey: 'id',
+  as: 'Branch'
+});
+
+Branch.hasMany(Table, {
+  foreignKey: 'branch_id',
+  sourceKey: 'id',
+  as: 'tables'
 });
 
 // QRCode - Branch association'ları
@@ -161,50 +198,23 @@ Products.hasMany(Ingredient, {
   as: 'ingredients'
 });
 
-// Products - RecommendedProduct associations
+// Products - RecommendedProduct Many-to-Many association
 RecommendedProduct.belongsTo(Products, {
-  foreignKey: 'product_id',
-  as: 'MainProduct'
-});
-
-RecommendedProduct.belongsTo(Products, {
-  foreignKey: 'recommended_product_id',
-  as: 'RecommendedProduct'
-});
-
-Products.hasMany(RecommendedProduct, {
-  foreignKey: 'product_id',
-  as: 'RecommendedProducts'
-});
-
-Products.hasMany(RecommendedProduct, {
-  foreignKey: 'recommended_product_id',
-  as: 'RecommendedForProducts'
-});
-
-// Translation association'ları
-ProductTranslation.belongsTo(Products, {
   foreignKey: 'product_id',
   as: 'product'
 });
 
-Products.hasMany(ProductTranslation, {
+RecommendedProduct.belongsTo(Products, {
+  foreignKey: 'recommended_product_id',
+  as: 'recommendedProduct'
+});
+
+Products.hasMany(RecommendedProduct, {
   foreignKey: 'product_id',
-  as: 'translations'
+  as: 'recommendedProducts'
 });
 
-ProductTranslation.belongsTo(Language, {
-  foreignKey: 'language_code',
-  targetKey: 'code',
-  as: 'language'
-});
-
-Language.hasMany(ProductTranslation, {
-  foreignKey: 'language_code',
-  sourceKey: 'code',
-  as: 'productTranslations'
-});
-
+// Category - CategoryTranslation One-to-Many association
 CategoryTranslation.belongsTo(Category, {
   foreignKey: 'category_id',
   as: 'category'
@@ -215,7 +225,42 @@ Category.hasMany(CategoryTranslation, {
   as: 'translations'
 });
 
+// Products - ProductTranslation One-to-Many association
+ProductTranslation.belongsTo(Products, {
+  foreignKey: 'product_id',
+  as: 'product'
+});
+
+Products.hasMany(ProductTranslation, {
+  foreignKey: 'product_id',
+  as: 'translations'
+});
+
+// Business - BusinessTranslation One-to-Many association
+BusinessTranslation.belongsTo(Business, {
+  foreignKey: 'business_id',
+  as: 'business'
+});
+
+Business.hasMany(BusinessTranslation, {
+  foreignKey: 'business_id',
+  as: 'translations'
+});
+
+// Language associations
 CategoryTranslation.belongsTo(Language, {
+  foreignKey: 'language_code',
+  targetKey: 'code',
+  as: 'language'
+});
+
+ProductTranslation.belongsTo(Language, {
+  foreignKey: 'language_code',
+  targetKey: 'code',
+  as: 'language'
+});
+
+BusinessTranslation.belongsTo(Language, {
   foreignKey: 'language_code',
   targetKey: 'code',
   as: 'language'
@@ -227,20 +272,10 @@ Language.hasMany(CategoryTranslation, {
   as: 'categoryTranslations'
 });
 
-BusinessTranslation.belongsTo(Business, {
-  foreignKey: 'business_id',
-  as: 'business'
-});
-
-Business.hasMany(BusinessTranslation, {
-  foreignKey: 'business_id',
-  as: 'translations'
-});
-
-BusinessTranslation.belongsTo(Language, {
+Language.hasMany(ProductTranslation, {
   foreignKey: 'language_code',
-  targetKey: 'code',
-  as: 'language'
+  sourceKey: 'code',
+  as: 'productTranslations'
 });
 
 Language.hasMany(BusinessTranslation, {
@@ -249,19 +284,9 @@ Language.hasMany(BusinessTranslation, {
   as: 'businessTranslations'
 });
 
-// Language - Currency association'ları
-Language.belongsTo(Currency, {
-  foreignKey: 'default_currency_code',
-  targetKey: 'code',
-  as: 'defaultCurrency'
-});
+// NOT: Business - Currency association kaldırıldı çünkü businesses tablosunda currency_code kolonu yok
 
-Currency.hasMany(Language, {
-  foreignKey: 'default_currency_code',
-  sourceKey: 'code',
-  as: 'languages'
-});
-
+// Modelleri dışa aktar
 module.exports = {
   sequelize,
   Permission,
@@ -284,6 +309,6 @@ module.exports = {
   BusinessTranslation,
   Currency,
   Portion,
-  RecommendedProduct,
-  Ingredient
+  Ingredient,
+  RecommendedProduct
 };

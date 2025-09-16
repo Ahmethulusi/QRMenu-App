@@ -386,6 +386,9 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Branches': '/branches',
       'GeneralQR': '/qr/general',
       'QRDesigns': '/qr/designs',
+      'TableSections': '/qr/sections', // Siparişli QR - Bölümler
+      'Tables': '/qr/tables', // Siparişli QR - Masalar ve QR Oluştur
+      'DesignSettings': '/qr/design-settings', // Siparişli QR - QR Tasarım Ayarları
       'Price Changing': '/price-change',
       'Roles': '/users',
       'Auth': '/auth',

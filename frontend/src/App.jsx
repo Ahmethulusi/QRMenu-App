@@ -160,9 +160,24 @@ function AppContent() {
                     <Content selectedComponent={selectedComponent} />
                   </ProtectedRoute>
                 } />
+                <Route path="/qr/sections" element={
+                  <ProtectedRoute requiredResource="qr" requiredAction="read">
+                    <Content selectedComponent="TableSections" />
+                  </ProtectedRoute>
+                } />
+                <Route path="/qr/tables" element={
+                  <ProtectedRoute requiredResource="qr" requiredAction="read">
+                    <Content selectedComponent="Tables" />
+                  </ProtectedRoute>
+                } />
                 <Route path="/qr/designs" element={
                   <ProtectedRoute requiredResource="qr" requiredAction="read">
                     <Content selectedComponent={selectedComponent} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/qr/design-settings" element={
+                  <ProtectedRoute requiredResource="qr" requiredAction="read">
+                    <Content selectedComponent="DesignSettings" />
                   </ProtectedRoute>
                 } />
                 

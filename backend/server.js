@@ -23,6 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Router'lar
 const adminRouter = require('./routes/adminRoute');
 const tableQrMngRouter = require('./routes/table_qr_route');
+const orderableQRRoute = require('./routes/orderableQRRoute');
 const branchRoute = require('./routes/branchRoute');
 const userRoute = require('./routes/userRoute');
 const authRoute = require('./routes/authRoute');
@@ -42,6 +43,7 @@ const recommendedProductRoute = require('./routes/recommendedProductRoute');
 app.use('/api/auth', authRoute);
 app.use('/api/admin', adminRouter);
 app.use('/api/table_qr', tableQrMngRouter);
+app.use('/api/orderable-qr', orderableQRRoute);
 app.use("/api/branches",branchRoute);
 app.use('/api/users', userRoute);
 app.use('/api/permissions', permissionRoute);
