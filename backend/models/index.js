@@ -284,6 +284,19 @@ Language.hasMany(BusinessTranslation, {
   as: 'businessTranslations'
 });
 
+// Language - Currency association
+Language.belongsTo(Currency, {
+  foreignKey: 'default_currency_code',
+  targetKey: 'code',
+  as: 'defaultCurrency'
+});
+
+Currency.hasMany(Language, {
+  foreignKey: 'default_currency_code',
+  sourceKey: 'code',
+  as: 'languages'
+});
+
 // NOT: Business - Currency association kaldırıldı çünkü businesses tablosunda currency_code kolonu yok
 
 // Modelleri dışa aktar
