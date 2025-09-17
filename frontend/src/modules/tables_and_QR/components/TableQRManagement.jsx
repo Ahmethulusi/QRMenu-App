@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message, Card, Row, Col, Divider, Typography, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, QrcodeOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message, Card, Row, Col, Divider, Typography, Spin, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, QrcodeOutlined, DownloadOutlined, LinkOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -19,8 +19,10 @@ const TableQRManagement = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [form] = Form.useForm();
   const [qrForm] = Form.useForm();
+  const [urlForm] = Form.useForm();
   const [generatingQR, setGeneratingQR] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
+  const [urlModalVisible, setUrlModalVisible] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   // Şubeleri getir
@@ -143,6 +145,19 @@ const TableQRManagement = () => {
     }
   };
 
+  // Base URL ayarla
+  const handleSetBaseUrl = async () => {
+    try {
+      const values = await urlForm.validateFields();
+      setBaseUrl(values.base_url);
+      localStorage.setItem('qr_base_url', values.base_url);
+      message.success('QR Base URL başarıyla kaydedildi');
+      setUrlModalVisible(false);
+    } catch (error) {
+      console.error('Base URL kaydedilemedi:', error);
+    }
+  };
+
   // Şube değiştiğinde bölümleri ve masaları yeniden getir
   useEffect(() => {
     fetchBranches();
@@ -151,6 +166,7 @@ const TableQRManagement = () => {
     const savedBaseUrl = localStorage.getItem('qr_base_url');
     if (savedBaseUrl) {
       setBaseUrl(savedBaseUrl);
+      urlForm.setFieldsValue({ base_url: savedBaseUrl });
     }
   }, []);
 
@@ -365,6 +381,11 @@ const TableQRManagement = () => {
       return;
     }
     
+    if (!selectedSectionId) {
+      message.error('Lütfen önce bir bölüm seçin');
+      return;
+    }
+    
     try {
       const response = await fetch(`${apiUrl}/api/orderable-qr/tables`, {
         method: 'POST',
@@ -374,7 +395,7 @@ const TableQRManagement = () => {
         },
         body: JSON.stringify({
           branch_id: selectedBranchId,
-          section_id: selectedSectionId || null
+          section_id: selectedSectionId
           // table_no belirtmiyoruz, backend otomatik atayacak
         })
       });
@@ -613,7 +634,7 @@ const TableQRManagement = () => {
           </Col>
           <Col xs={24} sm={8}>
             <Select
-              placeholder="Bölüm Seçin (Opsiyonel)"
+              placeholder="Bölüm Seçin"
               style={{ width: '100%' }}
               value={selectedSectionId}
               onChange={setSelectedSectionId}
@@ -624,17 +645,33 @@ const TableQRManagement = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleAddTable}
-              disabled={!selectedBranchId}
+              disabled={!selectedBranchId || !selectedSectionId}
             >
               Yeni Masa Ekle
             </Button>
           </Col>
+          <Col xs={24} sm={6}>
+            <Tooltip title="QR kodları için base URL ayarla">
+              <Button
+                type="default"
+                icon={<LinkOutlined />}
+                onClick={() => setUrlModalVisible(true)}
+              >
+                QR Base URL Ayarla
+              </Button>
+            </Tooltip>
+          </Col>
         </Row>
+        {baseUrl && (
+          <div style={{ marginTop: 8, color: '#1890ff' }}>
+            Mevcut Base URL: {baseUrl}
+          </div>
+        )}
       </div>
 
       <Table
@@ -643,6 +680,9 @@ const TableQRManagement = () => {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1000 , y: 400
+          
+        }}
       />
 
       {/* Masa düzenleme modalını kaldırdık, artık inline editing kullanıyoruz */}
@@ -711,6 +751,30 @@ const TableQRManagement = () => {
             initialValue={256}
           >
             <Input type="number" min={128} max={1024} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Base URL Ayarlama Modalı */}
+      <Modal
+        title="QR Base URL Ayarla"
+        open={urlModalVisible}
+        onOk={handleSetBaseUrl}
+        onCancel={() => setUrlModalVisible(false)}
+        okText="Kaydet"
+        cancelText="İptal"
+      >
+        <Form
+          form={urlForm}
+          layout="vertical"
+        >
+          <Form.Item
+            name="base_url"
+            label="QR Kodları için Base URL"
+            rules={[{ required: true, message: 'Lütfen bir URL girin!' }]}
+            help="Tüm QR kodları için kullanılacak temel URL. Masa numarası otomatik olarak sonuna eklenecektir."
+          >
+            <Input placeholder="https://example.com/menu" />
           </Form.Item>
         </Form>
       </Modal>

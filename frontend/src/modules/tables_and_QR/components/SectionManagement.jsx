@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message, Tooltip } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message, Tooltip, InputNumber } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -9,12 +9,9 @@ const SectionManagement = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [urlModalVisible, setUrlModalVisible] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [selectedBranchId, setSelectedBranchId] = useState(null);
-  const [baseUrl, setBaseUrl] = useState('');
   const [form] = Form.useForm();
-  const [urlForm] = Form.useForm();
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   // Şubeleri getir
@@ -185,6 +182,68 @@ const SectionManagement = () => {
     setModalVisible(true);
   };
 
+  // Toplu masa ekleme
+  const [bulkAddModalVisible, setBulkAddModalVisible] = useState(false);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [tableCount, setTableCount] = useState(1);
+  
+  // Toplu masa ekleme modalını aç
+  const handleBulkAddModal = (section) => {
+    setSelectedSection(section);
+    setTableCount(1);
+    setBulkAddModalVisible(true);
+  };
+  
+  // Toplu masa ekleme işlemi
+  const handleBulkAddTables = async () => {
+    if (!selectedSection || tableCount < 1) {
+      message.error('Lütfen geçerli bir masa sayısı girin');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const promises = [];
+      
+      // Belirtilen sayıda masa ekleme isteği oluştur
+      for (let i = 0; i < tableCount; i++) {
+        promises.push(
+          fetch(`${apiUrl}/api/orderable-qr/tables`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              branch_id: selectedSection.branch_id,
+              section_id: selectedSection.id
+            })
+          })
+        );
+      }
+      
+      // Tüm istekleri paralel olarak çalıştır
+      const results = await Promise.allSettled(promises);
+      
+      // Başarılı ve başarısız istekleri say
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected').length;
+      
+      if (successful > 0) {
+        message.success(`${successful} masa başarıyla eklendi`);
+      }
+      
+      if (failed > 0) {
+        message.error(`${failed} masa eklenirken hata oluştu`);
+      }
+      
+      setBulkAddModalVisible(false);
+    } catch (error) {
+      console.error('Toplu masa ekleme hatası:', error);
+      message.error('Toplu masa ekleme işlemi başarısız oldu');
+    }
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -206,7 +265,7 @@ const SectionManagement = () => {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 150,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -215,6 +274,14 @@ const SectionManagement = () => {
             onClick={() => handleEdit(record)}
             size="small"
           />
+          <Button
+            type="default"
+            onClick={() => handleBulkAddModal(record)}
+            size="small"
+            title="Toplu Masa Ekle"
+          >
+            Masa Ekle
+          </Button>
           <Popconfirm
             title="Bu bölümü silmek istediğinize emin misiniz?"
             onConfirm={() => handleDelete(record.id)}
@@ -233,27 +300,6 @@ const SectionManagement = () => {
     },
   ];
 
-  // Base URL ayarla
-  const handleSetBaseUrl = async () => {
-    try {
-      const values = await urlForm.validateFields();
-      setBaseUrl(values.base_url);
-      localStorage.setItem('qr_base_url', values.base_url);
-      message.success('QR Base URL başarıyla kaydedildi');
-      setUrlModalVisible(false);
-    } catch (error) {
-      console.error('Base URL kaydedilemedi:', error);
-    }
-  };
-
-  // Component yüklendiğinde localStorage'dan base URL'i al
-  useEffect(() => {
-    const savedBaseUrl = localStorage.getItem('qr_base_url');
-    if (savedBaseUrl) {
-      setBaseUrl(savedBaseUrl);
-      urlForm.setFieldsValue({ base_url: savedBaseUrl });
-    }
-  }, []);
 
   return (
     <div className="section-management">
@@ -277,21 +323,7 @@ const SectionManagement = () => {
           >
             Yeni Bölüm Ekle
           </Button>
-          <Tooltip title="QR kodları için base URL ayarla">
-            <Button
-              type="default"
-              icon={<LinkOutlined />}
-              onClick={() => setUrlModalVisible(true)}
-            >
-              QR Base URL Ayarla
-            </Button>
-          </Tooltip>
         </Space>
-        {baseUrl && (
-          <div style={{ marginTop: 8, color: '#1890ff' }}>
-            Mevcut Base URL: {baseUrl}
-          </div>
-        )}
       </div>
 
       <Table
@@ -335,26 +367,34 @@ const SectionManagement = () => {
         </Form>
       </Modal>
 
-      {/* Base URL Ayarlama Modalı */}
+      {/* Toplu Masa Ekleme Modalı */}
       <Modal
-        title="QR Base URL Ayarla"
-        open={urlModalVisible}
-        onOk={handleSetBaseUrl}
-        onCancel={() => setUrlModalVisible(false)}
-        okText="Kaydet"
+        title="Toplu Masa Ekle"
+        open={bulkAddModalVisible}
+        onOk={handleBulkAddTables}
+        onCancel={() => setBulkAddModalVisible(false)}
+        okText="Ekle"
         cancelText="İptal"
       >
-        <Form
-          form={urlForm}
-          layout="vertical"
-        >
-          <Form.Item
-            name="base_url"
-            label="QR Kodları için Base URL"
-            rules={[{ required: true, message: 'Lütfen bir URL girin!' }]}
-            help="Tüm QR kodları için kullanılacak temel URL. Masa numarası otomatik olarak sonuna eklenecektir."
+        {selectedSection && (
+          <div style={{ marginBottom: 16 }}>
+            <p><strong>Bölüm:</strong> {selectedSection.section_name}</p>
+            <p><strong>Şube:</strong> {selectedSection.Branch?.name || '-'}</p>
+          </div>
+        )}
+        <Form layout="vertical">
+          <Form.Item 
+            label="Eklenecek Masa Sayısı" 
+            required
+            help="Otomatik olarak sıralı numaralar atanacaktır."
           >
-            <Input placeholder="https://example.com/menu" />
+            <InputNumber 
+              min={1} 
+              max={100}
+              value={tableCount}
+              onChange={setTableCount}
+              style={{ width: '100%' }}
+            />
           </Form.Item>
         </Form>
       </Modal>
