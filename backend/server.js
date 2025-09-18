@@ -38,6 +38,7 @@ const currencyRoute = require('./routes/currencyRoute');
 const portionRoute = require('./routes/portionRoute');
 const ingredientRoute = require('./routes/ingredientRoute');
 const recommendedProductRoute = require('./routes/recommendedProductRoute');
+const businessRoute = require('./routes/businessRoute');
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
@@ -57,6 +58,7 @@ app.use('/api/currencies', currencyRoute);
 app.use('/api/portions', portionRoute);
 app.use('/api/ingredients', ingredientRoute);
 app.use('/api/recommended-products', recommendedProductRoute);
+app.use('/api/business', businessRoute);
 
 
 // Veritabanı bağlantısı ve senkronizasyon

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Tag, Button, message, Popconfirm } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -189,7 +190,7 @@ const QRDesignsTable = ({ businessId }) => {
             okText="Evet"
             cancelText="Hayır"
           >
-            <Button danger>Sil</Button>
+            <Button danger icon={<DeleteOutlined style={{ color: 'white' }} />}>Sil</Button>
           </Popconfirm>
         </>
       ),

@@ -206,6 +206,13 @@ function AppContent() {
                 {/* Genel Ayarlar */}
                 <Route path="/settings" element={<Content selectedComponent={selectedComponent} />} />
                 
+                {/* İşletme Profili */}
+                <Route path="/business-profile" element={
+                  <ProtectedRoute requiredResource="system" requiredAction="settings">
+                    <Content selectedComponent="BusinessProfile" />
+                  </ProtectedRoute>
+                } />
+                
                 {/* Dil Ayarları */}
                 <Route path="/language-settings" element={
                   <ProtectedRoute requiredResource="system" requiredAction="settings">

@@ -382,7 +382,7 @@ const Announcements = () => {
           >
             <Button 
               danger 
-              icon={<DeleteOutlined />} 
+              icon={<DeleteOutlined style={{ color: 'white' }} />} 
               size="small"
             >
               Sil

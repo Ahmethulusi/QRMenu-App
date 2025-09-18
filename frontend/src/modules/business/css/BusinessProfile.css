@@ -1,0 +1,230 @@
+.business-profile-container {
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.business-profile-header {
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.business-profile-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+}
+
+.business-profile-description {
+  color: #8c8c8c;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.profile-form-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  color: #1890ff;
+}
+
+.logo-upload-section {
+  text-align: center;
+  padding: 32px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  transition: border-color 0.3s;
+}
+
+.logo-upload-section:hover {
+  border-color: #1890ff;
+}
+
+.logo-preview {
+  margin-bottom: 16px;
+}
+
+.logo-image {
+  max-width: 200px;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.logo-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.banner-upload-section {
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  padding: 24px;
+  transition: border-color 0.3s;
+}
+
+.banner-upload-section:hover {
+  border-color: #1890ff;
+}
+
+.banner-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.banner-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+}
+
+.banner-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.banner-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.banner-delete-btn {
+  background: rgba(255, 77, 79, 0.9);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.banner-delete-btn:hover {
+  background: #ff4d4f;
+}
+
+.social-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.social-media-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-icon {
+  font-size: 24px;
+  width: 40px;
+  text-align: center;
+}
+
+.instagram-icon {
+  color: #e4405f;
+}
+
+.facebook-icon {
+  color: #1877f2;
+}
+
+.twitter-icon {
+  color: #1da1f2;
+}
+
+.linkedin-icon {
+  color: #0077b5;
+}
+
+.youtube-icon {
+  color: #ff0000;
+}
+
+.website-icon {
+  color: #52c41a;
+}
+
+.contact-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 32px;
+}
+
+.carousel-container {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.carousel-image {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.upload-text {
+  color: #8c8c8c;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.upload-hint {
+  color: #bfbfbf;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .business-profile-container {
+    padding: 16px;
+  }
+  
+  .social-media-grid,
+  .contact-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .banner-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}

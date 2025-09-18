@@ -162,7 +162,7 @@ const UsersTable = ({ businessId }) => {
               cancelText="Hayır"
             >
               <Button 
-                icon={<DeleteOutlined />} 
+                icon={<DeleteOutlined style={{ color: 'white' }} />} 
                 danger 
                 size="small"
               >

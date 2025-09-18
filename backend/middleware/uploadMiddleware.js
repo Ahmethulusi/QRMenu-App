@@ -62,6 +62,24 @@ const uploadConfigs = {
     maxSize: 10 * 1024 * 1024, // 10MB
     filename: (file) => `excel_${Date.now()}_${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`,
     errorMessage: 'Excel dosyası için sadece XLSX, XLS ve CSV dosyaları kabul edilir'
+  },
+
+  // İşletme logo'ları
+  business_logo: {
+    destination: 'public/logos',
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    filename: (file) => `business_logo_${Date.now()}_${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`,
+    errorMessage: 'İşletme logosu için sadece JPEG, JPG, PNG ve WebP dosyaları kabul edilir'
+  },
+
+  // İşletme banner'ları
+  business_banner: {
+    destination: 'public/images/banners',
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    filename: (file) => `business_banner_${Date.now()}_${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`,
+    errorMessage: 'İşletme banneri için sadece JPEG, JPG, PNG ve WebP dosyaları kabul edilir'
   }
 };
 

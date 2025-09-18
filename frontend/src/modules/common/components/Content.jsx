@@ -3,7 +3,7 @@ import Sort2 from '../../products/components/Sort2';
 import Categories from '../../categories/components/Categories';
 import ProductTable from '../../products/components/Product_Table';
 import PriceChangingPage from '../../products/components/PriceChange';
-import ProfileScreen from '../../users_and_permissions/components/ProfileScreen';
+// import ProfileScreen from '../../users_and_permissions/components/ProfileScreen';
 import CategorySortTable from '../../categories/components/CategorySort';
 import TablesPage from '../../tables_and_QR/components/TablesPage';
 import NonOrderableQR from '../../tables_and_QR/components/Non_OrderableQR';
@@ -23,6 +23,7 @@ import ERPIntegration from '../../ERPIntegration/ERPIntegration';
 import ERP from '../../ERP/ERP';
 import Currencies from '../../currencies/components/Currencies';
 import DesignSettings from './DesignSettings';
+import BusinessProfile from '../../business/components/BusinessProfile';
 import { getCurrentUser } from '../utils/permissions';
 
 function Content({ selectedComponent }) {
@@ -161,8 +162,14 @@ function Content({ selectedComponent }) {
       }
       return <Sort2 />;
 
-    case 'Profile':
-      return <ProfileScreen />;
+    case 'BusinessProfile':
+      if (!checkComponentPermission('system', 'settings')) {
+        return <NoPermission 
+          title="İşletme profili sayfasına erişim yetkiniz yok"
+          subTitle="İşletme profilini düzenlemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
+      return <BusinessProfile />;
 
     case 'GeneralSettings':
       return <Settings />;

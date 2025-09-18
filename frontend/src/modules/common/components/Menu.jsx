@@ -141,10 +141,10 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       componentName = 'Roles';
     } else if (path === '/auth') {
       componentName = 'Auth';
-    } else if (path === '/profile') {
-      componentName = 'Profile';
     } else if (path === '/settings') {
       componentName = 'Settings';
+    } else if (path === '/business-profile') {
+      componentName = 'BusinessProfile';
     } else if (path === '/language-settings') {
       componentName = 'LanguageSettings';
     } else if (path === '/currencies') {
@@ -269,6 +269,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       icon: <SettingOutlined />,
       label: 'Genel Ayarlar',
       children: [
+        { key: 'BusinessProfile', label: 'İşletme Profili' },
         { key: 'LanguageSettings', label: 'Dil Ayarları' },
         { key: 'Currencies', label: 'Para Birimleri' }
       ]
@@ -290,7 +291,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
         }
       ]
     },
-    { key: 'Profile', icon: <UserOutlined />, label: 'Profil' },
     { key: 'Logout', icon: <LogoutOutlined />, label: 'Çıkış Yap' }
   ];
 
@@ -392,8 +392,8 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       'Price Changing': '/price-change',
       'Roles': '/users',
       'Auth': '/auth',
-      'Profile': '/profile',
       'Settings': '/settings',
+      'BusinessProfile': '/business-profile',
       'LanguageSettings': '/language-settings',
       'Currencies': '/currencies',
       'ERP': '/erp', // Ana ERP route'u
