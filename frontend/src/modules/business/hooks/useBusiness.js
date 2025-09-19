@@ -230,6 +230,85 @@ export const useBusiness = () => {
     }
   };
 
+  // Upload welcome background
+  const uploadWelcomeBackground = async (file) => {
+    setUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('welcome_background', file);
+
+      const response = await fetch(`${VITE_API_URL}/api/business/upload-welcome-background`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the business profile with new welcome background
+        if (businessProfile) {
+          setBusinessProfile({
+            ...businessProfile,
+            welcome_background: data.data.welcome_background
+          });
+        }
+        message.success(data.message || 'Welcome background başarıyla yüklendi');
+        return true;
+      } else {
+        message.error(data.message || 'Welcome background yüklenirken hata oluştu');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error uploading welcome background:', error);
+      message.error('Welcome background yüklenirken hata oluştu');
+      return false;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Delete welcome background
+  const deleteWelcomeBackground = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${VITE_API_URL}/api/business/welcome-background`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the business profile
+        if (businessProfile) {
+          setBusinessProfile({
+            ...businessProfile,
+            welcome_background: null
+          });
+        }
+        message.success(data.message || 'Welcome background başarıyla silindi');
+        return true;
+      } else {
+        message.error(data.message || 'Welcome background silinirken hata oluştu');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error deleting welcome background:', error);
+      message.error('Welcome background silinirken hata oluştu');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load business profile on mount
   useEffect(() => {
     fetchBusinessProfile();
@@ -244,6 +323,8 @@ export const useBusiness = () => {
     uploadLogo,
     uploadBannerImages,
     deleteLogo,
-    deleteBannerImage
+    deleteBannerImage,
+    uploadWelcomeBackground,
+    deleteWelcomeBackground
   };
 };

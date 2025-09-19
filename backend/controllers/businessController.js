@@ -60,7 +60,10 @@ const updateBusinessProfile = async (req, res) => {
       youtube_url,
       phone,
       email,
-      address
+      address,
+      about_text,
+      slogan,
+      opening_hours
     } = req.body;
 
     // Find business
@@ -88,6 +91,9 @@ const updateBusinessProfile = async (req, res) => {
       phone,
       email,
       address,
+      about_text,
+      slogan,
+      opening_hours,
       updated_at: new Date()
     };
 
@@ -364,11 +370,157 @@ const deleteBannerImage = async (req, res) => {
   }
 };
 
+// Upload welcome background
+const uploadWelcomeBackground = async (req, res) => {
+  try {
+    const { business_id } = req.user;
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Welcome background dosyası gereklidir'
+      });
+    }
+
+    // Find business
+    const business = await Business.findOne({
+      where: { business_id }
+    });
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: 'İşletme bulunamadı'
+      });
+    }
+
+    // Delete old welcome background if exists
+    if (business.welcome_background) {
+      const oldImagePath = path.join(__dirname, '../uploads/welcome_backgrounds/', business.welcome_background);
+      try {
+        await fs.unlink(oldImagePath);
+      } catch (error) {
+        console.log('Old welcome background file not found or already deleted');
+      }
+    }
+
+    // Update business with new welcome background
+    await business.update({
+      welcome_background: req.file.filename,
+      updated_at: new Date()
+    });
+
+    // Get updated business with translations
+    const updatedBusiness = await Business.findOne({
+      where: { business_id },
+      include: [
+        {
+          model: BusinessTranslation,
+          as: 'translations',
+          include: [
+            {
+              model: Language,
+              as: 'language'
+            }
+          ]
+        }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: 'Welcome background başarıyla yüklendi',
+      data: updatedBusiness
+    });
+
+  } catch (error) {
+    console.error('Error uploading welcome background:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Welcome background yüklenirken hata oluştu',
+      error: error.message
+    });
+  }
+};
+
+// Delete welcome background
+const deleteWelcomeBackground = async (req, res) => {
+  try {
+    const { business_id } = req.user;
+
+    // Find business
+    const business = await Business.findOne({
+      where: { business_id }
+    });
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: 'İşletme bulunamadı'
+      });
+    }
+
+    if (!business.welcome_background) {
+      return res.status(400).json({
+        success: false,
+        message: 'Silinecek welcome background bulunamadı'
+      });
+    }
+
+    // Delete image file
+    const imagePath = path.join(__dirname, '../uploads/welcome_backgrounds/', business.welcome_background);
+    try {
+      await fs.unlink(imagePath);
+    } catch (error) {
+      console.log('Welcome background file not found or already deleted');
+    }
+
+    // Update business
+    await business.update({
+      welcome_background: null,
+      updated_at: new Date()
+    });
+
+    // Get updated business with translations
+    const updatedBusiness = await Business.findOne({
+      where: { business_id },
+      include: [
+        {
+          model: BusinessTranslation,
+          as: 'translations',
+          include: [
+            {
+              model: Language,
+              as: 'language'
+            }
+          ]
+        }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: 'Welcome background başarıyla silindi',
+      data: updatedBusiness
+    });
+
+  } catch (error) {
+    console.error('Error deleting welcome background:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Welcome background silinirken hata oluştu',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getBusinessProfile,
   updateBusinessProfile,
   uploadLogo,
   uploadBannerImages,
   deleteLogo,
-  deleteBannerImage
+  deleteBannerImage,
+  uploadWelcomeBackground,
+  deleteWelcomeBackground
 };

@@ -80,6 +80,15 @@ const uploadConfigs = {
     maxSize: 5 * 1024 * 1024, // 5MB
     filename: (file) => `business_banner_${Date.now()}_${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`,
     errorMessage: 'İşletme banneri için sadece JPEG, JPG, PNG ve WebP dosyaları kabul edilir'
+  },
+
+  // Welcome background resimleri
+  welcome_background: {
+    destination: 'public/images/welcome_backgrounds',
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    filename: (file) => `welcome_bg_${Date.now()}_${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`,
+    errorMessage: 'Welcome background için sadece JPEG, JPG, PNG ve WebP dosyaları kabul edilir'
   }
 };
 

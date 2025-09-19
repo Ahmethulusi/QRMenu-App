@@ -9,10 +9,11 @@ import {
   Row,
   Col,
   Card,
-  Carousel,
   message,
   Modal,
-  Spin
+  Spin,
+  TimePicker,
+  Checkbox
 } from 'antd';
 import {
   UploadOutlined,
@@ -30,9 +31,14 @@ import {
   TwitterOutlined,
   LinkedinOutlined,
   YoutubeOutlined,
-  EyeOutlined
+  EyeOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
+  TagOutlined,
+  PictureOutlined
 } from '@ant-design/icons';
 import { useBusiness } from '../hooks/useBusiness';
+import OpeningHours from './OpeningHours';
 import '../css/BusinessProfile.css';
 
 const { TextArea } = Input;
@@ -48,7 +54,9 @@ const BusinessProfile = () => {
     uploadLogo,
     uploadBannerImages,
     deleteLogo,
-    deleteBannerImage
+    deleteBannerImage,
+    uploadWelcomeBackground,
+    deleteWelcomeBackground
   } = useBusiness();
 
   const [logoFileList, setLogoFileList] = useState([]);
@@ -72,7 +80,10 @@ const BusinessProfile = () => {
         youtube_url: businessProfile.youtube_url,
         phone: businessProfile.phone,
         email: businessProfile.email,
-        address: businessProfile.address
+        address: businessProfile.address,
+        about_text: businessProfile.about_text,
+        slogan: businessProfile.slogan,
+        opening_hours: businessProfile.opening_hours
       });
     }
   }, [businessProfile, form]);
@@ -156,9 +167,44 @@ const BusinessProfile = () => {
     });
   };
 
+  // Welcome background upload
+  const handleWelcomeBackgroundUpload = async (file) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('Sadece resim dosyaları yükleyebilirsiniz!');
+      return false;
+    }
+
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Resim boyutu 5MB\'dan küçük olmalıdır!');
+      return false;
+    }
+
+    await uploadWelcomeBackground(file);
+    return false; // Prevent default upload
+  };
+
+  // Delete welcome background
+  const handleDeleteWelcomeBackground = () => {
+    confirm({
+      title: 'Welcome background\'u silmek istediğinizden emin misiniz?',
+      content: 'Bu işlem geri alınamaz.',
+      okText: 'Evet, Sil',
+      cancelText: 'İptal',
+      okType: 'danger',
+      onOk: async () => {
+        await deleteWelcomeBackground();
+      }
+    });
+  };
+
   // Preview image
-  const handlePreview = (imagePath, isLogo = false) => {
-    const basePath = isLogo ? '/logos/' : '/images/banners/';
+  const handlePreview = (imagePath, isLogo = false, isWelcomeBackground = false) => {
+    let basePath = '/images/banners/';
+    if (isLogo) basePath = '/logos/';
+    if (isWelcomeBackground) basePath = '/images/welcome_backgrounds/';
+    
     setPreviewImage(`${VITE_API_URL}${basePath}${imagePath}`);
     setPreviewVisible(true);
   };
@@ -183,6 +229,8 @@ const BusinessProfile = () => {
           İşletmenizin QR menüsünde görünecek bilgilerini buradan düzenleyebilirsiniz.
         </p>
       </div>
+
+      <div className="business-profile-content">
 
       <Form
         form={form}
@@ -280,21 +328,6 @@ const BusinessProfile = () => {
             Banner Görselleri
           </h3>
           
-          {businessProfile?.banner_images && businessProfile.banner_images.length > 0 && (
-            <div className="carousel-container">
-              <Carousel autoplay>
-                {businessProfile.banner_images.map((image, index) => (
-                  <div key={index}>
-                    <img
-                      src={`${VITE_API_URL}/images/banners/${image}`}
-                      alt={`Banner ${index + 1}`}
-                      className="carousel-image"
-                    />
-                  </div>
-                ))}
-              </Carousel>
-            </div>
-          )}
 
           <Card className="banner-upload-section">
             <Upload
@@ -433,6 +466,101 @@ const BusinessProfile = () => {
           </Form.Item>
         </div>
 
+        {/* Hakkımızda ve Slogan */}
+        <div className="profile-form-section">
+          <h3 className="section-title">
+            <FileTextOutlined className="section-icon" />
+            İşletme Bilgileri
+          </h3>
+          
+          <Form.Item
+            label="Slogan"
+            name="slogan"
+          >
+            <Input prefix={<TagOutlined />} placeholder="İşletmenizin sloganı" />
+          </Form.Item>
+          
+          <Form.Item
+            label="Hakkımızda"
+            name="about_text"
+          >
+            <TextArea
+              rows={4}
+              placeholder="İşletmeniz hakkında detaylı bilgi"
+              showCount
+              maxLength={1000}
+            />
+          </Form.Item>
+        </div>
+
+        {/* Açılış Saatleri */}
+        <div className="profile-form-section">
+          <h3 className="section-title">
+            <ClockCircleOutlined className="section-icon" />
+            Açılış Saatleri
+          </h3>
+          
+          <Form.Item name="opening_hours">
+            <OpeningHours />
+          </Form.Item>
+        </div>
+
+        {/* Welcome Background */}
+        <div className="profile-form-section">
+          <h3 className="section-title">
+            <PictureOutlined className="section-icon" />
+            Welcome Screen Arka Plan
+          </h3>
+          <Card className="welcome-background-upload-section">
+            {businessProfile?.welcome_background ? (
+              <div className="welcome-background-preview">
+                <img
+                  src={`${VITE_API_URL}/images/welcome_backgrounds/${businessProfile.welcome_background}`}
+                  alt="Welcome Background"
+                  className="welcome-background-image"
+                />
+                <div className="welcome-background-actions">
+                  <Button
+                    icon={<EyeOutlined />}
+                    onClick={() => handlePreview(businessProfile.welcome_background, false, true)}
+                  >
+                    Önizle
+                  </Button>
+                  <Button
+                    danger
+                    icon={<DeleteOutlined style={{ color: 'white' }} />}
+                    onClick={handleDeleteWelcomeBackground}
+                    loading={loading}
+                  >
+                    Sil
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p><UploadOutlined style={{ fontSize: '48px', color: '#bfbfbf' }} /></p>
+                <p className="upload-text">Welcome screen arka plan görseli yüklemek için tıklayın</p>
+                <p className="upload-hint">Önerilen boyut: 1080x1920px (9:16), Max: 5MB</p>
+              </div>
+            )}
+            
+            <Upload
+              beforeUpload={handleWelcomeBackgroundUpload}
+              showUploadList={false}
+              accept="image/*"
+              disabled={uploading}
+            >
+              <Button 
+                icon={<UploadOutlined />} 
+                loading={uploading}
+                style={{ marginTop: '16px' }}
+              >
+                {businessProfile?.welcome_background ? 'Arka Plan Değiştir' : 'Arka Plan Yükle'}
+              </Button>
+            </Upload>
+          </Card>
+        </div>
+
         {/* Form Actions */}
         <div className="form-actions">
           <Space size="middle">
@@ -466,6 +594,7 @@ const BusinessProfile = () => {
       >
         <img alt="preview" style={{ width: '100%' }} src={previewImage} />
       </Modal>
+      </div>
     </div>
   );
 };

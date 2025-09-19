@@ -3,12 +3,42 @@
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .business-profile-header {
   margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.business-profile-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Custom scrollbar */
+.business-profile-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.business-profile-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.business-profile-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.business-profile-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .business-profile-title {
@@ -210,9 +240,70 @@
   margin-top: 4px;
 }
 
+/* Welcome Background Styles */
+.welcome-background-upload-section {
+  text-align: center;
+  padding: 32px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  transition: border-color 0.3s;
+}
+
+.welcome-background-upload-section:hover {
+  border-color: #1890ff;
+}
+
+.welcome-background-preview {
+  margin-bottom: 16px;
+}
+
+.welcome-background-image {
+  max-width: 200px;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.welcome-background-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Opening Hours Styles */
+.opening-hours-container {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.opening-hours-container .ant-checkbox-wrapper {
+  font-weight: 500;
+  color: #262626;
+}
+
+.opening-hours-container .ant-time-picker {
+  width: 48%;
+}
+
+.opening-hours-container .ant-picker-range {
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .business-profile-container {
     padding: 16px;
+    height: calc(100vh - 64px); /* Header yüksekliğini çıkar */
+  }
+  
+  .business-profile-header {
+    margin-bottom: 16px;
+  }
+  
+  .business-profile-content {
+    padding-right: 4px;
   }
   
   .social-media-grid,
@@ -226,5 +317,9 @@
   
   .form-actions {
     flex-direction: column;
+  }
+  
+  .opening-hours-container .ant-col-6 {
+    margin-bottom: 8px;
   }
 }

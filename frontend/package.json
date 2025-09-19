@@ -23,6 +23,7 @@
     "@mui/material": "^6.0.0",
     "antd": "^5.20.6",
     "bootstrap": "^5.3.3",
+    "dayjs": "^1.11.18",
     "devextreme": "24.1.5",
     "devextreme-react": "24.1.5",
     "express": "^4.19.2",

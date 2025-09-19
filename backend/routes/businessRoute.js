@@ -19,10 +19,16 @@ router.post('/upload-logo', createUploadMiddleware('business_logo').single('logo
 // Upload banner images (multiple files)
 router.post('/upload-banners', createUploadMiddleware('business_banner').array('banners', 5), businessController.uploadBannerImages);
 
+// Upload welcome background (single file)
+router.post('/upload-welcome-background', createUploadMiddleware('welcome_background').single('welcome_background'), businessController.uploadWelcomeBackground);
+
 // Delete logo
 router.delete('/logo', businessController.deleteLogo);
 
 // Delete banner image
 router.delete('/banner-image', businessController.deleteBannerImage);
+
+// Delete welcome background
+router.delete('/welcome-background', businessController.deleteWelcomeBackground);
 
 module.exports = router;

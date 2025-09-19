@@ -71,6 +71,26 @@ const Business = sequelize.define('Business', {
     allowNull: true,
     comment: 'Business address'
   },
+  about_text: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'About us text/description'
+  },
+  slogan: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Business slogan'
+  },
+  opening_hours: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    comment: 'Opening hours for each day of the week'
+  },
+  welcome_background: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Welcome screen background image path'
+  },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
