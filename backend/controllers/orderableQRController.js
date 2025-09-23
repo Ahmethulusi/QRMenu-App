@@ -2,7 +2,14 @@ const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { QRCode: QRCodeModel, Table, Section, Branch, Business } = require('../models');
+
+// QR hash oluşturma fonksiyonu
+function generateQRHash(businessId, branchId, tableId) {
+  const data = `${businessId}_${branchId || 'nobranch'}_${tableId || 'notable'}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return crypto.createHash('md5').update(data).digest('hex').substring(0, 12);
+}
 
 // Siparişli QR kodlarını getir
 exports.getOrderableQRCodes = async (req, res) => {
@@ -79,15 +86,15 @@ exports.createOrderableQRCode = async (req, res) => {
       business_id,
       branch_id,
       table_id,
-      qr_url,
+      base_url, // Değişiklik: qr_url yerine base_url
       color,
       size,
       logo_size_percent
     } = req.body;
     
-    if (!business_id || !branch_id || !table_id || !qr_url) {
+    if (!business_id || !branch_id || !table_id || !base_url) {
       return res.status(400).json({ 
-        error: 'İşletme ID, şube ID, masa ID ve QR URL zorunludur' 
+        error: 'İşletme ID, şube ID, masa ID ve base URL zorunludur' 
       });
     }
     
@@ -129,6 +136,13 @@ exports.createOrderableQRCode = async (req, res) => {
     
     const parsedSize = parseInt(size) || 256;
     const parsedLogoPercent = parseInt(logo_size_percent) || 20;
+    
+    // ✅ Hash oluştur ve QR URL'i yapılandır
+    const qrHash = generateQRHash(business_id, branch_id, table_id);
+    const qr_url = `${base_url.replace(/\/$/, '')}/scan/${qrHash}`;
+    
+    console.log('🟢 Siparişli QR Hash oluşturuldu:', qrHash);
+    console.log('🟢 Siparişli QR URL:', qr_url);
     
     // QR kod dosyasını oluştur
     const fileName = `orderable_${uuidv4()}.png`;
@@ -184,7 +198,7 @@ exports.updateOrderableQRCode = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      qr_url,
+      base_url, // Değişiklik: qr_url yerine base_url
       color,
       size,
       is_active
@@ -204,8 +218,15 @@ exports.updateOrderableQRCode = async (req, res) => {
     // Güncelleme verilerini hazırla
     const updateData = {};
     
-    // QR URL değiştiyse yeni QR kodu oluştur
-    if (qr_url && qr_url !== qrCode.qr_url) {
+    // Base URL değiştiyse yeni QR kodu oluştur
+    if (base_url) {
+      // Yeni hash oluştur
+      const qrHash = generateQRHash(qrCode.business_id, qrCode.branch_id, qrCode.table_id);
+      const qr_url = `${base_url.replace(/\/$/, '')}/scan/${qrHash}`;
+      
+      console.log('🟢 Güncellenmiş QR Hash:', qrHash);
+      console.log('🟢 Güncellenmiş QR URL:', qr_url);
+      
       updateData.qr_url = qr_url;
       
       // Eski dosyayı sil

@@ -203,12 +203,13 @@ const SectionManagement = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const promises = [];
+      let successful = 0;
+      let failed = 0;
       
-      // Belirtilen sayıda masa ekleme isteği oluştur
+      // ✅ DÜZELTME: Sıralı olarak masa ekle (paralel değil)
       for (let i = 0; i < tableCount; i++) {
-        promises.push(
-          fetch(`${apiUrl}/api/orderable-qr/tables`, {
+        try {
+          const response = await fetch(`${apiUrl}/api/orderable-qr/tables`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -218,17 +219,22 @@ const SectionManagement = () => {
               branch_id: selectedSection.branch_id,
               section_id: selectedSection.id
             })
-          })
-        );
+          });
+          
+          if (response.ok) {
+            successful++;
+            console.log(`✅ Masa ${i + 1} başarıyla eklendi`);
+          } else {
+            failed++;
+            console.error(`❌ Masa ${i + 1} eklenemedi:`, response.status);
+          }
+        } catch (error) {
+          failed++;
+          console.error(`❌ Masa ${i + 1} eklenirken hata:`, error);
+        }
       }
       
-      // Tüm istekleri paralel olarak çalıştır
-      const results = await Promise.allSettled(promises);
-      
-      // Başarılı ve başarısız istekleri say
-      const successful = results.filter(result => result.status === 'fulfilled').length;
-      const failed = results.filter(result => result.status === 'rejected').length;
-      
+      // Sonuçları göster
       if (successful > 0) {
         message.success(`${successful} masa başarıyla eklendi`);
       }

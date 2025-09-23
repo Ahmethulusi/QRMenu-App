@@ -67,6 +67,11 @@ exports.getTableById = async (req, res) => {
 
 // Yeni masa oluştur
 exports.createTable = async (req, res) => {
+  const { Table, Branch, Section, sequelize } = require('../models');
+  
+  // ✅ Transaction kullanarak eşzamanlı istekleri güvenli hale getir
+  const transaction = await sequelize.transaction();
+  
   try {
     const { branch_id, section_id, table_no } = req.body;
     
@@ -97,28 +102,46 @@ exports.createTable = async (req, res) => {
     let finalTableNo = table_no;
     
     if (!finalTableNo) {
-      // Seçilen bölüm için en yüksek masa numarasını bul
-      const where = {};
-      if (section_id) {
-        where.section_id = section_id;
-      } else {
-        where.branch_id = branch_id;
-      }
-      
+      // ✅ DÜZELTME: Transaction içinde şube bazında en yüksek masa numarasını bul
       const maxTable = await Table.findOne({
-        where,
-        order: [['table_no', 'DESC']]
+        where: {
+          branch_id: branch_id // Sadece şubeyi kontrol et, bölüm önemsiz
+        },
+        order: [['table_no', 'DESC']],
+        transaction, // Transaction içinde çalıştır
+        lock: transaction.LOCK.UPDATE // Güvenlik için kilit kullan
       });
       
-      // Yeni masa numarası belirle (en yüksek numara + 1 veya 1)
+      // Yeni masa numarası belirle (şube içinde en yüksek numara + 1 veya 1)
       finalTableNo = maxTable ? maxTable.table_no + 1 : 1;
+      
+      console.log(`🟢 Şube ${branch_id} için yeni masa numarası: ${finalTableNo}`);
+    }
+    
+    // ✅ Aynı şubede aynı masa numarası var mı kontrol et (transaction içinde)
+    const existingTable = await Table.findOne({
+      where: {
+        branch_id: branch_id,
+        table_no: finalTableNo
+      },
+      transaction
+    });
+    
+    if (existingTable) {
+      await transaction.rollback();
+      return res.status(400).json({ 
+        error: `Bu şubede ${finalTableNo} numaralı masa zaten mevcut. Lütfen farklı bir numara seçin.` 
+      });
     }
     
     const newTable = await Table.create({
       table_no: finalTableNo,
       branch_id,
       section_id: section_id || null
-    });
+    }, { transaction });
+    
+    // Transaction'ı commit et
+    await transaction.commit();
     
     // Oluşturulan masayı ilişkilerle birlikte getir
     const createdTable = await Table.findByPk(newTable.id, {
@@ -136,6 +159,8 @@ exports.createTable = async (req, res) => {
     
     res.status(201).json(createdTable);
   } catch (error) {
+    // Hata durumunda transaction'ı geri al
+    await transaction.rollback();
     console.error('❌ Masa oluşturma hatası:', error);
     res.status(500).json({ error: 'Masa oluşturulamadı' });
   }
@@ -155,7 +180,24 @@ exports.updateTable = async (req, res) => {
     
     // Güncelleme verilerini hazırla
     const updateData = {};
-    if (table_no) updateData.table_no = table_no;
+    if (table_no) {
+      // ✅ Aynı şubede aynı masa numarası var mı kontrol et (kendisi hariç)
+      const existingTable = await Table.findOne({
+        where: {
+          branch_id: table.branch_id,
+          table_no: table_no,
+          id: { [require('sequelize').Op.ne]: id } // Kendisi hariç
+        }
+      });
+      
+      if (existingTable) {
+        return res.status(400).json({ 
+          error: `Bu şubede ${table_no} numaralı masa zaten mevcut. Lütfen farklı bir numara seçin.` 
+        });
+      }
+      
+      updateData.table_no = table_no;
+    }
     
     if (branch_id) {
       // Şubenin varlığını kontrol et

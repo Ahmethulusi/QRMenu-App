@@ -3,8 +3,15 @@ const Jimp = require('jimp');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const QRCodeModel = require('../models/QRCode');
 const { Business } = require('../models');
+
+// QR hash oluşturma fonksiyonu
+function generateQRHash(businessId, branchId, tableId) {
+  const data = `${businessId}_${branchId || 'nobranch'}_${tableId || 'notable'}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return crypto.createHash('md5').update(data).digest('hex').substring(0, 12);
+}
 
 exports.createQRCode = async (req, res) => {
   try {
@@ -15,15 +22,15 @@ exports.createQRCode = async (req, res) => {
       branch_id,
       table_id,
       type,
-      qr_url,
+      base_url, // Yeni: base URL parametresi
       color,
       size,
       logo_size_percent,
     } = req.body;
 
-    if (!business_id || !qr_url || typeof qr_url !== 'string' || qr_url.trim() === '') {
+    if (!business_id || !base_url || typeof base_url !== 'string' || base_url.trim() === '') {
       console.log('🔴 Gerekli alanlar eksik.');
-      return res.status(400).json({ error: 'Geçerli bir qr_url ve business_id gönderilmelidir.' });
+      return res.status(400).json({ error: 'Geçerli bir base_url ve business_id gönderilmelidir.' });
     }
 
     const parsedBusinessId = parseInt(business_id);
@@ -38,6 +45,13 @@ exports.createQRCode = async (req, res) => {
       console.log(`🔴 İşletme bulunamadı: ID ${parsedBusinessId}`);
       return res.status(400).json({ error: `ID'si ${parsedBusinessId} olan bir işletme bulunamadı.` });
     }
+
+    // ✅ Hash oluştur ve QR URL'i yapılandır
+    const qrHash = generateQRHash(parsedBusinessId, parsedBranchId, parsedTableId);
+    const qr_url = `${base_url.replace(/\/$/, '')}/scan/${qrHash}`;
+    
+    console.log('🟢 QR Hash oluşturuldu:', qrHash);
+    console.log('🟢 QR URL:', qr_url);
 
     const fileName = `${uuidv4()}.png`;
     const outputPath = path.join(__dirname, '..', 'public', 'qrcodes', fileName);

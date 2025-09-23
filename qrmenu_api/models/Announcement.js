@@ -73,7 +73,7 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.STRING(500),
     allowNull: true
   },
-  // Mevcut alanlar
+  // UI alanları
   delay: {
     type: DataTypes.INTEGER, // milliseconds
     allowNull: true
@@ -118,16 +118,6 @@ const Announcement = sequelize.define('Announcement', {
       key: 'business_id'
     },
     comment: 'İşletme ID - hangi işletmeye ait duyuru'
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    allowNull: false
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    allowNull: false
   }
 }, {
   tableName: 'announcements',

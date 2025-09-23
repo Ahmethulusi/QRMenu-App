@@ -127,33 +127,12 @@ const Business = sequelize.define('Business', {
     type: DataTypes.DATE,
     allowNull: true,
     comment: 'Son senkronizasyon tarihi'
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
+  }
 }, {
   tableName: 'businesses',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 });
-
-Business.associate = models => {
-  Business.hasMany(models.User, { foreignKey: 'business_id', sourceKey: 'business_id' });
-  Business.hasMany(models.Branch, { foreignKey: 'business_id', sourceKey: 'business_id' });
-  Business.hasMany(models.Product, { foreignKey: 'business_id', sourceKey: 'business_id' });
-  Business.hasMany(models.BusinessTranslation, { 
-    foreignKey: 'business_id', 
-    sourceKey: 'business_id',
-    as: 'translations'
-  });
-};
 
 module.exports = Business;

@@ -279,10 +279,8 @@ const TableQRManagement = () => {
         return;
       }
       
-      // QR URL'sini oluştur
+      // Base URL'i al (hash backend'de oluşturulacak)
       const baseUrl = values.base_url;
-      const tableNo = selectedTable.table_no;
-      const fullUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}table=${tableNo}`;
       
       // QR kodunu oluştur
       const response = await fetch(`${apiUrl}/api/orderable-qr/qrcodes`, {
@@ -295,8 +293,7 @@ const TableQRManagement = () => {
           business_id: values.business_id,
           branch_id: selectedTable.branch_id,
           table_id: selectedTable.id,
-          type: 'orderable',
-          qr_url: fullUrl,
+          base_url: baseUrl, // Değişiklik: qr_url yerine base_url
           color: values.color || '#000000',
           size: values.size || 256
         })

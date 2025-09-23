@@ -88,7 +88,7 @@ const NonOrderableQR = () => {
       const formData = new FormData();
       formData.append('business_id', 1); // test için
       formData.append('type', 'nonorderable');
-      formData.append('qr_url', qrUrl);
+      formData.append('base_url', qrUrl); // Değişiklik: qr_url yerine base_url
       formData.append('color', color);
       formData.append('size', size);
       formData.append('logo_size_percent', logoSizePercent);
@@ -103,7 +103,7 @@ const NonOrderableQR = () => {
         console.log(pair[0] + ': ' + pair[1]);
       }
       
-      const response = await fetch(`${API_URL}/api/table_qr`, {
+      const response = await fetch(`${API_URL}/api/table_qr/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

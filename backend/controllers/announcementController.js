@@ -5,9 +5,12 @@ const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 // Tüm duyuruları getir
 const getAllAnnouncements = async (req, res) => {
   try {
-    console.log('🔍 Tüm duyurular gesdfriliyor...');
+    console.log('🔍 Tüm duyurular getiriliyor...');
     
     const announcements = await Announcement.findAll({
+      where: {
+        business_id: req.user.business_id
+      },
       order: [['priority', 'DESC'], ['created_at', 'DESC']]
     });
     
@@ -33,6 +36,7 @@ const getActiveAnnouncements = async (req, res) => {
     
     const announcements = await Announcement.findAll({
       where: {
+        business_id: req.user.business_id,
         is_active: true,
         [Op.or]: [
           {
@@ -76,7 +80,12 @@ const getAnnouncementById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const announcement = await Announcement.findByPk(id);
+    const announcement = await Announcement.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      }
+    });
     
     if (!announcement) {
       return res.status(404).json({
@@ -268,6 +277,7 @@ const createAnnouncement = async (req, res) => {
       button_url: button_url || '',
       background_image_url: backgroundImageUrl,
       countdown_date: formattedCountdownDate,
+      business_id: req.user.business_id, // Kullanıcının işletme ID'si
       
       // Yeni alanlar
       discount_type: discountTypeValue,
