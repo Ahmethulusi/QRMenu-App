@@ -79,6 +79,13 @@ class AnnouncementController {
       whereConditions.category = category;
     }
 
+    // Debug: Veritabanındaki duyuruları kontrol et
+    const allAnnouncements = await Announcement.findAll({
+      where: { business_id: parseInt(business_id) },
+      attributes: ['id', 'title', 'type', 'is_active', 'business_id'],
+      limit: 5
+    });
+
     const announcements = await Announcement.findAll({
       where: whereConditions,
       order: [['priority', 'DESC'], ['created_at', 'DESC']],
@@ -102,6 +109,10 @@ class AnnouncementController {
           type: type || 'all',
           category: category || 'all',
           limit: parseInt(limit)
+        },
+        debug: {
+          where_conditions: whereConditions,
+          sample_announcements: allAnnouncements
         }
       },
       timestamp: new Date().toISOString()

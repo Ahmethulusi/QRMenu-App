@@ -19,11 +19,14 @@ class QRController {
     const decodedQrCode = decodeURIComponent(qrCode);
 
     // QR kodunu veritabanında ara (hem orijinal hem de decode edilmiş versiyonu dene)
+    // Ayrıca hash kısmını URL'den çıkarıp arama yap
     const qrData = await QRCode.findOne({
       where: {
         [Op.or]: [
           { qr_url: qrCode },
-          { qr_url: decodedQrCode }
+          { qr_url: decodedQrCode },
+          { qr_url: { [Op.like]: `%${qrCode}` } }, // Hash kısmını içeren URL'leri ara
+          { qr_url: { [Op.like]: `%${decodedQrCode}` } }
         ],
         is_active: true
       },
@@ -43,10 +46,21 @@ class QRController {
     });
 
     if (!qrData) {
+      // Debug: Veritabanındaki QR kodlarını kontrol et
+      const allQRCodes = await QRCode.findAll({
+        attributes: ['id', 'qr_url', 'type', 'is_active'],
+        limit: 5
+      });
+      
       return res.status(404).json({
         success: false,
         message: 'QR kod bulunamadı veya aktif değil',
-        code: 'QR_NOT_FOUND'
+        code: 'QR_NOT_FOUND_DEBUG',
+        debug: {
+          searched_qr: qrCode,
+          searched_decoded: decodedQrCode,
+          sample_qr_codes: allQRCodes
+        }
       });
     }
 

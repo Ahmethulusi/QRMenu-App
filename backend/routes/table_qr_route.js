@@ -14,6 +14,14 @@ router.post('/',
   qrCodeGenerator.createQRCode
 );
 
+// QR kod oluşturma (create endpoint)
+router.post('/create', 
+  authenticateToken, 
+  hasPermission('qrcodes', 'create'), 
+  uploadSingle('logo', 'logo'), 
+  qrCodeGenerator.createQRCode
+);
+
 // QR kod görüntüleme
 router.get('/', 
   authenticateToken, 
