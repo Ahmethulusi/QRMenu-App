@@ -381,9 +381,24 @@ const Announcements = () => {
             cancelText="Hayır"
           >
             <Button 
+              icon={<DeleteOutlined />} 
               danger 
-              icon={<DeleteOutlined style={{ color: 'white' }} />} 
               size="small"
+              style={{
+                backgroundColor: '#ff4d4f',
+                borderColor: '#ff4d4f',
+                color: 'white'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#ff7875';
+                e.target.style.borderColor = '#ff7875';
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#ff4d4f';
+                e.target.style.borderColor = '#ff4d4f';
+                e.target.style.color = 'white';
+              }}
             >
               Sil
             </Button>

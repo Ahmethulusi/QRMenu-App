@@ -20,7 +20,7 @@ const Branch = sequelize.define('Branch', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'business_id',
+      key: 'id',
     },
   },
 }, {
@@ -29,7 +29,7 @@ const Branch = sequelize.define('Branch', {
 });
 
 Branch.associate = models => {
-  Branch.belongsTo(models.Business, { foreignKey: 'business_id', targetKey: 'business_id'});
+  Branch.belongsTo(models.Business, { foreignKey: 'business_id', targetKey: 'id'});
   Branch.hasMany(models.BranchProduct, { 
     foreignKey: 'branch_id',
     sourceKey: 'id', // Branch tablosundaki id kolonunu kullan

@@ -8,7 +8,7 @@ const getBusinessProfile = async (req, res) => {
     const { business_id } = req.user;
 
     const business = await Business.findOne({
-      where: { business_id },
+      where: { id: business_id },
       include: [
         {
           model: BusinessTranslation,
@@ -68,7 +68,7 @@ const updateBusinessProfile = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -108,7 +108,7 @@ const updateBusinessProfile = async (req, res) => {
 
     // Get updated business with translations
     const updatedBusiness = await Business.findOne({
-      where: { business_id },
+      where: { id: business_id },
       include: [
         {
           model: BusinessTranslation,
@@ -153,7 +153,7 @@ const uploadLogo = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -212,7 +212,7 @@ const uploadBannerImages = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -268,7 +268,7 @@ const deleteLogo = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -324,7 +324,7 @@ const deleteBannerImage = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -384,7 +384,7 @@ const uploadWelcomeBackground = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -412,7 +412,7 @@ const uploadWelcomeBackground = async (req, res) => {
 
     // Get updated business with translations
     const updatedBusiness = await Business.findOne({
-      where: { business_id },
+      where: { id: business_id },
       include: [
         {
           model: BusinessTranslation,
@@ -450,7 +450,7 @@ const deleteWelcomeBackground = async (req, res) => {
 
     // Find business
     const business = await Business.findOne({
-      where: { business_id }
+      where: { id: business_id }
     });
 
     if (!business) {
@@ -483,7 +483,7 @@ const deleteWelcomeBackground = async (req, res) => {
 
     // Get updated business with translations
     const updatedBusiness = await Business.findOne({
-      where: { business_id },
+      where: { id: business_id },
       include: [
         {
           model: BusinessTranslation,

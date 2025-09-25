@@ -85,14 +85,8 @@ exports.getBusinessDetailsWithProducts = async (req, res) => {
 
 exports.getAllBranchesByBusinessId = async (req, res) => {
     try {
-      const { businessId } = req.params;
-
-      if (!businessId) {
-        return res.status(400).json({ error: 'business_id parametresi gerekli' });
-      }
-  
       const branches = await Branch.findAll({
-        where: { business_id: businessId },
+        where: { business_id: req.user.business_id },
         order: [['id', 'ASC']],
       });
 
@@ -107,12 +101,12 @@ exports.getAllBranchesByBusinessId = async (req, res) => {
   // POST /branches
 exports.createBranch = async (req, res) => {
   try {
-    const { name, adress, businessId} = req.body;
+    const { name, adress } = req.body;
 
     const newBranch = await Branch.create({
       name,
       adress,
-      business_id:businessId
+      business_id: req.user.business_id
     });
 
     res.status(201).json(newBranch);
@@ -128,7 +122,12 @@ exports.updateBranch = async (req, res) => {
     const { branchId } = req.params;
     const { name, adress } = req.body;
 
-    const branch = await Branch.findByPk(branchId);
+    const branch = await Branch.findOne({
+      where: {
+        id: branchId,
+        business_id: req.user.business_id
+      }
+    });
     if (!branch) {
       return res.status(404).json({ error: 'Şube bulunamadı' });
     }
@@ -149,7 +148,12 @@ exports.deleteBranch = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await Branch.destroy({ where: { id } });
+    const deleted = await Branch.destroy({ 
+      where: { 
+        id,
+        business_id: req.user.business_id
+      } 
+    });
 
     if (!deleted) {
       return res.status(404).json({ error: 'Şube bulunamadı' });
@@ -167,7 +171,12 @@ exports.getBranchById = async (req, res) => {
   try {
     const { branchId } = req.params;
 
-    const branch = await Branch.findByPk(branchId);
+    const branch = await Branch.findOne({
+      where: {
+        id: branchId,
+        business_id: req.user.business_id
+      }
+    });
     if (!branch) {
       return res.status(404).json({ error: 'Şube bulunamadı' });
     }
@@ -400,11 +409,17 @@ exports.getBranchProductMatrix = async (req, res) => {
     
     // Tüm şubeleri getir
     const branches = await Branch.findAll({
+      where: {
+        business_id: req.user.business_id
+      },
       attributes: ['id', 'name', 'business_id']
     });
     
     // Tüm ürünleri kategorileriyle birlikte getir
     const allProducts = await Products.findAll({
+      where: {
+        business_id: req.user.business_id
+      },
       include: [{
         model: Category,
         as: 'category',
@@ -415,8 +430,13 @@ exports.getBranchProductMatrix = async (req, res) => {
     });
     
     // Excluded ürünleri getir (is_available: false olanlar)
+    // Sadece bu işletmenin şubelerindeki ürünleri al
+    const branchIds = branches.map(b => b.id);
     const excludedProducts = await BranchProduct.findAll({
-      where: { is_available: false },
+      where: { 
+        is_available: false,
+        branch_id: branchIds // Sadece bu işletmenin şubeleri
+      },
       attributes: ['branch_id', 'product_id', 'price']
     });
     
@@ -529,6 +549,87 @@ exports.deleteBranchProduct = async (req, res) => {
   } catch (error) {
     console.error('Silme hatası:', error);
     return res.status(500).json({ error: 'Silme işlemi sırasında hata oluştu' });
+  }
+};
+
+// YENİ ENDPOINT: Şube ürün güncelleme (BranchProductMatrix için)
+exports.updateBranchProduct = async (req, res) => {
+  try {
+    const { branch_id, product_id, price, stock } = req.body;
+    
+    console.log('🔄 Şube ürün güncelleniyor:', { branch_id, product_id, price, stock });
+    
+    // Zorunlu alan kontrolü
+    if (!branch_id || !product_id || price === undefined || stock === undefined) {
+      return res.status(400).json({ error: 'branch_id, product_id, price ve stock alanları zorunludur' });
+    }
+    
+    // Şubenin bu işletmeye ait olduğunu kontrol et
+    const branch = await Branch.findOne({
+      where: {
+        id: branch_id,
+        business_id: req.user.business_id
+      }
+    });
+    
+    if (!branch) {
+      return res.status(404).json({ error: 'Şube bulunamadı veya yetkiniz yok' });
+    }
+    
+    // Ürünün bu işletmeye ait olduğunu kontrol et
+    const product = await Products.findOne({
+      where: {
+        product_id: product_id,
+        business_id: req.user.business_id
+      }
+    });
+    
+    if (!product) {
+      return res.status(404).json({ error: 'Ürün bulunamadı veya yetkiniz yok' });
+    }
+    
+    // BranchProduct kaydını bul veya oluştur
+    const [branchProduct, created] = await BranchProduct.findOrCreate({
+      where: {
+        branch_id: branch_id,
+        product_id: product_id
+      },
+      defaults: {
+        branch_id: branch_id,
+        product_id: product_id,
+        price: price,
+        is_available: stock > 0
+      }
+    });
+    
+    if (!created) {
+      // Mevcut kaydı güncelle
+      await branchProduct.update({
+        price: price,
+        is_available: stock > 0
+      });
+    }
+    
+    console.log('✅ Şube ürün güncellendi:', {
+      branch_id,
+      product_id,
+      price,
+      is_available: stock > 0,
+      created
+    });
+    
+    res.json({
+      success: true,
+      branch_id,
+      product_id,
+      price,
+      is_available: stock > 0,
+      created
+    });
+    
+  } catch (error) {
+    console.error('❌ Şube ürün güncelleme hatası:', error);
+    res.status(500).json({ error: 'Şube ürün güncellenemedi' });
   }
 };
 

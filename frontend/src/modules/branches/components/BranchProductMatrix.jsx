@@ -8,7 +8,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const API_URL = import.meta.env.VITE_API_URL;
 
-const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
+const BranchProductMatrix = ({ businessId }) => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -141,16 +141,10 @@ const BranchProductMatrix = ({ businessId = 1 }) => { // Default değer ekledik
       
       if (editingBranch) {
         // Şube güncelleme
-        await apiPut(`/api/branches/${branchId}`, { 
-          ...values, 
-          businessId: businessId 
-        });
+        await apiPut(`/api/branches/${branchId}`, values);
       } else {
         // Yeni şube oluşturma
-        await apiPost('/api/branches', { 
-          ...values, 
-          businessId: businessId 
-        });
+        await apiPost('/api/branches', values);
       }
 
       message.success(editingBranch ? 'Şube güncellendi' : 'Şube eklendi');

@@ -30,7 +30,7 @@ const User = sequelize.define('User', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'business_id',
+      key: 'id',
     },
   }
 }, {
@@ -41,7 +41,7 @@ const User = sequelize.define('User', {
 User.associate = models => {
   User.belongsTo(models.Business, { 
     foreignKey: 'business_id', 
-    targetKey: 'business_id',
+    targetKey: 'id',
     as: 'business'
   });
 };

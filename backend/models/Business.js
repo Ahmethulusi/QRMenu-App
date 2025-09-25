@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const Business = sequelize.define('Business', {
-  business_id: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -146,12 +146,13 @@ const Business = sequelize.define('Business', {
 });
 
 Business.associate = models => {
-  Business.hasMany(models.User, { foreignKey: 'business_id', sourceKey: 'business_id' });
-  Business.hasMany(models.Branch, { foreignKey: 'business_id', sourceKey: 'business_id' });
-  Business.hasMany(models.Product, { foreignKey: 'business_id', sourceKey: 'business_id' });
+  Business.hasMany(models.User, { foreignKey: 'business_id', sourceKey: 'id' });
+  Business.hasMany(models.Branch, { foreignKey: 'business_id', sourceKey: 'id' });
+  Business.hasMany(models.Product, { foreignKey: 'business_id', sourceKey: 'id' });
+  Business.hasMany(models.Table, { foreignKey: 'business_id', sourceKey: 'id' });
   Business.hasMany(models.BusinessTranslation, { 
     foreignKey: 'business_id', 
-    sourceKey: 'business_id',
+    sourceKey: 'id',
     as: 'translations'
   });
 };

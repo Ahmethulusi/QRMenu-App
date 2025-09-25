@@ -163,7 +163,7 @@ function Content({ selectedComponent }) {
       return <Sort2 />;
 
     case 'BusinessProfile':
-      if (!checkComponentPermission('system', 'settings')) {
+      if (!checkComponentPermission('business_profile', 'read')) {
         return <NoPermission 
           title="İşletme profili sayfasına erişim yetkiniz yok"
           subTitle="İşletme profilini düzenlemek için gerekli yetkilere sahip değilsiniz."
@@ -175,7 +175,7 @@ function Content({ selectedComponent }) {
       return <Settings />;
 
     case 'LanguageSettings':
-      if (!checkComponentPermission('system', 'settings')) {
+      if (!checkComponentPermission('languages', 'read')) {
         return <NoPermission 
           title="Dil ayarları sayfasına erişim yetkiniz yok"
           subTitle="Dil ayarlarını yönetmek için gerekli yetkilere sahip değilsiniz."
@@ -184,7 +184,7 @@ function Content({ selectedComponent }) {
       return <LanguageSettings />;
 
     case 'Currencies':
-      if (!checkComponentPermission('system', 'settings')) {
+      if (!checkComponentPermission('currencies', 'read')) {
         return <NoPermission 
           title="Para birimleri sayfasına erişim yetkiniz yok"
           subTitle="Para birimlerini yönetmek için gerekli yetkilere sahip değilsiniz."
@@ -226,7 +226,7 @@ function Content({ selectedComponent }) {
           subTitle="Şubeleri yönetmek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <BranchProductMatrix businessId={1} />;
+      return <BranchProductMatrix businessId={user?.business_id} />;
     
     case 'Users':
       if (!checkComponentPermission('users', 'read')) {
@@ -235,7 +235,7 @@ function Content({ selectedComponent }) {
           subTitle="Kullanıcıları yönetmek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <UsersTable businessId={1} />;
+      return <UsersTable businessId={user?.business_id} />;
       
     case 'Roles':
       if (!checkComponentPermission('users', 'read')) {
@@ -244,19 +244,19 @@ function Content({ selectedComponent }) {
           subTitle="Kullanıcı rollerini yönetmek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <UsersTable businessId={1} />;
+      return <UsersTable businessId={user?.business_id} />;
       
     case 'QRDesigns':
-      if (!checkComponentPermission('qr', 'read')) {
+      if (!checkComponentPermission('qrcodes', 'read')) {
         return <NoPermission 
           title="QR Tasarımları sayfasına erişim yetkiniz yok"
           subTitle="QR tasarımlarını görüntülemek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <QRDesignsTable businessId={1} />;
+      return <QRDesignsTable businessId={user?.business_id} />;
       
     case 'TableSections':
-      if (!checkComponentPermission('qr', 'read')) {
+      if (!checkComponentPermission('tables', 'read')) {
         return <NoPermission 
           title="Bölümler sayfasına erişim yetkiniz yok"
           subTitle="Bölümleri görüntülemek için gerekli yetkilere sahip değilsiniz."
@@ -265,7 +265,7 @@ function Content({ selectedComponent }) {
       return <SectionManagement />;
       
     case 'Tables':
-      if (!checkComponentPermission('qr', 'read')) {
+      if (!checkComponentPermission('tables', 'read')) {
         return <NoPermission 
           title="Masalar sayfasına erişim yetkiniz yok"
           subTitle="Masaları görüntülemek için gerekli yetkilere sahip değilsiniz."
@@ -274,7 +274,7 @@ function Content({ selectedComponent }) {
       return <TableQRManagement />;
       
     case 'DesignSettings':
-      if (!checkComponentPermission('qr', 'read')) {
+      if (!checkComponentPermission('qrcodes', 'read')) {
         return <NoPermission 
           title="QR Tasarım Ayarları sayfasına erişim yetkiniz yok"
           subTitle="QR tasarım ayarlarını görüntülemek için gerekli yetkilere sahip değilsiniz."
@@ -283,10 +283,28 @@ function Content({ selectedComponent }) {
       return <DesignSettings />;
     
     case 'ERP':
+      if (!checkComponentPermission('erp', 'read')) {
+        return <NoPermission 
+          title="ERP sayfasına erişim yetkiniz yok"
+          subTitle="ERP entegrasyonunu görüntülemek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
       return <ERP />;
     case 'ERPTest':
+      if (!checkComponentPermission('erp', 'read')) {
+        return <NoPermission 
+          title="ERP Test sayfasına erişim yetkiniz yok"
+          subTitle="ERP test işlemlerini yapmak için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
       return <ERPTest />;
     case 'ERPIntegration':
+      if (!checkComponentPermission('erp', 'read')) {
+        return <NoPermission 
+          title="ERP Entegrasyon sayfasına erişim yetkiniz yok"
+          subTitle="ERP entegrasyonunu yönetmek için gerekli yetkilere sahip değilsiniz."
+        />;
+      }
       return <ERPIntegration />;
     
     case 'Auth':
@@ -296,7 +314,7 @@ function Content({ selectedComponent }) {
           subTitle="Kullanıcı yetkilerini yönetmek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <PermissionsTable businessId={1} />;
+      return <PermissionsTable businessId={user?.business_id} />;
     
     case 'Logout':
       // Çıkış işlemi Menu.jsx'te handleClick'te yapılıyor

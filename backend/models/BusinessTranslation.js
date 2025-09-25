@@ -12,7 +12,7 @@ const BusinessTranslation = sequelize.define('BusinessTranslation', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'business_id',
+      key: 'id',
     },
   },
   language_code: {

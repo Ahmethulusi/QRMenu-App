@@ -24,7 +24,7 @@ const RolePermission = sequelize.define('RolePermission', {
     allowNull: true,
     references: {
       model: 'businesses',
-      key: 'business_id',
+      key: 'id',
     },
   },
   branch_id: {

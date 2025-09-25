@@ -6,6 +6,9 @@ exports.getAllLabels = async (req, res) => {
     console.log('🔄 Tüm etiketler getiriliyor...');
     
     const labels = await Label.findAll({
+      where: {
+        business_id: req.user.business_id
+      },
       order: [['name', 'ASC']]
     });
     
@@ -25,7 +28,10 @@ exports.createLabel = async (req, res) => {
     
     // Aynı isimde etiket var mı kontrol et
     const existingLabel = await Label.findOne({
-      where: { name: name.trim() }
+      where: { 
+        name: name.trim(),
+        business_id: req.user.business_id
+      }
     });
     
     if (existingLabel) {
@@ -36,7 +42,8 @@ exports.createLabel = async (req, res) => {
       name: name.trim(),
       description: description?.trim(),
       color: color || '#007bff',
-      is_active: is_active !== undefined ? is_active : true
+      is_active: is_active !== undefined ? is_active : true,
+      business_id: req.user.business_id
     });
     
     console.log('✅ Etiket başarıyla oluşturuldu:', label.name);
@@ -54,7 +61,12 @@ exports.updateLabel = async (req, res) => {
     const { id } = req.params;
     const { name, description, color, is_active } = req.body;
     
-    const label = await Label.findByPk(id);
+    const label = await Label.findOne({
+      where: {
+        label_id: id,
+        business_id: req.user.business_id
+      }
+    });
     if (!label) {
       return res.status(404).json({ error: 'Etiket bulunamadı' });
     }
@@ -64,7 +76,8 @@ exports.updateLabel = async (req, res) => {
       const existingLabel = await Label.findOne({
         where: { 
           name: name.trim(),
-          label_id: { [require('sequelize').Op.ne]: id }
+          label_id: { [require('sequelize').Op.ne]: id },
+          business_id: req.user.business_id
         }
       });
       
@@ -94,7 +107,12 @@ exports.deleteLabel = async (req, res) => {
     console.log('🔄 Etiket siliniyor...');
     const { id } = req.params;
     
-    const label = await Label.findByPk(id);
+    const label = await Label.findOne({
+      where: {
+        label_id: id,
+        business_id: req.user.business_id
+      }
+    });
     if (!label) {
       return res.status(404).json({ error: 'Etiket bulunamadı' });
     }

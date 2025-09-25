@@ -115,7 +115,7 @@ const Announcement = sequelize.define('Announcement', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'business_id'
+      key: 'id'
     },
     comment: 'İşletme ID - hangi işletmeye ait duyuru'
   },

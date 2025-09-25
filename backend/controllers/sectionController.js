@@ -4,7 +4,9 @@ const { Section, Branch } = require('../models');
 exports.getSections = async (req, res) => {
   try {
     const { branch_id } = req.query;
-    const where = {};
+    const where = {
+      business_id: req.user.business_id
+    };
     
     if (branch_id) {
       where.branch_id = branch_id;
@@ -15,7 +17,10 @@ exports.getSections = async (req, res) => {
       include: [
         {
           model: Branch,
-          as: 'Branch'
+          as: 'Branch',
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ],
       order: [['id', 'ASC']]
@@ -33,11 +38,18 @@ exports.getSectionById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const section = await Section.findByPk(id, {
+    const section = await Section.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      },
       include: [
         {
           model: Branch,
-          as: 'Branch'
+          as: 'Branch',
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ]
     });
@@ -63,14 +75,20 @@ exports.createSection = async (req, res) => {
     }
     
     // Şubenin varlığını kontrol et
-    const branch = await Branch.findByPk(branch_id);
+    const branch = await Branch.findOne({
+      where: {
+        id: branch_id,
+        business_id: req.user.business_id
+      }
+    });
     if (!branch) {
       return res.status(404).json({ error: 'Belirtilen şube bulunamadı' });
     }
     
     const newSection = await Section.create({
       section_name,
-      branch_id
+      branch_id,
+      business_id: req.user.business_id
     });
     
     res.status(201).json(newSection);
@@ -86,7 +104,12 @@ exports.updateSection = async (req, res) => {
     const { id } = req.params;
     const { section_name, branch_id } = req.body;
     
-    const section = await Section.findByPk(id);
+    const section = await Section.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      }
+    });
     
     if (!section) {
       return res.status(404).json({ error: 'Bölüm bulunamadı' });
@@ -97,7 +120,12 @@ exports.updateSection = async (req, res) => {
     if (section_name) updateData.section_name = section_name;
     if (branch_id) {
       // Şubenin varlığını kontrol et
-      const branch = await Branch.findByPk(branch_id);
+      const branch = await Branch.findOne({
+        where: {
+          id: branch_id,
+          business_id: req.user.business_id
+        }
+      });
       if (!branch) {
         return res.status(404).json({ error: 'Belirtilen şube bulunamadı' });
       }
@@ -107,11 +135,18 @@ exports.updateSection = async (req, res) => {
     await section.update(updateData);
     
     // Güncellenmiş bölümü getir
-    const updatedSection = await Section.findByPk(id, {
+    const updatedSection = await Section.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      },
       include: [
         {
           model: Branch,
-          as: 'Branch'
+          as: 'Branch',
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ]
     });
@@ -128,7 +163,12 @@ exports.deleteSection = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const section = await Section.findByPk(id);
+    const section = await Section.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      }
+    });
     
     if (!section) {
       return res.status(404).json({ error: 'Bölüm bulunamadı' });

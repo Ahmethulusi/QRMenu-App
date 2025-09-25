@@ -4,7 +4,9 @@ const { Table, Section, Branch } = require('../models');
 exports.getTables = async (req, res) => {
   try {
     const { branch_id, section_id } = req.query;
-    const where = {};
+    const where = {
+      business_id: req.user.business_id
+    };
     
     if (branch_id) {
       where.branch_id = branch_id;
@@ -19,11 +21,17 @@ exports.getTables = async (req, res) => {
       include: [
         {
           model: Branch,
-          as: 'Branch'
+          as: 'Branch',
+          where: {
+            business_id: req.user.business_id
+          }
         },
         {
           model: Section,
-          as: 'Section'
+          as: 'Section',
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ],
       order: [['id', 'ASC']]
@@ -41,15 +49,25 @@ exports.getTableById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const table = await Table.findByPk(id, {
+    const table = await Table.findOne({
+      where: {
+        id: id,
+        business_id: req.user.business_id
+      },
       include: [
         {
           model: Branch,
-          as: 'Branch'
+          as: 'Branch',
+          where: {
+            business_id: req.user.business_id
+          }
         },
         {
           model: Section,
-          as: 'Section'
+          as: 'Section',
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ]
     });
@@ -80,14 +98,24 @@ exports.createTable = async (req, res) => {
     }
     
     // Şubenin varlığını kontrol et
-    const branch = await Branch.findByPk(branch_id);
+    const branch = await Branch.findOne({
+      where: {
+        id: branch_id,
+        business_id: req.user.business_id
+      }
+    });
     if (!branch) {
       return res.status(404).json({ error: 'Belirtilen şube bulunamadı' });
     }
     
     // Eğer section_id belirtilmişse, bölümün varlığını kontrol et
     if (section_id) {
-      const section = await Section.findByPk(section_id);
+      const section = await Section.findOne({
+        where: {
+          id: section_id,
+          business_id: req.user.business_id
+        }
+      });
       if (!section) {
         return res.status(404).json({ error: 'Belirtilen bölüm bulunamadı' });
       }
@@ -105,7 +133,8 @@ exports.createTable = async (req, res) => {
       // ✅ DÜZELTME: Transaction içinde şube bazında en yüksek masa numarasını bul
       const maxTable = await Table.findOne({
         where: {
-          branch_id: branch_id // Sadece şubeyi kontrol et, bölüm önemsiz
+          branch_id: branch_id, // Sadece şubeyi kontrol et, bölüm önemsiz
+          business_id: req.user.business_id
         },
         order: [['table_no', 'DESC']],
         transaction, // Transaction içinde çalıştır
@@ -122,7 +151,8 @@ exports.createTable = async (req, res) => {
     const existingTable = await Table.findOne({
       where: {
         branch_id: branch_id,
-        table_no: finalTableNo
+        table_no: finalTableNo,
+        business_id: req.user.business_id
       },
       transaction
     });
@@ -137,7 +167,8 @@ exports.createTable = async (req, res) => {
     const newTable = await Table.create({
       table_no: finalTableNo,
       branch_id,
-      section_id: section_id || null
+      section_id: section_id || null,
+      business_id: req.user.business_id
     }, { transaction });
     
     // Transaction'ı commit et

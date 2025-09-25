@@ -27,18 +27,27 @@ exports.updateImageUrl = async (req, res) => {
 exports.getAllProuducts = async (req, res) => {
   try {
     const products = await Products.findAll({
+      where: {
+        business_id: req.user.business_id
+      },
       include: [
         {
           model: Category,
           as: 'category',
-          attributes: ['category_id', 'category_name']
+          attributes: ['category_id', 'category_name'],
+          where: {
+            business_id: req.user.business_id
+          }
         },
         {
           model: Label,
           as: 'labels',
           attributes: ['label_id', 'name', 'color'],
           through: { attributes: [] }, // ProductLabel junction tablosundan hiçbir alan almayız
-          required: false
+          required: false,
+          where: {
+            business_id: req.user.business_id
+          }
         }
       ]
     });
@@ -57,7 +66,10 @@ exports.getAllProductsOrderBySiraId = async (req,res) => {
             {
                 model: Category,
                 as: 'category',
-                attributes: ['category_id', 'category_name']
+                attributes: ['category_id', 'category_name'],
+                where: {
+                    business_id: req.user.business_id
+                }
             }
         ];
         
@@ -66,7 +78,10 @@ exports.getAllProductsOrderBySiraId = async (req,res) => {
             includeOptions.push({
                 model: ProductTranslation,
                 as: 'translations',
-                where: { language_code },
+                where: { 
+                    language_code,
+                    business_id: req.user.business_id
+                },
                 required: false,
                 attributes: ['product_name', 'description', 'allergens', 'recommended_with']
             });
@@ -74,13 +89,19 @@ exports.getAllProductsOrderBySiraId = async (req,res) => {
             includeOptions.push({
                 model: CategoryTranslation,
                 as: 'translations',
-                where: { language_code },
+                where: { 
+                    language_code,
+                    business_id: req.user.business_id
+                },
                 required: false,
                 attributes: ['category_name']
             });
         }
         
         const products = await Products.findAll({
+            where: {
+                business_id: req.user.business_id
+            },
             include: includeOptions,
             order:[['sira_id','ASC']]
         });
@@ -206,13 +227,17 @@ exports.createProduct = async (req, res) => {
         }
 
         const existingProduct = await Products.findOne({ 
-            where: { product_name: name, business_id: 8 } 
+            where: { product_name: name, business_id: req.user.business_id } 
         });
         if (existingProduct) {
             return res.status(400).json({ error: "Bu ürün zaten mevcut" }); 
         }
 
-        const count = await Products.count();
+        const count = await Products.count({
+            where: {
+                business_id: req.user.business_id
+            }
+        });
         
         const { stock, calorie_count, cooking_time, carbs, protein, fat, allergens, recommended_with } = req.body;
         
@@ -226,7 +251,7 @@ exports.createProduct = async (req, res) => {
             is_selected: showcase === 'true' || showcase === true,
             sira_id: count + 1,
             image_url: imageUrl,
-            business_id: 1,
+            business_id: req.user.business_id,
             stock: stock ? parseInt(stock) : null,
             calorie_count: calorie_count ? parseInt(calorie_count) : null,
             cooking_time: cooking_time ? parseInt(cooking_time) : null,
@@ -259,7 +284,8 @@ exports.createProduct = async (req, res) => {
                 // Etiketlerin geçerli olduğunu kontrol et
                 const validLabels = await Label.findAll({
                     where: { 
-                        label_id: labelIds
+                        label_id: labelIds,
+                        business_id: req.user.business_id
                     },
                     transaction
                 });
@@ -308,7 +334,12 @@ exports.deleteProduct = async (req, res) => {
     const { id } = req.params;
 
     // Önce ürünü bul ve resim bilgisini al
-    const product = await Products.findByPk(id);
+    const product = await Products.findOne({
+      where: {
+        product_id: id,
+        business_id: req.user.business_id
+      }
+    });
     if (!product) {
       return res.status(404).json({ error: 'Ürün bulunamadı' });
     }
@@ -327,7 +358,10 @@ exports.deleteProduct = async (req, res) => {
 
     // Sonra ürünü sil
     const deleted = await Products.destroy({
-      where: { product_id: id }
+      where: { 
+        product_id: id,
+        business_id: req.user.business_id
+      }
     });
 
     res.status(200).json({ success: true });
@@ -396,7 +430,10 @@ exports.updateProduct = async (req, res) => {
         }
 
         await Products.update(updateData, {
-            where: { product_id: id }
+            where: { 
+                product_id: id,
+                business_id: req.user.business_id
+            }
         });
 
         // Etiketleri güncelle
@@ -409,7 +446,8 @@ exports.updateProduct = async (req, res) => {
                 // Geçerli etiketleri kontrol et
                 const validLabels = await Label.findAll({
                     where: {
-                        label_id: labels
+                        label_id: labels,
+                        business_id: req.user.business_id
                     }
                 });
                 
@@ -438,19 +476,29 @@ exports.updateProduct = async (req, res) => {
         }
         
         // Güncellenmiş ürünü ilişkileriyle birlikte döndür
-        const updatedProduct = await Products.findByPk(id, {
+        const updatedProduct = await Products.findOne({
+            where: {
+                product_id: id,
+                business_id: req.user.business_id
+            },
             include: [
                 {
                     model: Category,
                     as: 'category',
-                    attributes: ['category_id', 'category_name']
+                    attributes: ['category_id', 'category_name'],
+                    where: {
+                        business_id: req.user.business_id
+                    }
                 },
                 {
                     model: Label,
                     as: 'labels',
                     attributes: ['label_id', 'name', 'color'],
                     through: { attributes: [] },
-                    required: false
+                    required: false,
+                    where: {
+                        business_id: req.user.business_id
+                    }
                 }
             ]
         });
@@ -474,13 +522,19 @@ exports.getCategories = async (req, res) => {
             includeOptions.push({
                 model: CategoryTranslation,
                 as: 'translations',
-                where: { language_code },
+                where: { 
+                    language_code,
+                    business_id: req.user.business_id
+                },
                 required: false,
                 attributes: ['category_name']
             });
         }
         
         const categories = await Category.findAll({
+            where: {
+                business_id: req.user.business_id
+            },
             include: includeOptions,
             order: [['sira_id', 'ASC']]
         });
@@ -517,13 +571,19 @@ exports.getCategoriesList = async (req, res) => {
             includeOptions.push({
                 model: CategoryTranslation,
                 as: 'translations',
-                where: { language_code },
+                where: { 
+                    language_code,
+                    business_id: req.user.business_id
+                },
                 required: false,
                 attributes: ['category_name']
             });
         }
         
         const categories = await Category.findAll({
+            where: {
+                business_id: req.user.business_id
+            },
             attributes: ['category_id', 'category_name'],
             include: includeOptions,
             order: [['sira_id', 'ASC']]
@@ -554,11 +614,21 @@ exports.getCategoriesList = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const productCount = await Products.count({ where: { category_id: id } });
+    const productCount = await Products.count({ 
+      where: { 
+        category_id: id,
+        business_id: req.user.business_id
+      } 
+    });
     if (productCount > 0) {
       return res.status(400).json({ error: 'Bu kategoriye bağlı ürünler var, önce ürünleri silin veya başka kategoriye taşıyın.' });
     }
-    const deleted = await Category.destroy({ where: { category_id: id } });
+    const deleted = await Category.destroy({ 
+      where: { 
+        category_id: id,
+        business_id: req.user.business_id
+      } 
+    });
     if (deleted) {
       res.json({ message: 'Kategori silindi' });
     } else {
@@ -582,7 +652,8 @@ exports.createCategory = async (req, res) => {
       category_name: category_name,
       sira_id: 0,
       parent_id: parent_id ? parseInt(parent_id) : null,
-      image_url: image_url
+      image_url: image_url,
+      business_id: req.user.business_id
     });
     res.json(category);
   } catch (error) {
@@ -598,7 +669,8 @@ exports.createSubCategory = async (req, res) => {
     const category = await Category.create({
       category_name: name,
       sira_id: 0,
-      parent_id: parentId || null
+      parent_id: parentId || null,
+      business_id: req.user.business_id
     });
     res.json(category);
   } catch (error) {
@@ -612,7 +684,8 @@ exports.getSubCategoriesByParentId = async (req,res) => {
     try {
         const otherSubCategories = await Category.findAll({
             where: {
-                parent_id: id
+                parent_id: id,
+                business_id: req.user.business_id
             }
         });
         res.json(otherSubCategories);
@@ -629,7 +702,8 @@ exports.getCategoryById = async (req, res) => {
     try {
         const category = await Category.findOne({
             where: {
-                category_id: id
+                category_id: id,
+                business_id: req.user.business_id
             }
         });
         res.json(category);
@@ -642,6 +716,9 @@ exports.getCategoryById = async (req, res) => {
 exports.getLastCategory = async (req, res) => {
     try {
       const lastCategory = await Category.findOne({
+        where: {
+          business_id: req.user.business_id
+        },
         order: [['category_id', 'DESC']],
         limit: 1
       });
@@ -683,7 +760,12 @@ exports.updateCategory = async (req, res) => {
         category_name: category_name,
         image_url: imageUrl 
       },
-      { where: { category_id: category_id } }
+      { 
+        where: { 
+          category_id: category_id,
+          business_id: req.user.business_id
+        } 
+      }
     );
 
     res.json({ 
@@ -713,7 +795,8 @@ exports.updateProductPrices = async (req,res)=>{
         },
         {
           where:{
-            product_id:product_id
+            product_id:product_id,
+            business_id: req.user.business_id
           }
         });
         res.json(product);
@@ -736,6 +819,7 @@ exports.bulkCreatePrices = async (req, res) => {
           category_id: {
             [Op.in]: categoryIds,
           },
+          business_id: req.user.business_id
         },
       });
   
@@ -762,7 +846,12 @@ exports.getProductsByCategory = async (req, res) => {
         return res.status(400).json({ message: 'Kategori ID gerekli' });
       }
   
-      const products = await Products.findAll({ where: { category_id } });
+      const products = await Products.findAll({ 
+        where: { 
+          category_id,
+          business_id: req.user.business_id
+        } 
+      });
   
       res.status(200).json(products);
     } catch (error) {
@@ -776,7 +865,12 @@ exports.updateShowcase = async (req, res) => {
   const { showcase } = req.body; // Body'den showcase durumunu alıyoruz
 
   try {
-    const product = await Products.findByPk(productId);
+    const product = await Products.findOne({
+      where: {
+        product_id: productId,
+        business_id: req.user.business_id
+      }
+    });
     
     if (!product) {
       return res.status(404).json({ message: 'Ürün bulunamadı!' });
@@ -801,7 +895,12 @@ exports.updateStatus = async (req, res) => {
   
     try {
       // Belirli ürünü bulup showcase durumunu güncelleme
-      const product = await Products.findByPk(productId);
+      const product = await Products.findOne({
+        where: {
+          product_id: productId,
+          business_id: req.user.business_id
+        }
+      });
       
       if (!product) {
         return res.status(404).json({ message: 'Ürün bulunamadı!' });
@@ -1072,7 +1171,12 @@ exports.updateProductImage = async (req, res) => {
         // Ürünü güncelle
         await Products.update(
             { image_url: imageUrl },
-            { where: { product_id: product_id } }
+            { 
+                where: { 
+                    product_id: product_id,
+                    business_id: req.user.business_id
+                } 
+            }
         );
 
         res.json({ 
@@ -1099,7 +1203,12 @@ exports.updateCategoriesSira = async (req, res) => {
       const category = categories[i];
       await Category.update(
         { sira_id: i + 1 },
-        { where: { category_id: category.category_id } }
+        { 
+          where: { 
+            category_id: category.category_id,
+            business_id: req.user.business_id
+          } 
+        }
       );
     }
 
@@ -1120,7 +1229,11 @@ exports.getRecommendedProductsData = async (req, res) => {
     console.log(`🔄 Ürün ID ${product_id} için önerilen ürünler getiriliyor...`);
     
     // Önce ana ürünü bul ve recommended_with alanını al
-    const mainProduct = await Products.findByPk(product_id, {
+    const mainProduct = await Products.findOne({
+      where: {
+        product_id: product_id,
+        business_id: req.user.business_id
+      },
       attributes: ['product_id', 'product_name', 'recommended_with']
     });
     
@@ -1157,7 +1270,8 @@ exports.getRecommendedProductsData = async (req, res) => {
       where: {
         product_id: {
           [Op.in]: recommendedIds
-        }
+        },
+        business_id: req.user.business_id
       },
       order: [['product_name', 'ASC']]
     });

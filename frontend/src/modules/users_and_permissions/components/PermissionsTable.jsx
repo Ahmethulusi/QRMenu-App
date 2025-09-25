@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Switch, Card, Row, Col, Typography, message, Select, Button } from 'antd';
 import { getRolePermissionsAPI, updateRolePermissionsAPI } from '../../common/utils/api';
 import { usePermissions } from '../../common/hooks/usePermissions';
+import { getCurrentUser } from '../../common/utils/permissions';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -9,13 +10,28 @@ const { Option } = Select;
 const PermissionsTable = ({ businessId }) => {
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('manager');
+  const [selectedRole, setSelectedRole] = useState('manager'); // Default value
   const [rolePermissions, setRolePermissions] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [tableKey, setTableKey] = useState(0);
   
   // İzin kontrolü
   const { hasPermission } = usePermissions();
+  
+  // Mevcut kullanıcı bilgisi
+  const currentUser = getCurrentUser();
+  
+  // Kullanıcının rolüne göre default seçili rol
+  const getDefaultRole = () => {
+    if (currentUser?.role === 'admin') {
+      return 'manager'; // Admin sadece Manager'ı düzenleyebilir
+    } else if (currentUser?.role === 'super_admin') {
+      return 'manager'; // Super Admin için default Manager
+    }
+    return 'manager'; // Fallback
+  };
 
   const resources = [
     { key: 'products', label: 'Ürünler' },
@@ -25,6 +41,12 @@ const PermissionsTable = ({ businessId }) => {
     { key: 'qrcodes', label: 'QR Kodlar' },
     { key: 'tables', label: 'Masalar' },
     { key: 'businesses', label: 'İşletmeler' },
+    { key: 'labels', label: 'Etiketler' },
+    { key: 'announcements', label: 'Duyurular' },
+    { key: 'erp', label: 'ERP Entegrasyonu' },
+    { key: 'currencies', label: 'Para Birimleri' },
+    { key: 'business_profile', label: 'İşletme Profili' },
+    { key: 'languages', label: 'Diller' },
     { key: 'permissions', label: 'Yetkiler' }
   ];
 
@@ -35,7 +57,8 @@ const PermissionsTable = ({ businessId }) => {
     { key: 'delete', label: 'Silme', description: 'Kayıtları kalıcı olarak silme' },
     { key: 'sort', label: 'Sıralama', description: 'Kayıtların sırasını değiştirme' },
     { key: 'image_upload', label: 'Resim Yükleme', description: 'Dosya yükleme işlemleri' },
-    { key: 'bulk_update', label: 'Toplu Güncelleme', description: 'Birden fazla kaydı aynı anda güncelleme' }
+    { key: 'bulk_update', label: 'Toplu Güncelleme', description: 'Birden fazla kaydı aynı anda güncelleme' },
+    { key: 'settings', label: 'Ayarlar', description: 'Sistem ayarlarını yönetme' }
   ];
 
   // Yetkileri yükle
@@ -61,6 +84,11 @@ const PermissionsTable = ({ businessId }) => {
     }
   };
 
+  // Component mount olduğunda ve kullanıcı değiştiğinde default rolü güncelle
+  useEffect(() => {
+    setSelectedRole(getDefaultRole());
+  }, [currentUser]);
+  
   // Rol değiştiğinde yetkileri yeniden yükle
   useEffect(() => {
     loadPermissions();
@@ -130,6 +158,18 @@ const PermissionsTable = ({ businessId }) => {
 
   // İzin kontrolü için değişken
   const canUpdatePermissions = hasPermission('permissions', 'update');
+  
+  // Tablo filtreleme değişikliği
+  const handleTableChange = (pagination, filters, sorter) => {
+    setFilteredInfo(filters);
+  };
+  
+  // Filtreleri temizle
+  const clearFilters = () => {
+    setFilteredInfo({});
+    // Table component'ini yeniden mount ederek filtreleri temizle
+    setTableKey(prev => prev + 1);
+  };
 
   // Tablo kolonları
   const columns = [
@@ -137,6 +177,11 @@ const PermissionsTable = ({ businessId }) => {
       title: 'Kaynak',
       dataIndex: 'resource',
       key: 'resource',
+      filters: resources.map(resource => ({
+        text: resource.label,
+        value: resource.key
+      })),
+      onFilter: (value, record) => record.resource === value,
       render: (resource) => {
         const resourceObj = resources.find(r => r.key === resource);
         return resourceObj ? resourceObj.label : resource;
@@ -146,6 +191,11 @@ const PermissionsTable = ({ businessId }) => {
       title: 'İşlem',
       dataIndex: 'action',
       key: 'action',
+      filters: actions.map(action => ({
+        text: action.label,
+        value: action.key
+      })),
+      onFilter: (value, record) => record.action === value,
       render: (action) => {
         const actionObj = actions.find(a => a.key === action);
         if (actionObj) {
@@ -195,10 +245,30 @@ const PermissionsTable = ({ businessId }) => {
               style={{ width: 200 }}
               placeholder="Rol seçin"
             >
-              <Option value="manager">Manager</Option>
-              <Option value="admin">Admin</Option>
-              <Option value="super_admin">Super Admin</Option>
+              {/* Admin sadece Manager rolünü düzenleyebilir */}
+              {currentUser?.role === 'admin' && (
+                <Option value="manager">Manager</Option>
+              )}
+              
+              {/* Super Admin tüm rolleri düzenleyebilir */}
+              {currentUser?.role === 'super_admin' && (
+                <>
+                  <Option value="manager">Manager</Option>
+                  <Option value="admin">Admin</Option>
+                  <Option value="super_admin">Super Admin</Option>
+                </>
+              )}
             </Select>
+            
+            {/* Filtreleri temizle butonu */}
+            {Object.keys(filteredInfo).length > 0 && (
+              <Button 
+                onClick={clearFilters}
+                size="small"
+              >
+                Filtreleri Temizle
+              </Button>
+            )}
             
             {hasChanges && canUpdatePermissions && (
               <>
@@ -223,13 +293,15 @@ const PermissionsTable = ({ businessId }) => {
       </Row>
       
       <Table
+        key={tableKey}
         columns={columns}
         scroll={{x: 1000, y: 400 }}
-
         dataSource={permissions}
         rowKey={(record) => `${record.resource}_${record.action}`}
         loading={loading}
         pagination={false}
+        onChange={handleTableChange}
+        filteredInfo={filteredInfo}
       />
     </Card>
   );
