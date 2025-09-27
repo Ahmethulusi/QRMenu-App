@@ -23,7 +23,23 @@ const UsersTable = ({ businessId }) => {
     setLoading(true);
     try {
       const data = await userAPI.getAllUsers(businessId);
-      setUsers(data);
+      
+      // Business ID'ye göre filtreleme
+      let filteredUsers = data.filter(user => user.business_id === businessId);
+      
+      // Rol bazlı filtreleme
+      if (currentUser?.role === 'admin') {
+        // Admin sadece admin ve manager rolleri görebilir, super_admin göremez
+        filteredUsers = filteredUsers.filter(user => 
+          user.role === 'admin' || user.role === 'manager'
+        );
+      } else if (currentUser?.role === 'manager') {
+        // Manager sadece manager rolleri görebilir
+        filteredUsers = filteredUsers.filter(user => user.role === 'manager');
+      }
+      // Super admin tüm kullanıcıları görebilir (filtreleme yok)
+      
+      setUsers(filteredUsers);
     } catch (err) {
       message.error('Kullanıcılar alınamadı!');
       console.error(err);
@@ -53,6 +69,15 @@ const UsersTable = ({ businessId }) => {
 
   const handleDelete = async (userId) => {
     try {
+      // Silinecek kullanıcıyı bul
+      const userToDelete = users.find(user => user.user_id === userId);
+      
+      // Rol bazlı silme sınırlaması
+      if (currentUser?.role === 'admin' && userToDelete?.role === 'super_admin') {
+        message.error('Süper admin kullanıcılarını silemezsiniz!');
+        return;
+      }
+      
       await userAPI.deleteUser(userId);
       message.success('Kullanıcı silindi!');
       fetchUsers();
@@ -69,9 +94,25 @@ const UsersTable = ({ businessId }) => {
   const handleSubmit = async (values) => {
     try {
       if (editingUser) {
+        // Rol değişikliği sınırlaması
+        if (currentUser?.role === 'admin' && values.role === 'super_admin') {
+          message.error('Admin kullanıcıları süper admin rolüne atayamaz!');
+          return;
+        }
+        if (currentUser?.role === 'admin' && editingUser.role === 'super_admin') {
+          message.error('Süper admin kullanıcılarını düzenleyemezsiniz!');
+          return;
+        }
+        
         await userAPI.updateUser(editingUser.user_id, { ...values, business_id: businessId });
         message.success('Kullanıcı güncellendi!');
       } else {
+        // Yeni kullanıcı oluştururken rol sınırlaması
+        if (currentUser?.role === 'admin' && values.role === 'super_admin') {
+          message.error('Admin kullanıcıları süper admin rolüne atayamaz!');
+          return;
+        }
+        
         await userAPI.createUser({ ...values, business_id: businessId, password: '123456' });
         message.success('Kullanıcı oluşturuldu!');
       }
@@ -134,59 +175,69 @@ const UsersTable = ({ businessId }) => {
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_, record) => (
-        <div style={{ display: 'flex', gap: 8 }}>
-          {canPerformAction(currentUser, 'edit_user') && (
-            <Button 
-              icon={<EditOutlined />} 
-              onClick={() => handleEdit(record)}
-              size="small"
-            >
-              Düzenle
-            </Button>
-          )}
-          {canPerformAction(currentUser, 'edit_user') && (
-            <Button 
-              icon={<KeyOutlined />} 
-              onClick={() => handlePasswordChange(record.user_id)}
-              size="small"
-            >
-              Şifre
-            </Button>
-          )}
-          {canPerformAction(currentUser, 'delete_user') && (
-            <Popconfirm
-              title="Bu kullanıcıyı silmek istediğinize emin misiniz?"
-              onConfirm={() => handleDelete(record.user_id)}
-              okText="Evet"
-              cancelText="Hayır"
-            >
+      render: (_, record) => {
+        // Rol bazlı buton görünürlük kontrolü
+        const canEdit = canPerformAction(currentUser, 'edit_user') && 
+          !(currentUser?.role === 'admin' && record.role === 'super_admin');
+        const canDelete = canPerformAction(currentUser, 'delete_user') && 
+          !(currentUser?.role === 'admin' && record.role === 'super_admin');
+        const canChangePassword = canPerformAction(currentUser, 'edit_user') && 
+          !(currentUser?.role === 'admin' && record.role === 'super_admin');
+        
+        return (
+          <div style={{ display: 'flex', gap: 8 }}>
+            {canEdit && (
               <Button 
-                icon={<DeleteOutlined />} 
-                danger 
+                icon={<EditOutlined />} 
+                onClick={() => handleEdit(record)}
                 size="small"
-                style={{
-                  backgroundColor: '#ff4d4f',
-                  borderColor: '#ff4d4f',
-                  color: 'white'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#ff7875';
-                  e.target.style.borderColor = '#ff7875';
-                  e.target.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#ff4d4f';
-                  e.target.style.borderColor = '#ff4d4f';
-                  e.target.style.color = 'white';
-                }}
               >
-                Sil
+                Düzenle
               </Button>
-            </Popconfirm>
-          )}
-        </div>
-      ),
+            )}
+            {canChangePassword && (
+              <Button 
+                icon={<KeyOutlined />} 
+                onClick={() => handlePasswordChange(record.user_id)}
+                size="small"
+              >
+                Şifre
+              </Button>
+            )}
+            {canDelete && (
+              <Popconfirm
+                title="Bu kullanıcıyı silmek istediğinize emin misiniz?"
+                onConfirm={() => handleDelete(record.user_id)}
+                okText="Evet"
+                cancelText="Hayır"
+              >
+                <Button 
+                  icon={<DeleteOutlined />} 
+                  danger 
+                  size="small"
+                  style={{
+                    backgroundColor: '#ff4d4f',
+                    borderColor: '#ff4d4f',
+                    color: 'white'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#ff7875';
+                    e.target.style.borderColor = '#ff7875';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#ff4d4f';
+                    e.target.style.borderColor = '#ff4d4f';
+                    e.target.style.color = 'white';
+                  }}
+                >
+                  Sil
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -251,9 +302,13 @@ const UsersTable = ({ businessId }) => {
             rules={[{ required: true, message: 'Rol seçin!' }]}
           >
             <Select>
+              {currentUser?.role === 'super_admin' && (
+                <Option value="super_admin">Süper Admin</Option>
+              )}
+              {currentUser?.role === 'super_admin' && (
+                <Option value="admin">Admin</Option>
+              )}
               <Option value="manager">Manager</Option>
-              <Option value="admin">Admin</Option>
-              <Option value="super_admin">Süper Admin</Option>
             </Select>
           </Form.Item>
 
