@@ -59,6 +59,8 @@ const CategorySelect = ({ selectedCategoryId, onCategoryChange = () => {}, value
       }
 
       console.log(`✅ ${data.length} kategori başarıyla yüklendi`);
+      console.log('📋 Tüm kategoriler:', data);
+      console.log('📋 Son kategori:', data[data.length - 1]);
       setCategories(data);
     } catch (error) {
       console.error('❌ Kategoriler yüklenirken hata:', error);
@@ -119,13 +121,12 @@ const CategorySelect = ({ selectedCategoryId, onCategoryChange = () => {}, value
       // Yeni kategoriyi listeye ekle
       setCategories(prevCategories => [...prevCategories, newCategory]);
       
-      // Form'da yeni kategoriyi seç
-      const form = document.querySelector('form');
-      if (form) {
-        const categoryField = form.querySelector('input[name="category"]');
-        if (categoryField) {
-          categoryField.value = newCategory.category_id;
-        }
+      // Yeni kategoriyi otomatik seç
+      if (onChange) {
+        onChange(newCategory.category_id);
+      }
+      if (onCategoryChange) {
+        onCategoryChange(newCategory.category_id);
       }
       
       message.success('Kategori başarıyla oluşturuldu!');
@@ -146,6 +147,7 @@ const CategorySelect = ({ selectedCategoryId, onCategoryChange = () => {}, value
     }
   };
 
+
   console.log('🎨 CategorySelector render:', { 
     loading, 
     categoriesCount: Categories?.length || 0, 
@@ -153,7 +155,8 @@ const CategorySelect = ({ selectedCategoryId, onCategoryChange = () => {}, value
     value,
     hasOnChange: !!onCategoryChange,
     hasFormOnChange: !!onChange,
-    categories: Categories?.slice(0, 3) // İlk 3 kategoriyi göster
+    categories: Categories?.slice(0, 3), // İlk 3 kategoriyi göster
+    lastCategory: Categories?.[Categories.length - 1] // Son kategoriyi göster
   });
 
   return (
@@ -178,35 +181,41 @@ const CategorySelect = ({ selectedCategoryId, onCategoryChange = () => {}, value
           onCategoryChange(selectedValue);
         }
       }}
+      dropdownMatchSelectWidth={false}
+      dropdownStyle={{ minWidth: '200px' }}
+      listHeight={300}
       dropdownRender={menu => (
-        <>
+        <div>
           {menu}
           <Divider style={{ margin: '8px 0' }} />
-          <Space style={{ padding: '0 8px 4px' }}>
-            <Input
-              placeholder="Yeni kategori ekleyin"
-              ref={inputRef}
-              value={name}
-              onChange={onNameChange}
-              onKeyPress={handleKeyPress}
-              disabled={loading}
-            />
-            <Button 
-              type="text" 
-              icon={<PlusOutlined />} 
-              onClick={addCategory}
-              loading={loading}
-              disabled={!name.trim()}
-            >
-              Ekle
-            </Button>
-          </Space>
-        </>
+          <div style={{ padding: '0 8px 8px' }}>
+            <Space.Compact style={{ width: '100%' }}>
+              <Input
+                placeholder="Yeni kategori ekleyin"
+                ref={inputRef}
+                value={name}
+                onChange={onNameChange}
+                onKeyPress={handleKeyPress}
+                disabled={loading}
+                style={{ flex: 1 }}
+              />
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={addCategory}
+                loading={loading}
+                disabled={!name.trim()}
+              >
+                Ekle
+              </Button>
+            </Space.Compact>
+          </div>
+        </div>
       )}
     >
       {Categories && Array.isArray(Categories) && Categories.length > 0 ? (
-        Categories.map((category) => {
-          console.log('📝 Kategori option:', category);
+        Categories.map((category, index) => {
+          console.log(`📝 Kategori option ${index + 1}/${Categories.length}:`, category);
           return (
             <Option key={category.category_id} value={category.category_id}>
               {category.category_name}

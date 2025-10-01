@@ -894,7 +894,12 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
               name="type"
               rules={[{ required: true, message: 'Lütfen duyuru türünü seçin!' }]}
             >
-              <Select onChange={handleTypeChange}>
+              <Select 
+                onChange={handleTypeChange}
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: '200px' }}
+                listHeight={300}
+              >
                 <Option value="general">Genel Duyuru</Option>
                 <Option value="promotion">Promosyon</Option>
                 <Option value="campaign">Kampanya</Option>
@@ -1110,6 +1115,9 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                     style={{ width: '100%' }}
                     options={products}
                     optionFilterProp="label"
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{ minWidth: '200px' }}
+                    listHeight={300}
                   />
                 </Form.Item>
                 
@@ -1123,6 +1131,9 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
                     style={{ width: '100%' }}
                     options={categories}
                     optionFilterProp="label"
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{ minWidth: '200px' }}
+                    listHeight={300}
                   />
                 </Form.Item>
               </>

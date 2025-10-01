@@ -330,6 +330,9 @@ const RecommendedProductManager = ({ productId, onRecommendationsChange, visible
                   filterOption={(input, option) =>
                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
+                  dropdownMatchSelectWidth={false}
+                  dropdownStyle={{ minWidth: '200px' }}
+                  listHeight={300}
                 >
                   {categories.map(category => (
                     <Option key={category.category_id} value={category.category_id}>

@@ -162,6 +162,9 @@ const LabelSelector = ({
             option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
           }
           maxTagCount="responsive"
+          dropdownMatchSelectWidth={false}
+          dropdownStyle={{ minWidth: '200px' }}
+          listHeight={300}
         >
           {labels.map(label => (
             <Option key={label.label_id} value={label.label_id}>

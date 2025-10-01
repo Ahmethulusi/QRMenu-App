@@ -28,6 +28,7 @@
     "devextreme-react": "24.1.5",
     "express": "^4.19.2",
     "moment": "^2.30.1",
+    "primereact": "^10.9.7",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",

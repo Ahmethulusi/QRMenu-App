@@ -415,6 +415,9 @@ const LanguageSettings = () => {
                 loading={currenciesLoading}
                 showSearch
                 allowClear
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: '200px' }}
+                listHeight={300}
               >
                 {currencies.map(currency => (
                   <Option key={currency.code} value={currency.code}>
@@ -437,6 +440,9 @@ const LanguageSettings = () => {
               onChange={handleModuleChange}
               style={{ width: '100%' }}
               placeholder="Modül seçiniz"
+              dropdownMatchSelectWidth={false}
+              dropdownStyle={{ minWidth: '200px' }}
+              listHeight={300}
             >
               {moduleOptions.map(option => (
                 <Option key={option.key} value={option.key}>
@@ -477,6 +483,9 @@ const LanguageSettings = () => {
                 loading={currenciesLoading}
                 showSearch
                 allowClear
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: '200px' }}
+                listHeight={300}
               >
                 {currencies.map(currency => (
                   <Option key={currency.code} value={currency.code}>
@@ -501,6 +510,9 @@ const LanguageSettings = () => {
                 onChange={handleModuleChange}
                 style={{ width: 200 }}
                 placeholder="Modül seçiniz"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: '200px' }}
+                listHeight={300}
               >
                 {moduleOptions.map(option => (
                   <Option key={option.key} value={option.key}>
