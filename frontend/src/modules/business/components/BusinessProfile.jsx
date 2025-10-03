@@ -38,6 +38,7 @@ import {
   PictureOutlined
 } from '@ant-design/icons';
 import { useBusiness } from '../hooks/useBusiness';
+import { getBusinessLogoUrl, getBusinessBannerUrls, getBusinessWelcomeBackgroundUrl } from '../../../utils/businessUtils';
 import OpeningHours from './OpeningHours';
 import '../css/BusinessProfile.css';
 
@@ -201,6 +202,22 @@ const BusinessProfile = () => {
 
   // Preview image
   const handlePreview = (imagePath, isLogo = false, isWelcomeBackground = false) => {
+    // imagePath null veya undefined ise placeholder göster
+    if (!imagePath) {
+      let placeholderSvg = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%2280%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%2080%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%2280%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%2244.5%22%3EGörsel%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+      setPreviewImage(placeholderSvg);
+      setPreviewVisible(true);
+      return;
+    }
+    
+    // Eğer tam URL ise doğrudan kullan
+    if (typeof imagePath === 'string' && (imagePath.startsWith('http://') || imagePath.startsWith('https://'))) {
+      setPreviewImage(imagePath);
+      setPreviewVisible(true);
+      return;
+    }
+    
+    // Değilse eski yöntemi kullan
     let basePath = '/images/banners/';
     if (isLogo) basePath = '/logos/';
     if (isWelcomeBackground) basePath = '/images/welcome_backgrounds/';
@@ -272,12 +289,17 @@ const BusinessProfile = () => {
             Logo
           </h3>
           <Card className="logo-upload-section">
-            {businessProfile?.logo ? (
+            {businessProfile && (getBusinessLogoUrl(businessProfile)) ? (
               <div className="logo-preview">
                 <img
-                  src={`${VITE_API_URL}/logos/${businessProfile.logo}`}
+                  src={getBusinessLogoUrl(businessProfile)}
                   alt="Business Logo"
                   className="logo-image"
+                  onError={(e) => {
+                    console.error('Logo yüklenemedi:', getBusinessLogoUrl(businessProfile));
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%2280%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%2080%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%2280%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%2244.5%22%3ELogo%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+                  }}
                 />
                 <div className="logo-actions">
                   <Button
@@ -345,32 +367,43 @@ const BusinessProfile = () => {
               </div>
             </Upload>
             
-            {businessProfile?.banner_images && businessProfile.banner_images.length > 0 && (
+            {businessProfile && getBusinessBannerUrls(businessProfile).length > 0 && (
               <div className="banner-preview-grid">
-                {businessProfile.banner_images.map((image, index) => (
-                  <div key={index} className="banner-item">
-                    <img
-                      src={`${VITE_API_URL}/images/banners/${image}`}
-                      alt={`Banner ${index + 1}`}
-                      className="banner-image"
-                    />
-                    <div className="banner-actions">
-                      <Button
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() => handlePreview(image)}
+                {getBusinessBannerUrls(businessProfile).map((imageUrl, index) => {
+                  // Cloudflare URL'den veya normal URL'den dosya adını çıkar
+                  // imageUrl null veya undefined olabilir, kontrol et
+                  const imagePath = imageUrl && typeof imageUrl === 'string' ? imageUrl.split('/').pop() : `banner_${index}`;
+                  
+                  return (
+                    <div key={index} className="banner-item">
+                      <img
+                        src={imageUrl || ''}
+                        alt={`Banner ${index + 1}`}
+                        className="banner-image"
+                        onError={(e) => {
+                          console.error('Banner görseli yüklenemedi:', imageUrl);
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%2280%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%2080%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%2280%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%2244.5%22%3EBanner%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+                        }}
                       />
-                      <Button
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined style={{ color: 'white' }} />}
-                        onClick={() => handleDeleteBannerImage(image)}
-                        loading={loading}
-                        className="banner-delete-btn"
-                      />
+                      <div className="banner-actions">
+                        <Button
+                          size="small"
+                          icon={<EyeOutlined />}
+                          onClick={() => handlePreview(imagePath)}
+                        />
+                        <Button
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined style={{ color: 'white' }} />}
+                          onClick={() => handleDeleteBannerImage(imagePath)}
+                          loading={loading}
+                          className="banner-delete-btn"
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             
@@ -512,12 +545,17 @@ const BusinessProfile = () => {
             Welcome Screen Arka Plan
           </h3>
           <Card className="welcome-background-upload-section">
-            {businessProfile?.welcome_background ? (
+            {businessProfile && getBusinessWelcomeBackgroundUrl(businessProfile) ? (
               <div className="welcome-background-preview">
                 <img
-                  src={`${VITE_API_URL}/images/welcome_backgrounds/${businessProfile.welcome_background}`}
+                  src={getBusinessWelcomeBackgroundUrl(businessProfile)}
                   alt="Welcome Background"
                   className="welcome-background-image"
+                  onError={(e) => {
+                    console.error('Welcome background yüklenemedi:', getBusinessWelcomeBackgroundUrl(businessProfile));
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22120%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20200%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22120%22%20height%3D%22200%22%20fill%3D%22%23eee%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2236.5%22%20y%3D%22104.5%22%3EArka Plan%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+                  }}
                 />
                 <div className="welcome-background-actions">
                   <Button

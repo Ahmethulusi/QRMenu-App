@@ -97,45 +97,122 @@ const cloudflareMiddleware = (type) => {
   const cloudflareService = new CloudflareService();
 
   return async (req, res, next) => {
-    // Orijinal middleware'den gelen dosya bilgilerini al
-    const file = req.file || (req.files ? req.files[0] : null);
-    
-    if (!file) {
-      return next();
-    }
-
     try {
-      // Cloudflare'deki hedef yolu oluştur
-      const cloudPath = `${type}/${path.basename(file.path)}`;
-      
-      // Dosyayı Cloudflare'e yükle
-      const publicUrl = await cloudflareService.uploadFile(
-        file.path,
-        cloudPath,
-        file.mimetype
-      );
+      // Tek dosya durumu
+      if (req.file) {
+        const file = req.file;
+        // Cloudflare'deki hedef yolu oluştur
+        const cloudPath = `${type}/${path.basename(file.path)}`;
+        
+        // Dosyayı Cloudflare'e yükle
+        const publicUrl = await cloudflareService.uploadFile(
+          file.path,
+          cloudPath,
+          file.mimetype
+        );
 
-      // Yerel dosyayı sil
-      await fs.unlink(file.path);
-      
-      // Request objesini güncelle
-      req.file = {
-        ...file,
-        cloudUrl: publicUrl,
-        cloudPath: cloudPath,
-        location: publicUrl // S3 uyumluluğu için
-      };
+        // Yerel dosyayı sil
+        await fs.unlink(file.path);
+        
+        // Request objesini güncelle
+        req.file = {
+          ...file,
+          cloudUrl: publicUrl,
+          cloudPath: cloudPath,
+          location: publicUrl // S3 uyumluluğu için
+        };
+        
+        console.log(`✅ Cloudflare middleware - Tek dosya işlendi: ${publicUrl}`);
+      } 
+      // Çoklu dosya durumu (array)
+      else if (req.files && Array.isArray(req.files)) {
+        for (let i = 0; i < req.files.length; i++) {
+          const file = req.files[i];
+          // Cloudflare'deki hedef yolu oluştur
+          const cloudPath = `${type}/${path.basename(file.path)}`;
+          
+          // Dosyayı Cloudflare'e yükle
+          const publicUrl = await cloudflareService.uploadFile(
+            file.path,
+            cloudPath,
+            file.mimetype
+          );
+
+          // Yerel dosyayı sil
+          await fs.unlink(file.path);
+          
+          // Dosya bilgilerini güncelle
+          req.files[i] = {
+            ...file,
+            cloudUrl: publicUrl,
+            cloudPath: cloudPath,
+            location: publicUrl
+          };
+        }
+        console.log(`✅ Cloudflare middleware - ${req.files.length} dosya işlendi`);
+      }
+      // Çoklu dosya durumu (object - farklı alanlar için)
+      else if (req.files && typeof req.files === 'object') {
+        for (const fieldName of Object.keys(req.files)) {
+          const files = req.files[fieldName];
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            // Cloudflare'deki hedef yolu oluştur
+            const cloudPath = `${type}/${fieldName}_${path.basename(file.path)}`;
+            
+            // Dosyayı Cloudflare'e yükle
+            const publicUrl = await cloudflareService.uploadFile(
+              file.path,
+              cloudPath,
+              file.mimetype
+            );
+
+            // Yerel dosyayı sil
+            await fs.unlink(file.path);
+            
+            // Dosya bilgilerini güncelle
+            files[i] = {
+              ...file,
+              cloudUrl: publicUrl,
+              cloudPath: cloudPath,
+              location: publicUrl
+            };
+          }
+        }
+        console.log(`✅ Cloudflare middleware - Çoklu alan dosyaları işlendi`);
+      }
+      // Hiç dosya yoksa
+      else {
+        console.log('⚠️ Cloudflare middleware - İşlenecek dosya bulunamadı');
+      }
 
       next();
     } catch (error) {
-      // Hata durumunda yerel dosyayı temizle
-      if (file.path) {
-        try {
-          await fs.unlink(file.path);
-        } catch (unlinkError) {
-          console.error('Yerel dosya silinirken hata:', unlinkError);
+      console.error(`❌ Cloudflare middleware hatası: ${error.message}`);
+      
+      // Hata durumunda yerel dosyaları temizle
+      try {
+        if (req.file && req.file.path) {
+          await fs.unlink(req.file.path).catch(() => {});
         }
+        
+        if (req.files) {
+          if (Array.isArray(req.files)) {
+            for (const file of req.files) {
+              if (file.path) await fs.unlink(file.path).catch(() => {});
+            }
+          } else {
+            for (const fieldName of Object.keys(req.files)) {
+              for (const file of req.files[fieldName]) {
+                if (file.path) await fs.unlink(file.path).catch(() => {});
+              }
+            }
+          }
+        }
+      } catch (cleanupError) {
+        console.error('Yerel dosyalar temizlenirken hata:', cleanupError);
       }
+      
       next(error);
     }
   };
