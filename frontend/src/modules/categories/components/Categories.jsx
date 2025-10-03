@@ -186,6 +186,8 @@ const Categories = () => {
         name: category.category_name,
         parent_id: category.parent_id,
         imageUrl: category.image_url,
+        cloudurl: category.cloudurl,
+        cloudpath: category.cloudpath,
         sira_id: category.sira_id || 0, // sira_id'yi ekleyelim, yoksa 0 olsun
       }));
       

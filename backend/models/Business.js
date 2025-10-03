@@ -16,10 +16,30 @@ const Business = sequelize.define('Business', {
     allowNull: true,
     comment: 'Logo image path'
   },
+  logocloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki logo URL\'i'
+  },
+  logocloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki logo yolu'
+  },
   banner_images: {
     type: DataTypes.JSON,
     allowNull: true,
     comment: 'Array of banner image paths for carousel'
+  },
+  bannercloudurl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki banner URL\'leri (JSON array)'
+  },
+  bannercloudpath: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki banner yolları (JSON array)'
   },
   custom_domain: {
     type: DataTypes.STRING,
@@ -90,6 +110,16 @@ const Business = sequelize.define('Business', {
     type: DataTypes.STRING,
     allowNull: true,
     comment: 'Welcome screen background image path'
+  },
+  welcomebackgroundcloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki welcome background URL\'i'
+  },
+  welcomebackgroundcloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki welcome background yolu'
   },
   // ERP SQL Server bağlantı bilgileri
   erp_server: {

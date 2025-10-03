@@ -19,6 +19,16 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.STRING(500),
     allowNull: true
   },
+  imagecloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki resim URL\'i'
+  },
+  imagecloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki resim yolu'
+  },
   type: {
     type: DataTypes.ENUM('promotion', 'campaign', 'discount', 'general'),
     allowNull: false,
@@ -93,6 +103,16 @@ const Announcement = sequelize.define('Announcement', {
   background_image_url: {
     type: DataTypes.STRING(500),
     allowNull: true
+  },
+  backgroundimagecloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki arkaplan resmi URL\'i'
+  },
+  backgroundimagecloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki arkaplan resmi yolu'
   },
   countdown_date: {
     type: DataTypes.DATE,

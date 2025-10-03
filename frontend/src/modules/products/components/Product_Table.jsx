@@ -8,6 +8,7 @@ import { apiGet, apiPut, apiDelete, apiPost } from '../../common/utils/api';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useCurrencies } from '../../currencies/hooks/useCurrencies';
 import '../../tables_and_QR/css/tableSizeManager.css';
+import { getProductImageUrl } from '../../../utils/imageUtils';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product_Table = () => {
@@ -73,9 +74,16 @@ const Product_Table = () => {
       }
 
               const formattedData = datas.map((item, index) => {
-        const imageUrl = item.image_url ? `${API_URL}/images/${item.image_url}` : null;
+        // imageUtils kullanarak resim URL'ini al
+        const imageUrl = getProductImageUrl(item);
         
-
+        console.log('Ürün resim bilgileri:', {
+          product_id: item.product_id,
+          product_name: item.product_name,
+          cloudurl: item.cloudurl,
+          image_url: item.image_url,
+          kullanilan_url: imageUrl
+        });
 
         return {
           key: index, 
@@ -236,6 +244,8 @@ const Product_Table = () => {
       return;
     }
     
+    console.log('Düzenlenen ürün:', originalApiProduct);
+    
     setIsEditModalVisible(true);
     setRecordToEdit({
       product_id: originalApiProduct.product_id,
@@ -254,7 +264,9 @@ const Product_Table = () => {
       is_available: originalApiProduct.is_available,
       is_selected: originalApiProduct.is_selected,
       labels: originalApiProduct.labels || [],
-      image_url: originalApiProduct.image_url
+      image_url: originalApiProduct.image_url,
+      cloudurl: originalApiProduct.cloudurl,
+      cloudpath: originalApiProduct.cloudpath
     });
   };
 
@@ -576,6 +588,12 @@ const UploadImageButton = ({ productId, onUploadSuccess }) => {
       }
 
       const data = await response.json();
+      console.log('Resim yükleme başarılı:', data);
+      
+      if (data.cloudUrl) {
+        console.log('Cloudflare URL:', data.cloudUrl);
+      }
+      
       onUploadSuccess();
     } catch (error) {
       console.error('Resim yüklemede bir hata oluştu', error);

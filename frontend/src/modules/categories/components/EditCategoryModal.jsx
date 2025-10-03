@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Upload, message, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { getCategoryImageUrl } from '../../../utils/categoryUtils';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -18,8 +19,10 @@ const EditCategoryModal = ({ visible, onCancel, onOk, category }) => {
       setImageRemoved(false);
       
       // Eğer resim varsa göster
-      if (category.imageUrl) {
-        setFile({ preview: `${API_URL}/images/${category.imageUrl}` });
+      // Önce Cloudflare URL'ini kontrol et, yoksa normal imageUrl'i kullan
+      const imageUrl = getCategoryImageUrl(category);
+      if (imageUrl) {
+        setFile({ preview: imageUrl });
       } else {
         setFile(null);
       }

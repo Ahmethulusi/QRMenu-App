@@ -16,6 +16,7 @@ import {
 } from 'antd';
 import { PlusOutlined, UploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { apiPost, apiPut, apiGet } from '../../common/utils/api';
+import { getAnnouncementImageUrl, getAnnouncementBackgroundImageUrl } from '../../../utils/announcementUtils';
 import moment from 'moment';
 import '../css/announcementFormModal.css';
 
@@ -194,54 +195,18 @@ const AnnouncementFormModal = ({ announcement, onClose, onSuccess }) => {
       // Duyuru tipini ayarla
       setAnnouncementType(announcement.type || 'general');
       
-      // Görsel önizlemeleri ayarla
-      if (announcement.image_url) {
-        console.log("🖼️ Orijinal Görsel URL'i:", announcement.image_url);
-        
-        // Eğer sadece dosya adı ise tam URL oluştur
-        if (!announcement.image_url.includes('/')) {
-          const fullUrl = `${API_URL}/images/${announcement.image_url}`;
-          console.log("✅ Dosya adı için tam yol oluşturuldu:", fullUrl);
-          setImageUrl(fullUrl);
-        } else {
-          // Eğer /public/ içeriyorsa, kaldır
-          if (announcement.image_url.includes('/public/')) {
-            const cleanPath = announcement.image_url.replace('/public', '');
-            const fullUrl = `${API_URL}${cleanPath}`;
-            console.log("✅ /public/ yolu düzeltildi:", fullUrl);
-            setImageUrl(fullUrl);
-          } else {
-            // Diğer durumlar için API_URL ile birleştir
-            const fullUrl = `${API_URL}${announcement.image_url.startsWith('/') ? '' : '/'}${announcement.image_url}`;
-            console.log("✅ Genel durum - URL birleştirildi:", fullUrl);
-            setImageUrl(fullUrl);
-          }
-        }
+      // Görsel önizlemeleri ayarla - announcementUtils kullanarak
+      const imageUrl = getAnnouncementImageUrl(announcement);
+      if (imageUrl) {
+        console.log("🖼️ Duyuru görseli URL'i:", imageUrl);
+        setImageUrl(imageUrl);
       }
       
-      // Arka plan görseli için aynı işlem
-      if (announcement.background_image_url) {
-        console.log("🖼️ Orijinal Arka Plan URL'i:", announcement.background_image_url);
-        
-        // Eğer sadece dosya adı ise tam URL oluştur
-        if (!announcement.background_image_url.includes('/')) {
-          const fullUrl = `${API_URL}/images/${announcement.background_image_url}`;
-          console.log("✅ Dosya adı için tam yol oluşturuldu:", fullUrl);
-          setBackgroundImageUrl(fullUrl);
-        } else {
-          // Eğer /public/ içeriyorsa, kaldır
-          if (announcement.background_image_url.includes('/public/')) {
-            const cleanPath = announcement.background_image_url.replace('/public', '');
-            const fullUrl = `${API_URL}${cleanPath}`;
-            console.log("✅ /public/ yolu düzeltildi:", fullUrl);
-            setBackgroundImageUrl(fullUrl);
-          } else {
-            // Diğer durumlar için API_URL ile birleştir
-            const fullUrl = `${API_URL}${announcement.background_image_url.startsWith('/') ? '' : '/'}${announcement.background_image_url}`;
-            console.log("✅ Genel durum - URL birleştirildi:", fullUrl);
-            setBackgroundImageUrl(fullUrl);
-          }
-        }
+      // Arka plan görseli için - announcementUtils kullanarak
+      const backgroundImageUrl = getAnnouncementBackgroundImageUrl(announcement);
+      if (backgroundImageUrl) {
+        console.log("🖼️ Duyuru arka plan görseli URL'i:", backgroundImageUrl);
+        setBackgroundImageUrl(backgroundImageUrl);
       }
     }
   }, [announcement, form]);

@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const announcementController = require('../controllers/announcementController');
 const { authenticateToken } = require('../middleware/authMiddleware');
-const { uploadFields } = require('../middleware/uploadMiddleware');
+const { uploadFields, uploadFieldsToCloudflare } = require('../middleware/uploadMiddleware');
 
-// Çoklu dosya yükleme için fields kullan
-const announcementUpload = uploadFields('announcement', [
+// Çoklu dosya yükleme için fields kullan (Cloudflare entegrasyonu ile)
+const announcementUpload = uploadFieldsToCloudflare('announcement', [
   { name: 'image', maxCount: 1 },
   { name: 'background_image', maxCount: 1 }
 ]);

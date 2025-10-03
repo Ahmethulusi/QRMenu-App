@@ -6,6 +6,7 @@ import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
 import RecommendedProductManager from './RecommendedProductManager';
 import IngredientManager from './IngredientManager';
+import { getProductImageUrl } from '../../../utils/imageUtils';
 // import '../css/CategoryFormModal.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;

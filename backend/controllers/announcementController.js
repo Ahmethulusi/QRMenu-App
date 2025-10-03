@@ -148,15 +148,37 @@ const createAnnouncement = async (req, res) => {
     
     // Görsel dosyalarını kontrol et
     let imageUrl = null;
+    let imageCloudUrl = null;
+    let imageCloudPath = null;
+    
     if (req.files?.image) {
-      imageUrl = `/public/images/${req.files.image[0].filename}`;
-      console.log('📸 Yeni görsel yüklendi:', imageUrl);
+      const imageFile = req.files.image[0];
+      imageUrl = imageFile.filename;
+      // Cloudflare bilgilerini al
+      imageCloudUrl = imageFile.cloudUrl || null;
+      imageCloudPath = imageFile.cloudPath || null;
+      console.log('📸 Yeni görsel yüklendi:', {
+        imageUrl,
+        imageCloudUrl,
+        imageCloudPath
+      });
     }
     
     let backgroundImageUrl = null;
+    let backgroundImageCloudUrl = null;
+    let backgroundImageCloudPath = null;
+    
     if (req.files?.background_image) {
-      backgroundImageUrl = `/public/images/${req.files.background_image[0].filename}`;
-      console.log('🖼️ Yeni arka plan görseli yüklendi:', backgroundImageUrl);
+      const bgImageFile = req.files.background_image[0];
+      backgroundImageUrl = bgImageFile.filename;
+      // Cloudflare bilgilerini al
+      backgroundImageCloudUrl = bgImageFile.cloudUrl || null;
+      backgroundImageCloudPath = bgImageFile.cloudPath || null;
+      console.log('🖼️ Yeni arka plan görseli yüklendi:', {
+        backgroundImageUrl,
+        backgroundImageCloudUrl,
+        backgroundImageCloudPath
+      });
     }
     
     // Integer alanları düzelt
@@ -265,6 +287,9 @@ const createAnnouncement = async (req, res) => {
       title,
       content: content || '',
       image_url: imageUrl,
+      image: imageUrl, // Alternatif alan
+      imagecloudurl: imageCloudUrl, // Cloudflare URL (küçük harfle)
+      imagecloudpath: imageCloudPath, // Cloudflare Path (küçük harfle)
       type: type || 'general',
       category: categoryValue, // Varsayılan kategori kullanılıyor
       priority: priorityValue,
@@ -276,6 +301,9 @@ const createAnnouncement = async (req, res) => {
       button_color: button_color || '#007bff',
       button_url: button_url || '',
       background_image_url: backgroundImageUrl,
+      background_image: backgroundImageUrl, // Alternatif alan
+      backgroundimagecloudurl: backgroundImageCloudUrl, // Cloudflare URL (küçük harfle)
+      backgroundimagecloudpath: backgroundImageCloudPath, // Cloudflare Path (küçük harfle)
       countdown_date: formattedCountdownDate,
       business_id: req.user.business_id, // Kullanıcının işletme ID'si
       
@@ -370,9 +398,20 @@ const updateAnnouncement = async (req, res) => {
     
     // Görsel dosyalarını kontrol et
     if (req.files?.image) {
-      // Dosya adını direkt olarak kaydet, /public/images/ öneki olmadan
-      updateData.image_url = req.files.image[0].filename;
-      console.log('📸 Yeni görsel yüklendi:', updateData.image_url);
+      const imageFile = req.files.image[0];
+      // Dosya adını direkt olarak kaydet
+      updateData.image_url = imageFile.filename;
+      updateData.image = imageFile.filename; // Alternatif alan
+      
+      // Cloudflare bilgilerini al
+      updateData.imagecloudurl = imageFile.cloudUrl || null;
+      updateData.imagecloudpath = imageFile.cloudPath || null;
+      
+      console.log('📸 Yeni görsel yüklendi:', {
+        image_url: updateData.image_url,
+        cloudUrl: updateData.imagecloudurl,
+        cloudPath: updateData.imagecloudpath
+      });
     } else if (req.body.existing_image_path) {
       // Mevcut görsel korunuyor, eğer tam yol ise sadece dosya adını al
       const existingPath = req.body.existing_image_path;
@@ -386,13 +425,31 @@ const updateAnnouncement = async (req, res) => {
         // Zaten sadece dosya adı ise olduğu gibi kullan
         updateData.image_url = existingPath;
       }
+      updateData.image = updateData.image_url; // Alternatif alan
       console.log('🖼️ Mevcut görsel korunuyor:', updateData.image_url);
+      
+      // Cloudflare bilgilerini mevcut duyurudan al
+      if (announcement.imagecloudurl) {
+        updateData.imagecloudurl = announcement.imagecloudurl;
+        updateData.imagecloudpath = announcement.imagecloudpath;
+      }
     }
     
     if (req.files?.background_image) {
-      // Dosya adını direkt olarak kaydet, /public/images/ öneki olmadan
-      updateData.background_image_url = req.files.background_image[0].filename;
-      console.log('🖼️ Yeni arka plan görseli yüklendi:', updateData.background_image_url);
+      const bgImageFile = req.files.background_image[0];
+      // Dosya adını direkt olarak kaydet
+      updateData.background_image_url = bgImageFile.filename;
+      updateData.background_image = bgImageFile.filename; // Alternatif alan
+      
+      // Cloudflare bilgilerini al
+      updateData.backgroundimagecloudurl = bgImageFile.cloudUrl || null;
+      updateData.backgroundimagecloudpath = bgImageFile.cloudPath || null;
+      
+      console.log('🖼️ Yeni arka plan görseli yüklendi:', {
+        background_image_url: updateData.background_image_url,
+        cloudUrl: updateData.backgroundimagecloudurl,
+        cloudPath: updateData.backgroundimagecloudpath
+      });
     } else if (req.body.existing_background_image_path) {
       // Mevcut arka plan görseli korunuyor, eğer tam yol ise sadece dosya adını al
       const existingBgPath = req.body.existing_background_image_path;
@@ -406,7 +463,14 @@ const updateAnnouncement = async (req, res) => {
         // Zaten sadece dosya adı ise olduğu gibi kullan
         updateData.background_image_url = existingBgPath;
       }
+      updateData.background_image = updateData.background_image_url; // Alternatif alan
       console.log('🖼️ Mevcut arka plan görseli korunuyor:', updateData.background_image_url);
+      
+      // Cloudflare bilgilerini mevcut duyurudan al
+      if (announcement.backgroundimagecloudurl) {
+        updateData.backgroundimagecloudurl = announcement.backgroundimagecloudurl;
+        updateData.backgroundimagecloudpath = announcement.backgroundimagecloudpath;
+      }
     }
     
     // Integer alanları düzelt

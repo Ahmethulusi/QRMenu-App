@@ -53,6 +53,19 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING(200),
     allowNull: true,
   },
+  // Cloud alanları migrasyon sonrası aktif edilecek
+
+  cloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki dosya URL\'i'
+  },
+  cloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki dosya yolu'
+  },
+
   calorie_count: {
     type: DataTypes.INTEGER,
     allowNull: true,

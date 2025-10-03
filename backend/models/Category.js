@@ -23,6 +23,16 @@ const Category = sequelize.define('Category', {
     type:DataTypes.STRING(200),
     allowNull: true,
   },
+  cloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki dosya URL\'i'
+  },
+  cloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloudflare R2 üzerindeki dosya yolu'
+  },
   // ERP entegrasyonu için gerekli alanlar
   category_code: {
     type: DataTypes.STRING(50),

@@ -6,6 +6,7 @@ import LabelSelector from '../../contents/components/LabelSelector';
 import PortionManager from './PortionManager';
 import RecommendedProductManager from './RecommendedProductManager';
 import IngredientManager from './IngredientManager';
+import { getProductImageUrl } from '../../../utils/imageUtils';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const { TabPane } = Tabs;
@@ -96,11 +97,9 @@ const EditModal = ({ visible, onCancel, onOk, record }) => {
       // Eski recommended_with alanını kullanmıyoruz
       
       // Eğer resim varsa göster
-      if (record.image_url) {
-        // Backend'den filename olarak geldiği için tam URL oluştur
-        const imageUrl = record.image_url.startsWith('http') 
-          ? record.image_url 
-          : `${API_URL}/images/${record.image_url}`;
+      // Önce Cloudflare URL'ini kontrol et, yoksa normal image_url'i kullan
+      const imageUrl = getProductImageUrl(record);
+      if (imageUrl) {
         setFile({ preview: imageUrl });
       } else {
         setFile(null);

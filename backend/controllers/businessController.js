@@ -175,8 +175,20 @@ const uploadLogo = async (req, res) => {
 
     // Update logo path - sadece dosya adını kaydet
     const logoFileName = req.file.filename;
+    
+    // Cloudflare bilgilerini al
+    const logoCloudUrl = req.file.cloudUrl || null;
+    const logoCloudPath = req.file.cloudPath || null;
+    
+    console.log('☁️ Logo yükleme - Cloudflare bilgileri:', {
+      logoCloudUrl,
+      logoCloudPath
+    });
+    
     await business.update({
       logo: logoFileName,
+      logocloudurl: logoCloudUrl,  // Cloudflare URL'ini kaydet (küçük harfle)
+      logocloudpath: logoCloudPath, // Cloudflare Path'ini kaydet (küçük harfle)
       updated_at: new Date()
     });
 
@@ -184,7 +196,9 @@ const uploadLogo = async (req, res) => {
       success: true,
       message: 'Logo başarıyla yüklendi',
       data: {
-        logo: logoFileName
+        logo: logoFileName,
+        cloudUrl: logoCloudUrl,
+        cloudPath: logoCloudPath
       }
     });
 
@@ -236,10 +250,21 @@ const uploadBannerImages = async (req, res) => {
 
     // Process uploaded files - sadece dosya adlarını kaydet
     const bannerFileNames = req.files.map(file => file.filename);
+    
+    // Cloudflare bilgilerini al
+    const bannerCloudUrls = req.files.map(file => file.cloudUrl || null);
+    const bannerCloudPaths = req.files.map(file => file.cloudPath || null);
+    
+    console.log('☁️ Banner yükleme - Cloudflare bilgileri:', {
+      bannerCloudUrls,
+      bannerCloudPaths
+    });
 
     // Update banner images
     await business.update({
       banner_images: bannerFileNames,
+      bannercloudurl: JSON.stringify(bannerCloudUrls),  // Array'i JSON olarak kaydet
+      bannercloudpath: JSON.stringify(bannerCloudPaths), // Array'i JSON olarak kaydet
       updated_at: new Date()
     });
 
@@ -247,7 +272,9 @@ const uploadBannerImages = async (req, res) => {
       success: true,
       message: 'Banner görselleri başarıyla yüklendi',
       data: {
-        banner_images: bannerFileNames
+        banner_images: bannerFileNames,
+        cloudUrls: bannerCloudUrls,
+        cloudPaths: bannerCloudPaths
       }
     });
 
@@ -291,6 +318,8 @@ const deleteLogo = async (req, res) => {
     // Update business
     await business.update({
       logo: null,
+      logocloudurl: null,
+      logocloudpath: null,
       updated_at: new Date()
     });
 
@@ -313,7 +342,7 @@ const deleteLogo = async (req, res) => {
 const deleteBannerImage = async (req, res) => {
   try {
     const { business_id } = req.user;
-    const { imagePath } = req.body;
+    const { imagePath, cloudPath } = req.body;
 
     if (!imagePath) {
       return res.status(400).json({
@@ -337,6 +366,33 @@ const deleteBannerImage = async (req, res) => {
     // Remove from banner_images array
     let bannerImages = business.banner_images || [];
     bannerImages = bannerImages.filter(img => img !== imagePath);
+    
+    // Cloudflare URL ve Path bilgilerini güncelle
+    let bannerCloudUrls = [];
+    let bannerCloudPaths = [];
+    
+    try {
+      bannerCloudUrls = JSON.parse(business.bannercloudurl || '[]');
+      bannerCloudPaths = JSON.parse(business.bannercloudpath || '[]');
+    } catch (e) {
+      console.error('Banner cloud bilgileri parse edilemedi:', e);
+      bannerCloudUrls = [];
+      bannerCloudPaths = [];
+    }
+    
+    // Cloudflare bilgilerini güncelle
+    if (cloudPath && bannerCloudPaths.includes(cloudPath)) {
+      const index = bannerCloudPaths.indexOf(cloudPath);
+      bannerCloudPaths.splice(index, 1);
+      bannerCloudUrls.splice(index, 1);
+    } else {
+      // Eğer cloudPath verilmemişse, imagePath ile aynı indeksi sil
+      const index = bannerImages.indexOf(imagePath);
+      if (index !== -1 && index < bannerCloudPaths.length) {
+        bannerCloudPaths.splice(index, 1);
+        bannerCloudUrls.splice(index, 1);
+      }
+    }
 
     // Delete file
     try {
@@ -349,6 +405,8 @@ const deleteBannerImage = async (req, res) => {
     // Update business
     await business.update({
       banner_images: bannerImages,
+      bannercloudurl: JSON.stringify(bannerCloudUrls),
+      bannercloudpath: JSON.stringify(bannerCloudPaths),
       updated_at: new Date()
     });
 
@@ -404,9 +462,20 @@ const uploadWelcomeBackground = async (req, res) => {
       }
     }
 
+    // Cloudflare bilgilerini al
+    const welcomeBackgroundCloudUrl = req.file.cloudUrl || null;
+    const welcomeBackgroundCloudPath = req.file.cloudPath || null;
+    
+    console.log('☁️ Welcome Background yükleme - Cloudflare bilgileri:', {
+      welcomeBackgroundCloudUrl,
+      welcomeBackgroundCloudPath
+    });
+
     // Update business with new welcome background
     await business.update({
       welcome_background: req.file.filename,
+      welcomebackgroundcloudurl: welcomeBackgroundCloudUrl,
+      welcomebackgroundcloudpath: welcomeBackgroundCloudPath,
       updated_at: new Date()
     });
 
@@ -478,6 +547,8 @@ const deleteWelcomeBackground = async (req, res) => {
     // Update business
     await business.update({
       welcome_background: null,
+      welcomebackgroundcloudurl: null,
+      welcomebackgroundcloudpath: null,
       updated_at: new Date()
     });
 

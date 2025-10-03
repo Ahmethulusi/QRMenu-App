@@ -39,6 +39,7 @@ const portionRoute = require('./routes/portionRoute');
 const ingredientRoute = require('./routes/ingredientRoute');
 const recommendedProductRoute = require('./routes/recommendedProductRoute');
 const businessRoute = require('./routes/businessRoute');
+const uploadRoute = require('./routes/uploadRoute');
 
 // Router kullanımı
 app.use('/api/auth', authRoute);
@@ -59,6 +60,7 @@ app.use('/api/portions', portionRoute);
 app.use('/api/ingredients', ingredientRoute);
 app.use('/api/recommended-products', recommendedProductRoute);
 app.use('/api/business', businessRoute);
+app.use('/api/upload', uploadRoute);
 
 
 // Veritabanı bağlantısı ve senkronizasyon

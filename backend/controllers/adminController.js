@@ -12,10 +12,33 @@ const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 exports.updateImageUrl = async (req, res) => {
     const {productId } = req.body;
     const imageUrl = req.file.filename;
+    
+    // Cloudflare bilgilerini al
+    const cloudUrl = req.file.cloudUrl || null;
+    const cloudPath = req.file.cloudPath || null;
+    
+    console.log('☁️ updateImageUrl - Cloudflare bilgileri:', {
+        productId,
+        imageUrl,
+        cloudUrl,
+        cloudPath
+    });
 
     try {
-        const result = await Products.update({ image_url: imageUrl }, { where: { product_id: productId } });
-        res.json(result);
+        const result = await Products.update({ 
+            image_url: imageUrl,
+            cloudurl: cloudUrl,
+            cloudpath: cloudPath
+        }, { 
+            where: { product_id: productId } 
+        });
+        
+        res.json({
+            success: true,
+            image_url: imageUrl,
+            cloudUrl: cloudUrl,
+            cloudPath: cloudPath
+        });
     } catch (err) {
         console.error('❌ Resim güncelleme hatası:', err);
         res.status(500).json("Internal Server Error");
@@ -217,10 +240,16 @@ exports.createProduct = async (req, res) => {
     try {
         const { name, price, description, category_id, status, showcase, labels } = req.body;
         const imageUrl = req.file ? req.file.filename : null;
+        
+        // Cloudflare URL ve path bilgilerini al
+        const cloudUrl = req.file && req.file.cloudUrl ? req.file.cloudUrl : null;
+        const cloudPath = req.file && req.file.cloudPath ? req.file.cloudPath : null;
 
         console.log('🔍 Request body:', req.body);
         console.log('🏷️ Labels raw:', labels);
         console.log('🏷️ Labels type:', typeof labels);
+        console.log('☁️ Cloudflare URL:', cloudUrl);
+        console.log('☁️ Cloudflare Path:', cloudPath);
 
         if (!name || !price || !category_id) {
             return res.status(400).json({ error: "Zorunlu alanlar eksik" });
@@ -251,6 +280,8 @@ exports.createProduct = async (req, res) => {
             is_selected: showcase === 'true' || showcase === true,
             sira_id: count + 1,
             image_url: imageUrl,
+            cloudurl: cloudUrl,  // Cloudflare URL'ini kaydet (küçük harfle)
+            cloudpath: cloudPath, // Cloudflare Path'ini kaydet (küçük harfle)
             business_id: req.user.business_id,
             stock: stock ? parseInt(stock) : null,
             calorie_count: calorie_count ? parseInt(calorie_count) : null,
@@ -645,6 +676,16 @@ exports.createCategory = async (req, res) => {
   try {
     const { category_name, parent_id } = req.body;
     const image_url = req.file ? req.file.filename : null;
+    
+    // Cloudflare bilgilerini al
+    const cloudUrl = req.file && req.file.cloudUrl ? req.file.cloudUrl : null;
+    const cloudPath = req.file && req.file.cloudPath ? req.file.cloudPath : null;
+    
+    console.log('☁️ Kategori oluşturma - Cloudflare bilgileri:', {
+        cloudUrl,
+        cloudPath
+    });
+    
     if (!category_name) {
       return res.status(400).json({ error: "Kategori adı boş olamaz!" });
     }
@@ -653,10 +694,13 @@ exports.createCategory = async (req, res) => {
       sira_id: 0,
       parent_id: parent_id ? parseInt(parent_id) : null,
       image_url: image_url,
+      cloudurl: cloudUrl,  // Cloudflare URL'ini kaydet (küçük harfle)
+      cloudpath: cloudPath, // Cloudflare Path'ini kaydet (küçük harfle)
       business_id: req.user.business_id
     });
     res.json(category);
   } catch (error) {
+    console.error('Kategori oluşturma hatası:', error);
     res.status(500).json({ error: "Bir hata oluştu!" });
   }
 };
@@ -736,14 +780,26 @@ exports.updateCategory = async (req, res) => {
     const imageFile = req.file;
 
     let imageUrl = null;
+    let cloudUrl = null;
+    let cloudPath = null;
 
     // Eğer resim kaldırılacaksa
     if (removeImage === 'true') {
       imageUrl = null;
+      cloudUrl = null;
+      cloudPath = null;
     }
     // Eğer yeni resim yüklenecekse
     else if (imageFile) {
       imageUrl = imageFile.filename;
+      // Cloudflare bilgilerini al
+      cloudUrl = imageFile.cloudUrl || null;
+      cloudPath = imageFile.cloudPath || null;
+      
+      console.log('☁️ Kategori güncelleme - Cloudflare bilgileri:', {
+          cloudUrl,
+          cloudPath
+      });
     }
     // Eğer hiçbir değişiklik yoksa mevcut resmi koru
     else {
@@ -751,6 +807,8 @@ exports.updateCategory = async (req, res) => {
       const existingCategory = await Category.findByPk(category_id);
       if (existingCategory) {
         imageUrl = existingCategory.image_url;
+        cloudUrl = existingCategory.cloudurl;
+        cloudPath = existingCategory.cloudpath;
       }
     }
 
@@ -758,7 +816,9 @@ exports.updateCategory = async (req, res) => {
     await Category.update(
       { 
         category_name: category_name,
-        image_url: imageUrl 
+        image_url: imageUrl,
+        cloudurl: cloudUrl,
+        cloudpath: cloudPath
       },
       { 
         where: { 
@@ -770,7 +830,9 @@ exports.updateCategory = async (req, res) => {
 
     res.json({ 
       message: 'Kategori başarıyla güncellendi',
-      image_url: imageUrl 
+      image_url: imageUrl,
+      cloudUrl: cloudUrl,
+      cloudPath: cloudPath
     });
   } catch (error) {
     console.error('Kategori güncelleme hatası:', error);
@@ -1150,14 +1212,26 @@ exports.updateProductImage = async (req, res) => {
         const imageFile = req.file;
 
         let imageUrl = null;
+        let cloudUrl = null;
+        let cloudPath = null;
 
         // Eğer resim kaldırılacaksa
         if (removeImage === 'true') {
             imageUrl = null;
+            cloudUrl = null;
+            cloudPath = null;
         }
         // Eğer yeni resim yüklenecekse
         else if (imageFile) {
             imageUrl = imageFile.filename;
+            // Cloudflare bilgilerini al
+            cloudUrl = imageFile.cloudUrl || null;
+            cloudPath = imageFile.cloudPath || null;
+            
+            console.log('☁️ Resim güncelleme - Cloudflare bilgileri:', {
+                cloudUrl,
+                cloudPath
+            });
         }
         // Eğer hiçbir değişiklik yoksa mevcut resmi koru
         else {
@@ -1165,12 +1239,18 @@ exports.updateProductImage = async (req, res) => {
             const existingProduct = await Products.findByPk(product_id);
             if (existingProduct) {
                 imageUrl = existingProduct.image_url;
+                cloudUrl = existingProduct.cloudurl;
+                cloudPath = existingProduct.cloudpath;
             }
         }
 
         // Ürünü güncelle
         await Products.update(
-            { image_url: imageUrl },
+            { 
+                image_url: imageUrl,
+                cloudurl: cloudUrl,
+                cloudpath: cloudPath
+            },
             { 
                 where: { 
                     product_id: product_id,
@@ -1181,7 +1261,9 @@ exports.updateProductImage = async (req, res) => {
 
         res.json({ 
             message: 'Ürün resmi başarıyla güncellendi',
-            image_url: imageUrl 
+            image_url: imageUrl,
+            cloudUrl: cloudUrl,
+            cloudPath: cloudPath
         });
     } catch (error) {
         console.error('Resim güncelleme hatası:', error);

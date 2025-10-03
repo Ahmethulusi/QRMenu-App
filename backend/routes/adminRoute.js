@@ -3,13 +3,13 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { hasPermission } = require('../controllers/permissionController');
-const { uploadSingle, uploadExcel } = require('../middleware/uploadMiddleware');
+const { uploadSingleToCloudflare, createCloudflareUploadMiddleware } = require('../middleware/uploadMiddleware');
 
 // Excel upload
 router.post('/uploadExcel', 
   authenticateToken, 
   hasPermission('system', 'settings'), 
-  uploadExcel(), 
+  uploadSingleToCloudflare('excel', 'excel'), 
   adminController.uploadExcel
 );
 
@@ -27,7 +27,7 @@ router.put('/products/updateStatus/:productId',
 router.post('/products/updateImageUrl', 
   authenticateToken, 
   hasPermission('products', 'image_upload'), 
-  uploadSingle('product', 'resim'), 
+  uploadSingleToCloudflare('product', 'resim'), 
   adminController.updateImageUrl
 );
 router.put('/products/updatePrice', 
@@ -50,7 +50,7 @@ router.put('/products/yeniSira',
 router.post('/products/create', 
   authenticateToken, 
   hasPermission('products', 'create'), 
-  uploadSingle('product', 'resim'), 
+  uploadSingleToCloudflare('product', 'resim'), 
   adminController.createProduct
 );
 router.delete('/products/:id', 
@@ -66,7 +66,7 @@ router.put('/products/update',
 router.put('/products/updateImage', 
   authenticateToken, 
   hasPermission('products', 'image_upload'), 
-  uploadSingle('product', 'resim'), 
+  uploadSingleToCloudflare('product', 'resim'), 
   adminController.updateProductImage
 );
 
@@ -119,7 +119,7 @@ router.post('/categories/create-sub',
 router.post('/categories/create', 
   authenticateToken, 
   hasPermission('categories', 'create'), 
-  uploadSingle('category', 'resim'), 
+  uploadSingleToCloudflare('category', 'resim'), 
   adminController.createCategory
 );
 router.delete('/categories/:id', 
@@ -130,7 +130,7 @@ router.delete('/categories/:id',
 router.put('/categories/update/:category_id', 
   authenticateToken, 
   hasPermission('categories', 'update'), 
-  uploadSingle('category', 'resim'), 
+  uploadSingleToCloudflare('category', 'resim'), 
   adminController.updateCategory
 );
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const businessController = require('../controllers/businessController');
 const { authenticateToken } = require('../middleware/authMiddleware');
-const { createUploadMiddleware } = require('../middleware/uploadMiddleware');
+const { uploadSingleToCloudflare, uploadMultipleToCloudflare } = require('../middleware/uploadMiddleware');
 
 // Apply auth middleware to all routes
 router.use(authenticateToken);
@@ -14,13 +14,13 @@ router.get('/profile', businessController.getBusinessProfile);
 router.put('/profile', businessController.updateBusinessProfile);
 
 // Upload logo (single file)
-router.post('/upload-logo', createUploadMiddleware('business_logo').single('logo'), businessController.uploadLogo);
+router.post('/upload-logo', uploadSingleToCloudflare('business_logo', 'logo'), businessController.uploadLogo);
 
 // Upload banner images (multiple files)
-router.post('/upload-banners', createUploadMiddleware('business_banner').array('banners', 5), businessController.uploadBannerImages);
+router.post('/upload-banners', uploadMultipleToCloudflare('business_banner', 'banners', 5), businessController.uploadBannerImages);
 
 // Upload welcome background (single file)
-router.post('/upload-welcome-background', createUploadMiddleware('welcome_background').single('welcome_background'), businessController.uploadWelcomeBackground);
+router.post('/upload-welcome-background', uploadSingleToCloudflare('welcome_background', 'welcome_background'), businessController.uploadWelcomeBackground);
 
 // Delete logo
 router.delete('/logo', businessController.deleteLogo);

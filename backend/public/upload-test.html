@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .file-input {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            min-height: 100px;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-item img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        .file-info {
+            flex: 1;
+            margin-left: 10px;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Test Sayfası</h1>
+    
+    <div class="upload-container">
+        <h2>Lokal Dosya Yükleme</h2>
+        <div class="file-input">
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <button id="uploadBtn">Lokale Yükle</button>
+    </div>
+    
+    <div class="upload-container" style="background-color: #e6f7ff;">
+        <h2>Cloudflare R2 Dosya Yükleme</h2>
+        <div class="file-input">
+            <input type="file" id="cloudflareFileInput" accept="image/*">
+        </div>
+        <button id="cloudflareUploadBtn" style="background-color: #1890ff;">Cloudflare'e Yükle</button>
+    </div>
+    
+    <div class="result">
+        <h3>Sonuç:</h3>
+        <pre id="resultOutput"></pre>
+    </div>
+    
+    <div class="file-list">
+        <h2>Yüklenen Dosyalar</h2>
+        <button id="refreshBtn">Listeyi Yenile</button>
+        <div id="fileListContainer"></div>
+    </div>
+    
+    <script>
+        // Lokal Upload işlemi
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const resultOutput = document.getElementById('resultOutput');
+            
+            if (!fileInput.files[0]) {
+                resultOutput.textContent = 'Lütfen bir dosya seçin';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                resultOutput.textContent = 'Lokale yükleniyor...';
+                
+                const response = await fetch('/api/upload/test', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                resultOutput.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    loadFileList();
+                }
+            } catch (error) {
+                resultOutput.textContent = `Hata: ${error.message}`;
+            }
+        });
+        
+        // Cloudflare Upload işlemi
+        document.getElementById('cloudflareUploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('cloudflareFileInput');
+            const resultOutput = document.getElementById('resultOutput');
+            
+            if (!fileInput.files[0]) {
+                resultOutput.textContent = 'Lütfen bir dosya seçin';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                resultOutput.textContent = 'Cloudflare\'e yükleniyor...';
+                
+                const response = await fetch('/api/upload/cloudflare-test', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                resultOutput.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    loadFileList();
+                }
+            } catch (error) {
+                resultOutput.textContent = `Cloudflare Hatası: ${error.message}`;
+            }
+        });
+        
+        // Dosya listesini yükleme
+        async function loadFileList() {
+            const fileListContainer = document.getElementById('fileListContainer');
+            
+            try {
+                const response = await fetch('/api/upload/list');
+                const data = await response.json();
+                
+                fileListContainer.innerHTML = '';
+                
+                if (data.files && data.files.length > 0) {
+                    data.files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        // Resim önizleme
+                        const img = document.createElement('img');
+                        img.src = file.url;
+                        img.alt = file.name;
+                        fileItem.appendChild(img);
+                        
+                        // Dosya bilgileri
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
+                        fileInfo.innerHTML = `
+                            <div>Dosya: ${file.name}</div>
+                            <div>Boyut: ${formatFileSize(file.size)}</div>
+                            <div><a href="${file.url}" target="_blank">Görüntüle</a></div>
+                        `;
+                        fileItem.appendChild(fileInfo);
+                        
+                        // Silme butonu
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = 'Sil';
+                        deleteBtn.addEventListener('click', () => deleteFile(file.name));
+                        fileItem.appendChild(deleteBtn);
+                        
+                        fileListContainer.appendChild(fileItem);
+                    });
+                } else {
+                    fileListContainer.innerHTML = '<p>Henüz dosya yüklenmemiş</p>';
+                }
+            } catch (error) {
+                fileListContainer.innerHTML = `<p>Hata: ${error.message}</p>`;
+            }
+        }
+        
+        // Dosya silme
+        async function deleteFile(filename) {
+            try {
+                const response = await fetch(`/api/upload/delete/${filename}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadFileList();
+                } else {
+                    alert(`Hata: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Hata: ${error.message}`);
+            }
+        }
+        
+        // Dosya boyutu formatı
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Sayfa yüklendiğinde dosya listesini göster
+        document.getElementById('refreshBtn').addEventListener('click', loadFileList);
+        document.addEventListener('DOMContentLoaded', loadFileList);
+    </script>
+</body>
+</html>

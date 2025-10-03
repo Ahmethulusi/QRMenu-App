@@ -244,7 +244,7 @@ const customizeErrorMessages = (type, customMessages) => {
   }
 };
 
-const { cloudflareMiddleware } = require('./cloudflareMiddleware');
+const { cloudflareMiddleware, CloudflareService } = require('./cloudflareMiddleware');
 
 // Cloudflare entegrasyonlu upload middleware'leri
 const createCloudflareUploadMiddleware = (type, options = {}) => {
@@ -277,6 +277,71 @@ const uploadMultipleToCloudflare = (type, fieldName = 'files', maxCount = 5) => 
   };
 };
 
+// Çoklu alan için Cloudflare entegrasyonlu upload
+const uploadFieldsToCloudflare = (type, fields) => {
+  const multerMiddleware = uploadFields(type, fields);
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) return next(err);
+      
+      // Çoklu alan için özel Cloudflare middleware
+      const processFiles = async () => {
+        try {
+          const cloudflareService = new CloudflareService();
+          
+          // Her bir alan için dosyaları işle
+          for (const field of fields) {
+            const fieldName = field.name;
+            const files = req.files && req.files[fieldName];
+            
+            if (files && files.length > 0) {
+              // Her bir dosyayı Cloudflare'e yükle
+              for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const cloudPath = `${type}/${fieldName}_${path.basename(file.path)}`;
+                
+                // Dosyayı Cloudflare'e yükle
+                const cloudUrl = await cloudflareService.uploadFile(
+                  file.path,
+                  cloudPath,
+                  file.mimetype
+                );
+                
+                // Yerel dosyayı sil
+                await fs.promises.unlink(file.path).catch(err => console.error(`Yerel dosya silinemedi: ${err.message}`));
+                
+                // Dosya bilgilerini güncelle
+                files[i] = {
+                  ...file,
+                  cloudUrl,
+                  cloudPath,
+                  location: cloudUrl
+                };
+              }
+            }
+          }
+          
+          next();
+        } catch (error) {
+          // Hata durumunda yerel dosyaları temizle
+          if (req.files) {
+            Object.keys(req.files).forEach(fieldName => {
+              req.files[fieldName].forEach(file => {
+                if (file.path) {
+                  fs.unlink(file.path, () => {});
+                }
+              });
+            });
+          }
+          next(error);
+        }
+      };
+      
+      processFiles().catch(next);
+    });
+  };
+};
+
 module.exports = {
   // Ana fonksiyonlar
   createUploadMiddleware,
@@ -289,6 +354,7 @@ module.exports = {
   createCloudflareUploadMiddleware,
   uploadSingleToCloudflare,
   uploadMultipleToCloudflare,
+  uploadFieldsToCloudflare,
   
   // Utility fonksiyonlar
   deleteImage,
