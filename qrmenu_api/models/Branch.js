@@ -2,10 +2,17 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const Branch = sequelize.define('Branch', {
-  id: {
+  branch_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    field: 'id'  // Veritabanında 'id' olarak saklanır
+  },
+  id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.branch_id;
+    }
   },
   name: {
     type: DataTypes.STRING,
@@ -20,7 +27,7 @@ const Branch = sequelize.define('Branch', {
     allowNull: false,
     references: {
       model: 'businesses',
-      key: 'business_id',
+      key: 'id',
     },
   },
 }, {

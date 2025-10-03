@@ -1,4 +1,4 @@
-const { Product, Category, Branch, ProductTranslation, CategoryTranslation, Label, Currency, Language } = require('../models');
+const { Product, Category, Branch, ProductTranslation, CategoryTranslation, Label, Currency, Language, Portion } = require('../models');
 
 /**
  * Menu Controller
@@ -35,6 +35,8 @@ class MenuController {
       price: product.price,
       currency: product.currency_code,
       image_url: product.image_url,
+      cloud_url: product.cloudurl,
+      cloud_path: product.cloudpath,
       order: product.sira_id,
       nutritional_info: {
         calories: product.calorie_count,
@@ -46,6 +48,14 @@ class MenuController {
       cooking_time: product.cooking_time,
       stock: product.stock,
       is_available: product.is_available,
+      
+      // Porsiyonlar
+      portions: product.portions ? product.portions.map(portion => ({
+        id: portion.portion_id,
+        name: portion.name,
+        quantity: portion.quantity,
+        price: portion.price ? parseFloat(portion.price) : 0
+      })) : [],
       
       // Etiketler
       labels: product.labels ? product.labels.map(label => ({
@@ -69,6 +79,8 @@ class MenuController {
       id: category.category_id,
       name: categoryTranslation ? categoryTranslation.category_name : category.category_name,
       image_url: category.image_url,
+      cloud_url: category.cloudurl,
+      cloud_path: category.cloudpath,
       order: category.sira_id,
       products: category.products ? 
         category.products.map(product => this._mapProductWithTranslations(product, lang)) : []
@@ -149,6 +161,13 @@ class MenuController {
               required: false,
               attributes: ['label_id', 'name', 'description', 'color'],
               through: { attributes: [] } // ProductLabel ara tablosundan veri almaya gerek yok
+            },
+            {
+              model: Portion,
+              as: 'portions',
+              required: false,
+              attributes: ['portion_id', 'name', 'quantity', 'price'],
+              order: [['portion_id', 'ASC']]
             }
           ]
         }
@@ -208,7 +227,7 @@ class MenuController {
         is_active: true 
       },
       order: [['sira_id', 'ASC']],
-      attributes: ['category_id', 'category_name', 'image_url', 'sira_id'],
+      attributes: ['category_id', 'category_name', 'image_url', 'cloudurl', 'cloudpath', 'sira_id'],
       include: [
         {
           model: CategoryTranslation,
@@ -231,6 +250,8 @@ class MenuController {
             id: cat.category_id,
             name: categoryTranslation ? categoryTranslation.category_name : cat.category_name,
             image_url: cat.image_url,
+            cloud_url: cat.cloudurl,
+            cloud_path: cat.cloudpath,
             order: cat.sira_id
           };
         })
@@ -295,6 +316,13 @@ class MenuController {
               required: false,
               attributes: ['label_id', 'name', 'description', 'color'],
               through: { attributes: [] } // ProductLabel ara tablosundan veri almaya gerek yok
+            },
+            {
+              model: Portion,
+              as: 'portions',
+              required: false,
+              attributes: ['portion_id', 'name', 'quantity', 'price'],
+              order: [['portion_id', 'ASC']]
             }
           ]
         }
@@ -318,6 +346,8 @@ class MenuController {
           name: category.translations && category.translations[0] ? 
                 category.translations[0].category_name : category.category_name,
           image_url: category.image_url,
+          cloud_url: category.cloudurl,
+          cloud_path: category.cloudpath,
           products: category.products ? 
             category.products.map(product => this._mapProductWithTranslations(product, lang)) : []
         }

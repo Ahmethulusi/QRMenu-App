@@ -95,6 +95,16 @@ const Product = sequelize.define('Product', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     comment: 'Ürün aktif mi?'
+  },
+  cloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for product image'
+  },
+  cloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for product image'
   }
 }, {
   tableName: 'products',

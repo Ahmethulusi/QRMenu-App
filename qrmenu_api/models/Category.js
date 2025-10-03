@@ -41,6 +41,16 @@ const Category = sequelize.define('Category', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     comment: 'Kategori aktif mi?'
+  },
+  cloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for category image'
+  },
+  cloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for category image'
   }
 }, {
   tableName: 'categories',

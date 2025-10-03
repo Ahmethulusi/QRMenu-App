@@ -119,13 +119,17 @@ class ProductController {
         price: product.price,
         currency: product.currency_code,
         image_url: product.image_url,
+        cloud_url: product.cloudurl,
+        cloud_path: product.cloudpath,
         order: product.sira_id,
         
         // Kategori bilgisi
         category: product.category ? {
           id: product.category.category_id,
           name: categoryName,
-          image_url: product.category.image_url
+          image_url: product.category.image_url,
+          cloud_url: product.category.cloudurl,
+          cloud_path: product.category.cloudpath
         } : null,
         
         // Beslenme bilgileri
@@ -173,7 +177,9 @@ class ProductController {
               name: rp.recommendedProduct.product_name,
               price: rp.recommendedProduct.price,
               currency: rp.recommendedProduct.currency_code,
-              image_url: rp.recommendedProduct.image_url
+              image_url: rp.recommendedProduct.image_url,
+              cloud_url: rp.recommendedProduct.cloudurl,
+              cloud_path: rp.recommendedProduct.cloudpath
             })) : [],
         
         language: lang,

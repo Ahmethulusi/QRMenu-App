@@ -91,11 +91,11 @@ class AnnouncementController {
       order: [['priority', 'DESC'], ['created_at', 'DESC']],
       limit: parseInt(limit),
       attributes: [
-        'id', 'title', 'content', 'image_url', 'type', 'category', 
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'type', 'category', 
         'priority', 'start_date', 'end_date', 'discount_type', 
         'discount_value', 'applicable_products', 'applicable_categories',
         'campaign_condition', 'campaign_reward', 'delay', 'button_text',
-        'button_color', 'button_url', 'background_image_url', 
+        'button_color', 'button_url', 'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath',
         'countdown_date', 'layout_config', 'created_at'
       ]
     });
@@ -133,11 +133,11 @@ class AnnouncementController {
         is_active: true 
       },
       attributes: [
-        'id', 'title', 'content', 'image_url', 'type', 'category', 
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'type', 'category', 
         'priority', 'start_date', 'end_date', 'discount_type', 
         'discount_value', 'applicable_products', 'applicable_categories',
         'campaign_condition', 'campaign_reward', 'delay', 'button_text',
-        'button_color', 'button_url', 'background_image_url', 
+        'button_color', 'button_url', 'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath',
         'countdown_date', 'layout_config', 'created_at'
       ]
     });
@@ -184,9 +184,9 @@ class AnnouncementController {
       order: [['priority', 'DESC'], ['created_at', 'DESC']],
       limit: parseInt(limit),
       attributes: [
-        'id', 'title', 'content', 'image_url', 'type', 'discount_type', 
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'type', 'discount_type', 
         'discount_value', 'applicable_products', 'applicable_categories',
-        'button_text', 'button_color', 'button_url', 'background_image_url', 
+        'button_text', 'button_color', 'button_url', 'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath',
         'start_date', 'end_date', 'created_at'
       ]
     });
@@ -242,9 +242,9 @@ class AnnouncementController {
       order: [['priority', 'DESC'], ['created_at', 'DESC']],
       limit: parseInt(limit),
       attributes: [
-        'id', 'title', 'content', 'image_url', 'type', 'campaign_condition',
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'type', 'campaign_condition',
         'campaign_reward', 'button_text', 'button_color', 'button_url', 
-        'background_image_url', 'start_date', 'end_date', 'created_at'
+        'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath', 'start_date', 'end_date', 'created_at'
       ]
     });
     
@@ -320,10 +320,10 @@ class AnnouncementController {
       order: [['priority', 'DESC'], ['created_at', 'DESC']],
       limit: parseInt(limit),
       attributes: [
-        'id', 'title', 'content', 'image_url', 'type', 'discount_type', 
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'type', 'discount_type', 
         'discount_value', 'applicable_products', 'applicable_categories',
         'campaign_condition', 'campaign_reward', 'button_text', 'button_color', 
-        'button_url', 'start_date', 'end_date'
+        'button_url', 'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath', 'start_date', 'end_date'
       ]
     });
     
@@ -359,8 +359,8 @@ class AnnouncementController {
       order: [['countdown_date', 'ASC'], ['priority', 'DESC']],
       limit: parseInt(limit),
       attributes: [
-        'id', 'title', 'content', 'image_url', 'countdown_date',
-        'button_text', 'button_color', 'button_url', 'background_image_url',
+        'id', 'title', 'content', 'image_url', 'imagecloudurl', 'imagecloudpath', 'countdown_date',
+        'button_text', 'button_color', 'button_url', 'background_image_url', 'backgroundimagecloudurl', 'backgroundimagecloudpath',
         'layout_config'
       ]
     });
@@ -394,7 +394,11 @@ class AnnouncementController {
       title: announcement.title,
       content: announcement.content,
       image_url: announcement.image_url,
+      image_cloud_url: announcement.imagecloudurl,
+      image_cloud_path: announcement.imagecloudpath,
       background_image_url: announcement.background_image_url,
+      background_image_cloud_url: announcement.backgroundimagecloudurl,
+      background_image_cloud_path: announcement.backgroundimagecloudpath,
       type: announcement.type,
       category: announcement.category,
       priority: announcement.priority,

@@ -118,6 +118,26 @@ const Announcement = sequelize.define('Announcement', {
       key: 'business_id'
     },
     comment: 'İşletme ID - hangi işletmeye ait duyuru'
+  },
+  imagecloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for announcement image'
+  },
+  imagecloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for announcement image'
+  },
+  backgroundimagecloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for background image'
+  },
+  backgroundimagecloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for background image'
   }
 }, {
   tableName: 'announcements',

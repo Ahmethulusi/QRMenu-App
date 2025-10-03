@@ -41,6 +41,8 @@ const productRoute = require('./routes/productRoute');
 const languageRoute = require('./routes/languageRoute');
 const currencyRoute = require('./routes/currencyRoute');
 const announcementRoute = require('./routes/announcementRoute');
+const labelRoute = require('./routes/labelRoute');
+const businessRoute = require('./routes/businessRoute');
 
 // Route-specific rate limiting
 app.use('/api/qr', qrLimiter, qrRoute);
@@ -49,6 +51,8 @@ app.use('/api/product', menuLimiter, productRoute);
 app.use('/api/languages', languageLimiter, languageRoute);
 app.use('/api/currencies', languageLimiter, currencyRoute);
 app.use('/api/announcements', menuLimiter, announcementRoute);
+app.use('/api/labels', menuLimiter, labelRoute);
+app.use('/api/business', menuLimiter, businessRoute);
 
 // Health check endpointn
 app.get('/api/health', (req, res) => {

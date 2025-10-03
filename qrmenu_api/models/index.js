@@ -196,13 +196,26 @@ Currency.hasMany(Language, {
 // Business - Announcement
 Business.hasMany(Announcement, {
   foreignKey: 'business_id',
-  sourceKey: 'id',
+  sourceKey: 'business_id',
   as: 'announcements'
 });
 
 Announcement.belongsTo(Business, {
   foreignKey: 'business_id',
-  targetKey: 'id',
+  targetKey: 'business_id',
+  as: 'business'
+});
+
+// Business - Branch
+Business.hasMany(Branch, {
+  foreignKey: 'business_id',
+  sourceKey: 'business_id',
+  as: 'branches'
+});
+
+Branch.belongsTo(Business, {
+  foreignKey: 'business_id',
+  targetKey: 'business_id',
   as: 'business'
 });
 

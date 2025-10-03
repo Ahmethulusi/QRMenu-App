@@ -30,6 +30,32 @@ const validateBranchId = (req, res, next) => {
 };
 
 /**
+ * Business ID doğrulama
+ */
+const validateBusinessId = (req, res, next) => {
+  const { businessId } = req.params;
+  
+  if (!businessId) {
+    return res.status(400).json({
+      success: false,
+      message: 'İşletme ID gereklidir',
+      code: 'BUSINESS_ID_REQUIRED'
+    });
+  }
+  
+  if (isNaN(businessId) || parseInt(businessId) <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Geçerli bir işletme ID gönderiniz',
+      code: 'INVALID_BUSINESS_ID'
+    });
+  }
+  
+  req.businessId = parseInt(businessId);
+  next();
+};
+
+/**
  * Product ID doğrulama
  */
 const validateProductId = (req, res, next) => {
@@ -196,6 +222,7 @@ const validateAnnouncementId = (req, res, next) => {
 
 module.exports = {
   validateBranchId,
+  validateBusinessId,
   validateProductId,
   validateCategoryId,
   validateLanguageCode,

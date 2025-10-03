@@ -2,10 +2,17 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
 const Business = sequelize.define('Business', {
-  id: {
+  business_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    field: 'id'  // Veritabanında 'id' olarak saklanır
+  },
+  id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.business_id;
+    }
   },
   name: {
     type: DataTypes.STRING,
@@ -127,6 +134,36 @@ const Business = sequelize.define('Business', {
     type: DataTypes.DATE,
     allowNull: true,
     comment: 'Son senkronizasyon tarihi'
+  },
+  logocloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for business logo'
+  },
+  logocloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for business logo'
+  },
+  bannercloudurl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Cloud URL for banner images (JSON array)'
+  },
+  bannercloudpath: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Cloud path for banner images (JSON array)'
+  },
+  welcomebackgroundcloudurl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Cloud URL for welcome background image'
+  },
+  welcomebackgroundcloudpath: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Cloud path for welcome background image'
   }
 }, {
   tableName: 'businesses',

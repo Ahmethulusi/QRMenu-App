@@ -120,7 +120,7 @@ const requestLogger = (req, res, next) => {
       duration: `${duration}ms`,
       ip: req.clientIP,
       userAgent: req.userAgent,
-      size: data ? Buffer.byteLength(data, 'utf8') : 0
+      size: data ? (typeof data === 'string' ? Buffer.byteLength(data, 'utf8') : Buffer.byteLength(JSON.stringify(data), 'utf8')) : 0
     };
     
     // Renk kodları (terminal için)
