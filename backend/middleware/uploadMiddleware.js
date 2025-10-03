@@ -244,6 +244,39 @@ const customizeErrorMessages = (type, customMessages) => {
   }
 };
 
+const { cloudflareMiddleware } = require('./cloudflareMiddleware');
+
+// Cloudflare entegrasyonlu upload middleware'leri
+const createCloudflareUploadMiddleware = (type, options = {}) => {
+  const multerMiddleware = createUploadMiddleware(type, options);
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) return next(err);
+      cloudflareMiddleware(type)(req, res, next);
+    });
+  };
+};
+
+const uploadSingleToCloudflare = (type, fieldName = 'file') => {
+  const multerMiddleware = uploadSingle(type, fieldName);
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) return next(err);
+      cloudflareMiddleware(type)(req, res, next);
+    });
+  };
+};
+
+const uploadMultipleToCloudflare = (type, fieldName = 'files', maxCount = 5) => {
+  const multerMiddleware = uploadMultiple(type, fieldName, maxCount);
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) return next(err);
+      cloudflareMiddleware(type)(req, res, next);
+    });
+  };
+};
+
 module.exports = {
   // Ana fonksiyonlar
   createUploadMiddleware,
@@ -251,6 +284,11 @@ module.exports = {
   uploadMultiple,
   uploadFields,
   uploadExcel,
+  
+  // Cloudflare entegrasyonlu fonksiyonlar
+  createCloudflareUploadMiddleware,
+  uploadSingleToCloudflare,
+  uploadMultipleToCloudflare,
   
   // Utility fonksiyonlar
   deleteImage,
