@@ -55,11 +55,18 @@ const upsertProductTranslation = async (req, res) => {
       return res.status(404).json({ error: 'Ürün bulunamadı' });
     }
     
+    console.log('Ürün model adı:', Products.name);
+    console.log('Ürün tableName:', Products.tableName);
+    
     // Dil var mı kontrol et
     const language = await Language.findOne({ where: { code: language_code, is_active: true } });
     if (!language) {
       return res.status(404).json({ error: 'Dil bulunamadı veya aktif değil' });
     }
+    
+    // Ürünün business_id'sini al
+    const business_id = product.business_id;
+    console.log('Ürün business_id:', business_id, 'Ürün:', JSON.stringify(product));
     
     // Mevcut çeviri var mı kontrol et
     const existingTranslation = await ProductTranslation.findOne({
@@ -72,7 +79,8 @@ const upsertProductTranslation = async (req, res) => {
       translation = await existingTranslation.update({
         product_name,
         description,
-        allergens
+        allergens,
+        business_id
       });
     } else {
       // Yeni ekle
@@ -81,7 +89,8 @@ const upsertProductTranslation = async (req, res) => {
         language_code,
         product_name,
         description,
-        allergens
+        allergens,
+        business_id
       });
     }
     
@@ -137,6 +146,10 @@ const upsertCategoryTranslation = async (req, res) => {
       return res.status(404).json({ error: 'Dil bulunamadı veya aktif değil' });
     }
     
+    // Kategorinin business_id'sini al
+    const business_id = category.business_id;
+    console.log('Kategori business_id:', business_id, 'Kategori:', JSON.stringify(category));
+    
     // Mevcut çeviri var mı kontrol et
     const existingTranslation = await CategoryTranslation.findOne({
       where: { category_id, language_code }
@@ -145,13 +158,17 @@ const upsertCategoryTranslation = async (req, res) => {
     let translation;
     if (existingTranslation) {
       // Güncelle
-      translation = await existingTranslation.update({ category_name });
+      translation = await existingTranslation.update({ 
+        category_name,
+        business_id 
+      });
     } else {
       // Yeni ekle
       translation = await CategoryTranslation.create({
         category_id,
         language_code,
-        category_name
+        category_name,
+        business_id
       });
     }
     

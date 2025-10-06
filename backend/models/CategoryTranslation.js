@@ -26,6 +26,14 @@ const CategoryTranslation = sequelize.define('CategoryTranslation', {
   category_name: {
     type: DataTypes.STRING(100), // Çeviri için daha uzun
     allowNull: false,
+  },
+  business_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'businesses',
+      key: 'id',
+    }
   }
 }, {
   tableName: 'category_translations',
@@ -47,6 +55,11 @@ CategoryTranslation.associate = models => {
     foreignKey: 'language_code',
     targetKey: 'code',
     as: 'language'
+  });
+  CategoryTranslation.belongsTo(models.Business, { 
+    foreignKey: 'business_id',
+    targetKey: 'id',
+    as: 'business'
   });
 };
 

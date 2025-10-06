@@ -34,6 +34,14 @@ const ProductTranslation = sequelize.define('ProductTranslation', {
   allergens: {
     type: DataTypes.TEXT,
     allowNull: true,
+  },
+  business_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'businesses',
+      key: 'id',
+    }
   }
 }, {
   tableName: 'product_translations',
@@ -45,5 +53,23 @@ const ProductTranslation = sequelize.define('ProductTranslation', {
     }
   ]
 });
+
+ProductTranslation.associate = models => {
+  ProductTranslation.belongsTo(models.Product, { 
+    foreignKey: 'product_id',
+    targetKey: 'product_id',
+    as: 'product'
+  });
+  ProductTranslation.belongsTo(models.Language, { 
+    foreignKey: 'language_code',
+    targetKey: 'code',
+    as: 'language'
+  });
+  ProductTranslation.belongsTo(models.Business, { 
+    foreignKey: 'business_id',
+    targetKey: 'id',
+    as: 'business'
+  });
+};
 
 module.exports = ProductTranslation;
