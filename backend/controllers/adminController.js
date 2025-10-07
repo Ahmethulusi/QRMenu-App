@@ -1,12 +1,13 @@
 const Products = require('../models/Products');
 const Category = require('../models/Category');
 const Business = require('../models/Business');
-const { Label, ProductLabel, ProductTranslation, CategoryTranslation } = require('../models');
+const { Label, ProductLabel, ProductTranslation, CategoryTranslation, Portion, Ingredient, RecommendedProduct } = require('../models');
 const xlsx = require('xlsx');
 const { Op } = require("sequelize");
 const sequelize = require('../db');
 const { hasPermission } = require('../utils/permissionUtils');
 const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
+const { CloudflareService } = require('../middleware/cloudflareMiddleware');
 
 
 exports.updateImageUrl = async (req, res) => {
@@ -363,6 +364,7 @@ exports.createProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const cloudflareService = new CloudflareService();
 
     // Önce ürünü bul ve resim bilgisini al
     const product = await Products.findOne({
@@ -375,19 +377,69 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Ürün bulunamadı' });
     }
 
-    // Eğer ürünün resmi varsa, resmi de sil
+    // Cloudflare'den resmi sil (eğer varsa)
+    if (product.cloudpath) {
+      try {
+        await cloudflareService.deleteFile(product.cloudpath);
+        console.log(`✅ Cloudflare'den ürün görseli silindi: ${product.cloudpath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den görsel silinemedi: ${cloudflareError.message}`);
+        // Cloudflare hatası olsa bile işleme devam et
+      }
+    }
+
+    // Yerel diskten resmi sil (eğer varsa)
     if (product.image_url) {
       const imagePath = `public/images/${product.image_url}`;
       deleteImage(imagePath);
     }
 
-    // Önce branch_products tablosundaki kayıtları sil
+    // Tüm bağımlı kayıtları sil
+    console.log(`🗑️ Ürün siliniyor (ID: ${id}), bağımlılıklar temizleniyor...`);
+    
+    // 1. Ürün çevirilerini sil
+    await ProductTranslation.destroy({
+      where: { product_id: id }
+    });
+    console.log('✅ Ürün çevirileri silindi');
+
+    // 2. Ürün etiketlerini sil
+    await ProductLabel.destroy({
+      where: { product_id: id }
+    });
+    console.log('✅ Ürün etiketleri silindi');
+
+    // 3. Önerilen ürün ilişkilerini sil (hem kaynak hem hedef olarak)
+    await RecommendedProduct.destroy({
+      where: {
+        [Op.or]: [
+          { product_id: id },
+          { recommended_product_id: id }
+        ]
+      }
+    });
+    console.log('✅ Önerilen ürün ilişkileri silindi');
+
+    // 4. Porsiyonları sil
+    await Portion.destroy({
+      where: { product_id: id }
+    });
+    console.log('✅ Porsiyonlar silindi');
+
+    // 5. Malzemeleri sil
+    await Ingredient.destroy({
+      where: { product_id: id }
+    });
+    console.log('✅ Malzemeler silindi');
+
+    // 6. Şube ürün ilişkilerini sil
     const BranchProduct = require('../models/BranchProduct');
     await BranchProduct.destroy({
       where: { product_id: id }
     });
+    console.log('✅ Şube ürün ilişkileri silindi');
 
-    // Sonra ürünü sil
+    // 7. Son olarak ürünü sil
     const deleted = await Products.destroy({
       where: { 
         product_id: id,
@@ -395,10 +447,11 @@ exports.deleteProduct = async (req, res) => {
       }
     });
 
-    res.status(200).json({ success: true });
+    console.log('✅ Ürün başarıyla silindi');
+    res.status(200).json({ success: true, message: 'Ürün ve tüm bağımlılıkları başarıyla silindi' });
   } catch (error) {
-    console.error('Silme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error('❌ Ürün silme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası: ' + error.message });
   }
 };
 
@@ -645,6 +698,21 @@ exports.getCategoriesList = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
+    const cloudflareService = new CloudflareService();
+
+    // Önce kategoriyi bul
+    const category = await Category.findOne({
+      where: {
+        category_id: id,
+        business_id: req.user.business_id
+      }
+    });
+
+    if (!category) {
+      return res.status(404).json({ error: 'Kategori bulunamadı' });
+    }
+
+    // Kategoriye bağlı ürün kontrolü
     const productCount = await Products.count({ 
       where: { 
         category_id: id,
@@ -654,19 +722,49 @@ exports.deleteCategory = async (req, res) => {
     if (productCount > 0) {
       return res.status(400).json({ error: 'Bu kategoriye bağlı ürünler var, önce ürünleri silin veya başka kategoriye taşıyın.' });
     }
+
+    console.log(`🗑️ Kategori siliniyor (ID: ${id}), bağımlılıklar temizleniyor...`);
+    
+    // Cloudflare'den resmi sil (eğer varsa)
+    if (category.cloudpath) {
+      try {
+        await cloudflareService.deleteFile(category.cloudpath);
+        console.log(`✅ Cloudflare'den kategori görseli silindi: ${category.cloudpath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den görsel silinemedi: ${cloudflareError.message}`);
+        // Cloudflare hatası olsa bile işleme devam et
+      }
+    }
+
+    // Yerel diskten resmi sil (eğer varsa)
+    if (category.image_url) {
+      const imagePath = `public/images/${category.image_url}`;
+      deleteImage(imagePath);
+    }
+    
+    // Kategori çevirilerini sil
+    await CategoryTranslation.destroy({
+      where: { category_id: id }
+    });
+    console.log('✅ Kategori çevirileri silindi');
+
+    // Kategoriyi sil
     const deleted = await Category.destroy({ 
       where: { 
         category_id: id,
         business_id: req.user.business_id
       } 
     });
+    
     if (deleted) {
-      res.json({ message: 'Kategori silindi' });
+      console.log('✅ Kategori başarıyla silindi');
+      res.json({ message: 'Kategori ve çevirileri başarıyla silindi' });
     } else {
       res.status(404).json({ error: 'Kategori bulunamadı' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Silme işlemi başarısız' });
+    console.error('❌ Kategori silme hatası:', error);
+    res.status(500).json({ error: 'Silme işlemi başarısız: ' + error.message });
   }
 };
 

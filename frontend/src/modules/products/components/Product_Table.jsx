@@ -25,18 +25,11 @@ const Product_Table = () => {
   const [recordToEdit, setRecordToEdit] = useState(null); // Düzenlenecek kayıt bilgileri
   const [refreshing, setRefreshing] = useState(false); // Sadece tablo yenileme için
   const [userPermissions, setUserPermissions] = useState(null); // Kullanıcı yetkileri
-  const [selectedCurrency, setSelectedCurrency] = useState('USD'); // Seçili para birimi
+  const [selectedCurrency, setSelectedCurrency] = useState('TRY'); // Seçili para birimi - Varsayılan TRY
 
   useEffect(() => {
     fetchData();
     fetchUserPermissions();
-  }, [currentLanguage]);
-
-  // Mevcut dilin varsayılan para birimini ayarla
-  useEffect(() => {
-    if (currentLanguage?.defaultCurrency?.code) {
-      setSelectedCurrency(currentLanguage.defaultCurrency.code);
-    }
   }, [currentLanguage]);
 
   // Fiyat dönüştürme fonksiyonu

@@ -1,6 +1,7 @@
 const { Business, BusinessTranslation, Language } = require('../models');
 const path = require('path');
 const fs = require('fs').promises;
+const { CloudflareService } = require('../middleware/cloudflareMiddleware');
 
 // Get business profile
 const getBusinessProfile = async (req, res) => {
@@ -292,6 +293,7 @@ const uploadBannerImages = async (req, res) => {
 const deleteLogo = async (req, res) => {
   try {
     const { business_id } = req.user;
+    const cloudflareService = new CloudflareService();
 
     // Find business
     const business = await Business.findOne({
@@ -305,11 +307,23 @@ const deleteLogo = async (req, res) => {
       });
     }
 
-    // Delete logo file if exists
+    // Delete logo file from Cloudflare if exists
+    if (business.logocloudpath) {
+      try {
+        await cloudflareService.deleteFile(business.logocloudpath);
+        console.log(`✅ Cloudflare'den logo silindi: ${business.logocloudpath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den logo silinemedi: ${cloudflareError.message}`);
+        // Cloudflare hatası olsa bile işleme devam et
+      }
+    }
+
+    // Delete logo file from local storage if exists
     if (business.logo) {
       try {
         const logoPath = path.join(__dirname, '..', 'public', 'logos', business.logo);
         await fs.unlink(logoPath);
+        console.log(`✅ Yerel diskten logo silindi: ${business.logo}`);
       } catch (error) {
         console.log('Logo file not found or could not be deleted:', error.message);
       }
@@ -343,6 +357,7 @@ const deleteBannerImage = async (req, res) => {
   try {
     const { business_id } = req.user;
     const { imagePath, cloudPath } = req.body;
+    const cloudflareService = new CloudflareService();
 
     if (!imagePath) {
       return res.status(400).json({
@@ -380,6 +395,17 @@ const deleteBannerImage = async (req, res) => {
       bannerCloudPaths = [];
     }
     
+    // Cloudflare'den görseli sil
+    if (cloudPath) {
+      try {
+        await cloudflareService.deleteFile(cloudPath);
+        console.log(`✅ Cloudflare'den banner görseli silindi: ${cloudPath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den banner görseli silinemedi: ${cloudflareError.message}`);
+        // Cloudflare hatası olsa bile işleme devam et
+      }
+    }
+    
     // Cloudflare bilgilerini güncelle
     if (cloudPath && bannerCloudPaths.includes(cloudPath)) {
       const index = bannerCloudPaths.indexOf(cloudPath);
@@ -394,10 +420,11 @@ const deleteBannerImage = async (req, res) => {
       }
     }
 
-    // Delete file
+    // Delete local file
     try {
       const fullImagePath = path.join(__dirname, '..', 'public', 'images', 'banners', imagePath);
       await fs.unlink(fullImagePath);
+      console.log(`✅ Yerel diskten banner görseli silindi: ${imagePath}`);
     } catch (error) {
       console.log('Banner image file not found or could not be deleted:', error.message);
     }

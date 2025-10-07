@@ -314,7 +314,11 @@ const ModalForm = ({ visible, onCancel, onOk}) => {
                 name="price"
                 rules={[{ required: true, message: 'Lütfen fiyat giriniz!' }]}
               >
-                <InputNumber placeholder="Fiyat girin" style={{ width: '100%' }} />
+                <InputNumber 
+                  placeholder="Fiyat girin" 
+                  addonAfter="₺" 
+                  style={{ width: '100%' }} 
+                />
               </Form.Item>
             </Col>
            
