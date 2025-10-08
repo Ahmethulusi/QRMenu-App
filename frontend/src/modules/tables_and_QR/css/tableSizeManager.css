@@ -7,9 +7,16 @@
   white-space: nowrap;
 }
 
-.ant-table-body {
-  max-height: 65vh !important;
+/* .ant-table-body {
+  max-height: 45vh !important;
   overflow-y: auto;
+}  */
+
+
+
+
+.ant-table {
+  max-height: 800px !important;
 }
 
 /* Sabit satır yüksekliği */

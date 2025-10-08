@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, InputNumber, Switch, message, Row, Col, Card, List, Typography, Select, Modal, Form, Input } from 'antd';
+import { Table, Button, InputNumber, Switch, message, Card, Typography, Select, Modal, Form, Input } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import '../css/BranchProductMatrix.css';
 import { apiGet, apiPut, apiPost } from '../../common/utils/api';
@@ -441,66 +441,43 @@ const BranchProductMatrix = ({ businessId }) => {
       ];
 
                    return (
-            <div style={{ 
-              height: '350px', 
-              border: '1px solid #f0f0f0',
-              borderRadius: '6px'
-            }}>
+           
               <Table
+                className='ant-table'
+                
+                bordered={true}
+                scroll={{x: 900, y: 350}}
+
                 columns={columns}
                 dataSource={filteredProducts.map(product => ({
                   ...product,
                   key: `${product.product_id}`,
                 }))}
                 pagination={{
-                  pageSize: 10,
+                  pageSizeOptions: ['5', '10', '20', '50'],
                   showSizeChanger: true,
-                  showQuickJumper: true,
+                  defaultPageSize: 5,
+                  responsive: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                  position: ['bottomRight']
                 }}
-                size="small"
                 // scroll={{ x: 1200 ,y: 400}}
                 loading={loading}
-                style={{ 
-                  height: '100%',
-                  overflow: 'auto'
-                }}
               />
-            </div>
           );
   };
 
   return (
-    <div className="branch-product-matrix branch-product-matrix-page" style={{ 
+    <div  style={{ 
       padding: 16
     }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2}>Şube Ürün Yönetimi</Title>
-                           <div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => openModal()}
-                style={{ 
-                fontWeight: 'bold', 
-                fontSize: 16, 
-                padding: '12px 10px',
-                height: 'auto',
-                minHeight: '20px'
-              }}
-            >
-              Yeni Şube
-            </Button>
-           
-          </div>
-      </div>
-
-      {/* Filtreler */}
-      <Card title="Filtreler" size="small" style={{ marginBottom: 16 }}>
-        <Row gutter={16}>
-          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-            <Text strong>Şube Filtresi:</Text>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Text strong>Şube:</Text>
             <Select
-              style={{ width: '100%', marginTop: 8 }}
+              style={{ width: 200 }}
               placeholder="Tüm şubeler"
               allowClear
               value={selectedBranch}
@@ -512,33 +489,24 @@ const BranchProductMatrix = ({ businessId }) => {
                 </Option>
               ))}
             </Select>
-          </Col>
-          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-            <Text strong>Kategori Filtresi:</Text>
-            <Select
-              style={{ width: '100%', marginTop: 8 }}
-              placeholder="Tüm kategoriler"
-              allowClear
-              value={selectedCategory}
-              onChange={handleCategoryFilter}
-            >
-              {allCategories.map(category => (
-                <Option key={category} value={category}>
-                  {category}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col xs={24} sm={24} md={8} lg={8} xl={8}>
-            <Button 
-              onClick={clearFilters}
-              style={{ width: '100%', marginTop: 32 }}
-            >
-              Filtreleri Temizle
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openModal()}
+            style={{ 
+              fontWeight: 'bold', 
+              fontSize: 16, 
+              padding: '10px 10px',
+              height: 'auto',
+              minHeight: '10px'
+            }}
+          >
+            Yeni Şube
+          </Button>
+        </div>
+      </div>
+
 
              {/* Ürün Tablosu */}
        <Card title="Ürünler" size="small">

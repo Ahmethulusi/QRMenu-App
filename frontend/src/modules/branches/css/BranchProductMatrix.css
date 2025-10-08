@@ -7,6 +7,11 @@
   min-height: 100vh;
 }
 
+.ant-table-body {
+  max-height: 45vh !important;
+  overflow-y: auto;
+}
+
 /* Header section styles */
 .matrix-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -30,9 +35,9 @@
 
 /* Filter card styles */
 .filter-card {
-  background: white;
+  background: transparent;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   margin-bottom: 20px;
 }
 
@@ -63,9 +68,9 @@
 
 /* Product table styles */
 .product-table-card {
-  background: white;
+  background: transparent;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .product-table-card .ant-card-head {
