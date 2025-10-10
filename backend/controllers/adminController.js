@@ -17,6 +17,7 @@ exports.updateImageUrl = async (req, res) => {
     // Cloudflare bilgilerini al
     const cloudUrl = req.file.cloudUrl || null;
     const cloudPath = req.file.cloudPath || null;
+    const compressionStats = req.file.compressionStats || null;
     
     console.log('☁️ updateImageUrl - Cloudflare bilgileri:', {
         productId,
@@ -25,7 +26,37 @@ exports.updateImageUrl = async (req, res) => {
         cloudPath
     });
 
+    // Sıkıştırma istatistiklerini logla
+    if (compressionStats) {
+        if (compressionStats.compressed) {
+            console.log('📊 Görsel Sıkıştırma İstatistikleri:');
+            console.log(`   • Orijinal Boyut: ${compressionStats.originalSizeKB.toFixed(2)} KB`);
+            console.log(`   • Sıkıştırılmış Boyut: ${compressionStats.finalSizeKB.toFixed(2)} KB`);
+            console.log(`   • Tasarruf Oranı: %${compressionStats.compressionRatio}`);
+            console.log(`   • İşlem Süresi: ${compressionStats.processingTime}ms`);
+            console.log(`   • Deneme Sayısı: ${compressionStats.attempts}`);
+        } else {
+            console.log('ℹ️ Görsel zaten optimize edilmiş, sıkıştırma atlandı');
+        }
+    }
+
     try {
+        // Önce eski ürünü bul ve eski görseli Cloudflare'den sil
+        const existingProduct = await Products.findOne({
+            where: { product_id: productId }
+        });
+
+        if (existingProduct && existingProduct.cloudpath) {
+            const cloudflareService = new CloudflareService();
+            try {
+                await cloudflareService.deleteFile(existingProduct.cloudpath);
+                console.log(`✅ Eski ürün görseli Cloudflare'den silindi: ${existingProduct.cloudpath}`);
+            } catch (cloudflareError) {
+                console.error(`⚠️ Cloudflare'den eski görsel silinemedi: ${cloudflareError.message}`);
+                // Hata olsa bile işleme devam et
+            }
+        }
+
         const result = await Products.update({ 
             image_url: imageUrl,
             cloudurl: cloudUrl,
@@ -38,7 +69,8 @@ exports.updateImageUrl = async (req, res) => {
             success: true,
             image_url: imageUrl,
             cloudUrl: cloudUrl,
-            cloudPath: cloudPath
+            cloudPath: cloudPath,
+            compressionStats: compressionStats
         });
     } catch (err) {
         console.error('❌ Resim güncelleme hatası:', err);
@@ -245,12 +277,26 @@ exports.createProduct = async (req, res) => {
         // Cloudflare URL ve path bilgilerini al
         const cloudUrl = req.file && req.file.cloudUrl ? req.file.cloudUrl : null;
         const cloudPath = req.file && req.file.cloudPath ? req.file.cloudPath : null;
+        const compressionStats = req.file && req.file.compressionStats ? req.file.compressionStats : null;
 
         console.log('🔍 Request body:', req.body);
         console.log('🏷️ Labels raw:', labels);
         console.log('🏷️ Labels type:', typeof labels);
         console.log('☁️ Cloudflare URL:', cloudUrl);
         console.log('☁️ Cloudflare Path:', cloudPath);
+
+        // Sıkıştırma istatistiklerini logla
+        if (compressionStats) {
+            if (compressionStats.compressed) {
+                console.log('📊 Ürün Görseli Sıkıştırma İstatistikleri:');
+                console.log(`   • Orijinal Boyut: ${compressionStats.originalSizeKB.toFixed(2)} KB`);
+                console.log(`   • Sıkıştırılmış Boyut: ${compressionStats.finalSizeKB.toFixed(2)} KB`);
+                console.log(`   • Tasarruf Oranı: %${compressionStats.compressionRatio}`);
+                console.log(`   • İşlem Süresi: ${compressionStats.processingTime}ms`);
+            } else {
+                console.log('ℹ️ Görsel zaten optimize edilmiş, sıkıştırma atlandı');
+            }
+        }
 
         if (!name || !price || !category_id) {
             return res.status(400).json({ error: "Zorunlu alanlar eksik" });
@@ -881,6 +927,30 @@ exports.updateCategory = async (req, res) => {
     let cloudUrl = null;
     let cloudPath = null;
 
+    // Önce mevcut kategoriyi bul
+    const existingCategory = await Category.findOne({
+      where: { 
+        category_id: category_id,
+        business_id: req.user.business_id
+      }
+    });
+
+    if (!existingCategory) {
+      return res.status(404).json({ error: 'Kategori bulunamadı' });
+    }
+
+    // Eğer resim kaldırılacaksa veya yeni resim yüklenecekse eski görseli sil
+    if ((removeImage === 'true' || imageFile) && existingCategory.cloudpath) {
+      const cloudflareService = new CloudflareService();
+      try {
+        await cloudflareService.deleteFile(existingCategory.cloudpath);
+        console.log(`✅ Eski kategori görseli Cloudflare'den silindi: ${existingCategory.cloudpath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den eski görsel silinemedi: ${cloudflareError.message}`);
+        // Hata olsa bile işleme devam et
+      }
+    }
+
     // Eğer resim kaldırılacaksa
     if (removeImage === 'true') {
       imageUrl = null;
@@ -901,13 +971,9 @@ exports.updateCategory = async (req, res) => {
     }
     // Eğer hiçbir değişiklik yoksa mevcut resmi koru
     else {
-      // Mevcut kategoriyi bul ve resmini koru
-      const existingCategory = await Category.findByPk(category_id);
-      if (existingCategory) {
-        imageUrl = existingCategory.image_url;
-        cloudUrl = existingCategory.cloudurl;
-        cloudPath = existingCategory.cloudpath;
-      }
+      imageUrl = existingCategory.image_url;
+      cloudUrl = existingCategory.cloudurl;
+      cloudPath = existingCategory.cloudpath;
     }
 
     // Kategoriyi güncelle
@@ -1313,6 +1379,25 @@ exports.updateProductImage = async (req, res) => {
         let cloudUrl = null;
         let cloudPath = null;
 
+        // Önce mevcut ürünü bul
+        const existingProduct = await Products.findByPk(product_id);
+        
+        if (!existingProduct) {
+            return res.status(404).json({ error: 'Ürün bulunamadı' });
+        }
+
+        // Eğer resim kaldırılacaksa veya yeni resim yüklenecekse eski görseli sil
+        if ((removeImage === 'true' || imageFile) && existingProduct.cloudpath) {
+            const cloudflareService = new CloudflareService();
+            try {
+                await cloudflareService.deleteFile(existingProduct.cloudpath);
+                console.log(`✅ Eski ürün görseli Cloudflare'den silindi: ${existingProduct.cloudpath}`);
+            } catch (cloudflareError) {
+                console.error(`⚠️ Cloudflare'den eski görsel silinemedi: ${cloudflareError.message}`);
+                // Hata olsa bile işleme devam et
+            }
+        }
+
         // Eğer resim kaldırılacaksa
         if (removeImage === 'true') {
             imageUrl = null;
@@ -1325,21 +1410,31 @@ exports.updateProductImage = async (req, res) => {
             // Cloudflare bilgilerini al
             cloudUrl = imageFile.cloudUrl || null;
             cloudPath = imageFile.cloudPath || null;
+            const compressionStats = imageFile.compressionStats || null;
             
             console.log('☁️ Resim güncelleme - Cloudflare bilgileri:', {
                 cloudUrl,
                 cloudPath
             });
+
+            // Sıkıştırma istatistiklerini logla
+            if (compressionStats) {
+                if (compressionStats.compressed) {
+                    console.log('📊 Ürün Resmi Güncelleme - Sıkıştırma İstatistikleri:');
+                    console.log(`   • Orijinal Boyut: ${compressionStats.originalSizeKB.toFixed(2)} KB`);
+                    console.log(`   • Sıkıştırılmış Boyut: ${compressionStats.finalSizeKB.toFixed(2)} KB`);
+                    console.log(`   • Tasarruf Oranı: %${compressionStats.compressionRatio}`);
+                    console.log(`   • İşlem Süresi: ${compressionStats.processingTime}ms`);
+                } else {
+                    console.log('ℹ️ Görsel zaten optimize edilmiş, sıkıştırma atlandı');
+                }
+            }
         }
         // Eğer hiçbir değişiklik yoksa mevcut resmi koru
         else {
-            // Mevcut ürünü bul ve resmini koru
-            const existingProduct = await Products.findByPk(product_id);
-            if (existingProduct) {
-                imageUrl = existingProduct.image_url;
-                cloudUrl = existingProduct.cloudurl;
-                cloudPath = existingProduct.cloudpath;
-            }
+            imageUrl = existingProduct.image_url;
+            cloudUrl = existingProduct.cloudurl;
+            cloudPath = existingProduct.cloudpath;
         }
 
         // Ürünü güncelle

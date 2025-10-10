@@ -164,7 +164,19 @@ const uploadLogo = async (req, res) => {
       });
     }
 
-    // Delete old logo if exists
+    // Eski logo Cloudflare'den sil (eğer varsa)
+    if (business.logocloudpath) {
+      const cloudflareService = new CloudflareService();
+      try {
+        await cloudflareService.deleteFile(business.logocloudpath);
+        console.log(`✅ Eski logo Cloudflare'den silindi: ${business.logocloudpath}`);
+      } catch (cloudflareError) {
+        console.error(`⚠️ Cloudflare'den eski logo silinemedi: ${cloudflareError.message}`);
+        // Hata olsa bile işleme devam et
+      }
+    }
+
+    // Delete old logo from local disk if exists
     if (business.logo) {
       try {
         const oldLogoPath = path.join(__dirname, '..', 'public', 'logos', business.logo);
@@ -180,11 +192,25 @@ const uploadLogo = async (req, res) => {
     // Cloudflare bilgilerini al
     const logoCloudUrl = req.file.cloudUrl || null;
     const logoCloudPath = req.file.cloudPath || null;
+    const compressionStats = req.file.compressionStats || null;
     
     console.log('☁️ Logo yükleme - Cloudflare bilgileri:', {
       logoCloudUrl,
       logoCloudPath
     });
+
+    // Sıkıştırma istatistiklerini logla
+    if (compressionStats) {
+      if (compressionStats.compressed) {
+        console.log('📊 Logo Sıkıştırma İstatistikleri:');
+        console.log(`   • Orijinal Boyut: ${compressionStats.originalSizeKB.toFixed(2)} KB`);
+        console.log(`   • Sıkıştırılmış Boyut: ${compressionStats.finalSizeKB.toFixed(2)} KB`);
+        console.log(`   • Tasarruf Oranı: %${compressionStats.compressionRatio}`);
+        console.log(`   • İşlem Süresi: ${compressionStats.processingTime}ms`);
+      } else {
+        console.log('ℹ️ Logo zaten optimize edilmiş, sıkıştırma atlandı');
+      }
+    }
     
     await business.update({
       logo: logoFileName,
@@ -199,7 +225,8 @@ const uploadLogo = async (req, res) => {
       data: {
         logo: logoFileName,
         cloudUrl: logoCloudUrl,
-        cloudPath: logoCloudPath
+        cloudPath: logoCloudPath,
+        compressionStats: compressionStats
       }
     });
 
@@ -237,7 +264,29 @@ const uploadBannerImages = async (req, res) => {
       });
     }
 
-    // Delete old banner images if exist
+    // Eski banner'ları Cloudflare'den sil
+    if (business.bannercloudpath) {
+      const cloudflareService = new CloudflareService();
+      try {
+        const oldBannerCloudPaths = JSON.parse(business.bannercloudpath || '[]');
+        
+        // Her bir eski banner'ı sil
+        for (const cloudPath of oldBannerCloudPaths) {
+          if (cloudPath) {
+            try {
+              await cloudflareService.deleteFile(cloudPath);
+              console.log(`✅ Eski banner Cloudflare'den silindi: ${cloudPath}`);
+            } catch (err) {
+              console.error(`⚠️ Banner silinemedi: ${cloudPath}`, err.message);
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error('Banner cloud path parse edilemedi:', parseError.message);
+      }
+    }
+
+    // Delete old banner images from local disk if exist
     if (business.banner_images && Array.isArray(business.banner_images)) {
       for (const bannerFileName of business.banner_images) {
         try {
@@ -259,6 +308,22 @@ const uploadBannerImages = async (req, res) => {
     console.log('☁️ Banner yükleme - Cloudflare bilgileri:', {
       bannerCloudUrls,
       bannerCloudPaths
+    });
+
+    // Sıkıştırma istatistiklerini logla
+    req.files.forEach((file, index) => {
+      const compressionStats = file.compressionStats;
+      if (compressionStats) {
+        if (compressionStats.compressed) {
+          console.log(`📊 Banner ${index + 1} Sıkıştırma İstatistikleri:`);
+          console.log(`   • Orijinal Boyut: ${compressionStats.originalSizeKB.toFixed(2)} KB`);
+          console.log(`   • Sıkıştırılmış Boyut: ${compressionStats.finalSizeKB.toFixed(2)} KB`);
+          console.log(`   • Tasarruf Oranı: %${compressionStats.compressionRatio}`);
+          console.log(`   • İşlem Süresi: ${compressionStats.processingTime}ms`);
+        } else {
+          console.log(`ℹ️ Banner ${index + 1} zaten optimize edilmiş, sıkıştırma atlandı`);
+        }
+      }
     });
 
     // Update banner images

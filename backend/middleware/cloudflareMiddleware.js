@@ -2,6 +2,7 @@ const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/cl
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const fs = require('fs').promises;
 const path = require('path');
+const ImageCompressionService = require('../utils/imageCompression');
 require('dotenv').config();
 
 // Cloudflare R2 istemcisini yapılandır
@@ -18,15 +19,29 @@ const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
 const CLOUDFLARE_PUBLIC_URL = process.env.CLOUDFLARE_PUBLIC_URL;
 
 class CloudflareService {
+  constructor() {
+    this.compressionService = new ImageCompressionService();
+  }
+
   /**
    * Dosyayı Cloudflare R2'ye yükler
    * @param {string} localPath - Yerel dosya yolu
    * @param {string} destinationPath - R2'deki hedef yol
    * @param {string} contentType - Dosya MIME tipi
-   * @returns {Promise<string>} - Yüklenen dosyanın public URL'i
+   * @param {string} type - Dosya tipi (product, logo, vb.) - Sıkıştırma için
+   * @param {boolean} compress - Sıkıştırma yapılsın mı (varsayılan: true)
+   * @returns {Promise<Object>} - Yüklenen dosyanın bilgileri
    */
-  async uploadFile(localPath, destinationPath, contentType) {
+  async uploadFile(localPath, destinationPath, contentType, type = 'product', compress = true) {
     try {
+      let compressionStats = null;
+
+      // Eğer görsel dosyası ise ve sıkıştırma aktifse
+      if (compress && this.compressionService.isImage(contentType)) {
+        console.log(`🔄 Görsel sıkıştırılıyor: ${path.basename(localPath)}`);
+        compressionStats = await this.compressionService.compressImage(localPath, type, contentType);
+      }
+
       const fileContent = await fs.readFile(localPath);
       
       const uploadParams = {
@@ -44,7 +59,14 @@ class CloudflareService {
       // Başarılı log
       console.log(`📤 Dosya Cloudflare'e yüklendi: ${publicUrl}`);
       
-      return publicUrl;
+      if (compressionStats && compressionStats.compressed) {
+        console.log(`✅ Sıkıştırma başarılı: ${compressionStats.originalSizeKB.toFixed(2)} KB → ${compressionStats.finalSizeKB.toFixed(2)} KB (%${compressionStats.compressionRatio} azalma)`);
+      }
+      
+      return {
+        publicUrl,
+        compressionStats
+      };
     } catch (error) {
       console.error(`❌ Cloudflare yükleme hatası: ${error.message}`);
       throw error;
@@ -104,11 +126,13 @@ const cloudflareMiddleware = (type) => {
         // Cloudflare'deki hedef yolu oluştur
         const cloudPath = `${type}/${path.basename(file.path)}`;
         
-        // Dosyayı Cloudflare'e yükle
-        const publicUrl = await cloudflareService.uploadFile(
+        // Dosyayı sıkıştır ve Cloudflare'e yükle
+        const uploadResult = await cloudflareService.uploadFile(
           file.path,
           cloudPath,
-          file.mimetype
+          file.mimetype,
+          type,
+          true // Sıkıştırma aktif
         );
 
         // Yerel dosyayı sil
@@ -117,12 +141,13 @@ const cloudflareMiddleware = (type) => {
         // Request objesini güncelle
         req.file = {
           ...file,
-          cloudUrl: publicUrl,
+          cloudUrl: uploadResult.publicUrl,
           cloudPath: cloudPath,
-          location: publicUrl // S3 uyumluluğu için
+          location: uploadResult.publicUrl, // S3 uyumluluğu için
+          compressionStats: uploadResult.compressionStats
         };
         
-        console.log(`✅ Cloudflare middleware - Tek dosya işlendi: ${publicUrl}`);
+        console.log(`✅ Cloudflare middleware - Tek dosya işlendi: ${uploadResult.publicUrl}`);
       } 
       // Çoklu dosya durumu (array)
       else if (req.files && Array.isArray(req.files)) {
@@ -131,11 +156,13 @@ const cloudflareMiddleware = (type) => {
           // Cloudflare'deki hedef yolu oluştur
           const cloudPath = `${type}/${path.basename(file.path)}`;
           
-          // Dosyayı Cloudflare'e yükle
-          const publicUrl = await cloudflareService.uploadFile(
+          // Dosyayı sıkıştır ve Cloudflare'e yükle
+          const uploadResult = await cloudflareService.uploadFile(
             file.path,
             cloudPath,
-            file.mimetype
+            file.mimetype,
+            type,
+            true // Sıkıştırma aktif
           );
 
           // Yerel dosyayı sil
@@ -144,9 +171,10 @@ const cloudflareMiddleware = (type) => {
           // Dosya bilgilerini güncelle
           req.files[i] = {
             ...file,
-            cloudUrl: publicUrl,
+            cloudUrl: uploadResult.publicUrl,
             cloudPath: cloudPath,
-            location: publicUrl
+            location: uploadResult.publicUrl,
+            compressionStats: uploadResult.compressionStats
           };
         }
         console.log(`✅ Cloudflare middleware - ${req.files.length} dosya işlendi`);
@@ -160,11 +188,13 @@ const cloudflareMiddleware = (type) => {
             // Cloudflare'deki hedef yolu oluştur
             const cloudPath = `${type}/${fieldName}_${path.basename(file.path)}`;
             
-            // Dosyayı Cloudflare'e yükle
-            const publicUrl = await cloudflareService.uploadFile(
+            // Dosyayı sıkıştır ve Cloudflare'e yükle
+            const uploadResult = await cloudflareService.uploadFile(
               file.path,
               cloudPath,
-              file.mimetype
+              file.mimetype,
+              type,
+              true // Sıkıştırma aktif
             );
 
             // Yerel dosyayı sil
@@ -173,9 +203,10 @@ const cloudflareMiddleware = (type) => {
             // Dosya bilgilerini güncelle
             files[i] = {
               ...file,
-              cloudUrl: publicUrl,
+              cloudUrl: uploadResult.publicUrl,
               cloudPath: cloudPath,
-              location: publicUrl
+              location: uploadResult.publicUrl,
+              compressionStats: uploadResult.compressionStats
             };
           }
         }

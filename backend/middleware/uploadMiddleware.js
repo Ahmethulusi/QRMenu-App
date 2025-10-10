@@ -295,16 +295,18 @@ const uploadFieldsToCloudflare = (type, fields) => {
             const files = req.files && req.files[fieldName];
             
             if (files && files.length > 0) {
-              // Her bir dosyayı Cloudflare'e yükle
+              // Her bir dosyayı sıkıştır ve Cloudflare'e yükle
               for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const cloudPath = `${type}/${fieldName}_${path.basename(file.path)}`;
                 
-                // Dosyayı Cloudflare'e yükle
-                const cloudUrl = await cloudflareService.uploadFile(
+                // Dosyayı sıkıştır ve Cloudflare'e yükle
+                const uploadResult = await cloudflareService.uploadFile(
                   file.path,
                   cloudPath,
-                  file.mimetype
+                  file.mimetype,
+                  type,
+                  true // Sıkıştırma aktif
                 );
                 
                 // Yerel dosyayı sil
@@ -313,9 +315,10 @@ const uploadFieldsToCloudflare = (type, fields) => {
                 // Dosya bilgilerini güncelle
                 files[i] = {
                   ...file,
-                  cloudUrl,
+                  cloudUrl: uploadResult.publicUrl,
                   cloudPath,
-                  location: cloudUrl
+                  location: uploadResult.publicUrl,
+                  compressionStats: uploadResult.compressionStats
                 };
               }
             }
