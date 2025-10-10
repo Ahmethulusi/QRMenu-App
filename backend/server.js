@@ -13,10 +13,11 @@ const models = require('./models');
 const { startCurrencyCronJobs } = require('./services/currencyCronService');
 
 // Middleware
-// app.use(cors());
-app.use(cors({
-  origin: "https://www.promasterqr.com"
-}));
+app.use(cors());
+// app.use(cors({
+//   origin: "https://www.promasterqr.com"
+// }));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
