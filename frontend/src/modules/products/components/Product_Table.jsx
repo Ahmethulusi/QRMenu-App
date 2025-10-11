@@ -541,7 +541,7 @@ const Product_Table = () => {
         pagination={{
           pageSizeOptions: ['5', '10', '20', '50'],
           showSizeChanger: true,
-          defaultPageSize: 5,
+          defaultPageSize: 50,
           responsive: true,
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           position: ['bottomRight']
