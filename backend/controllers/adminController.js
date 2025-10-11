@@ -1357,19 +1357,64 @@ exports.uploadExcel = async (req, res) => {
       return mappedItem;
     });
 
+    // Zorunlu alanları kontrol et ve geçerli satırları filtrele
     const missingFields = [];
+    const validRows = [];
+    const invalidRows = [];
+    
     data.forEach((item, index) => {
-      if (!item.product_name) missingFields.push(`Satır ${index + 1}: Ürün adı eksik`);
-      if (!item.price) missingFields.push(`Satır ${index + 1}: Fiyat eksik`);
-      if (!item.category_name) missingFields.push(`Satır ${index + 1}: Kategori adı eksik`);
+      const rowNumber = index + 1;
+      const rowErrors = [];
+      
+      // Zorunlu alanları kontrol et
+      if (!item.product_name) rowErrors.push(`Ürün adı eksik`);
+      if (!item.price) rowErrors.push(`Fiyat eksik`);
+      if (!item.category_name) rowErrors.push(`Kategori adı eksik`);
+      
+      // Boş satırları atla (tüm alanları boş olan satırlar)
+      const isEmpty = !item.product_name && !item.price && !item.category_name && 
+                     !item.description && !item.is_selected && !item.is_available;
+      
+      if (isEmpty) {
+        console.log(`⚠️ Satır ${rowNumber}: Boş satır, atlanıyor`);
+        return; // Bu satırı atla
+      }
+      
+      if (rowErrors.length > 0) {
+        // Hatalı satır
+        missingFields.push(`Satır ${rowNumber}: ${rowErrors.join(', ')}`);
+        invalidRows.push({
+          rowNumber,
+          errors: rowErrors,
+          data: item
+        });
+      } else {
+        // Geçerli satır
+        validRows.push(item);
+      }
     });
-
-    if (missingFields.length > 0) {
+    
+    console.log(`📊 Toplam satır: ${data.length}, Geçerli: ${validRows.length}, Geçersiz: ${invalidRows.length}`);
+    
+    // Hiç geçerli satır yoksa işlemi durdur
+    if (validRows.length === 0) {
       return res.status(400).json({
-        message: 'Zorunlu alanlar eksik:',
-        details: missingFields
+        message: 'İşlenebilecek geçerli satır bulunamadı. Tüm satırlarda zorunlu alanlar eksik.',
+        details: missingFields,
+        totalRows: data.length,
+        validRows: 0,
+        invalidRows: invalidRows.length
       });
     }
+    
+    // Geçersiz satırlar varsa uyarı göster ama işleme devam et
+    if (missingFields.length > 0) {
+      console.warn(`⚠️ ${missingFields.length} satırda zorunlu alan eksik, bu satırlar atlanacak`);
+      console.warn(missingFields);
+    }
+    
+    // Bundan sonraki işlemlerde sadece geçerli satırları kullan
+    const filteredData = validRows;
 
     const count = await Products.count();
     const duplicateProducts = [];
@@ -1405,8 +1450,9 @@ exports.uploadExcel = async (req, res) => {
       p.product_name.toString().trim().toLowerCase()
     );
 
-    for (let i = 0; i < data.length; i++) {
-      const item = data[i];
+    // Filtrelenmiş (geçerli) satırları işle
+    for (let i = 0; i < filteredData.length; i++) {
+      const item = filteredData[i];
       
       const incomingName = item.product_name.toString().trim().toLowerCase();
 
@@ -1550,7 +1596,8 @@ console.log('📤 Response gönderiliyor:', {
   statusCode,
   message: responseMessage,
   addedCount: successfulProducts.length,
-  duplicateCount: duplicateProducts.length
+  duplicateCount: duplicateProducts.length,
+  invalidRowsCount: invalidRows.length
 });
 
 res.status(statusCode).json({
@@ -1560,9 +1607,13 @@ res.status(statusCode).json({
   categoryErrors,
   addedCount: successfulProducts.length,
   duplicateCount: duplicateProducts.length,
+  skippedRows: missingFields,
   detailedResults: {
     success: successfulProducts.length > 0,
-    totalProcessed: data.length,
+    totalRows: data.length,
+    validRows: validRows.length,
+    invalidRows: invalidRows.length,
+    processedRows: filteredData.length,
     successCount: successfulProducts.length,
     duplicateCount: duplicateProducts.length,
     errorCount: categoryErrors.length
