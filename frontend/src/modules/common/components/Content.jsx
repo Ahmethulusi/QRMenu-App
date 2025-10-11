@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Sort2 from '../../products/components/Sort2';
 import Categories from '../../categories/components/Categories';
 import ProductTable from '../../products/components/Product_Table';
 import PriceChangingPage from '../../products/components/PriceChange';
 // import ProfileScreen from '../../users_and_permissions/components/ProfileScreen';
-import CategorySortTable from '../../categories/components/CategorySort';
+import UnifiedSortTable from '../../products/components/UnifiedSort';
 import TablesPage from '../../tables_and_QR/components/TablesPage';
 import NonOrderableQR from '../../tables_and_QR/components/Non_OrderableQR';
 import QRDesignsTable from '../../tables_and_QR/components/QRDesignsTable';
@@ -153,14 +152,7 @@ function Content({ selectedComponent }) {
       }
       return <PriceChangingPage />;
 
-    case 'Sort':
-      if (!checkComponentPermission('products', 'sort')) {
-        return <NoPermission 
-          title="Sıralama sayfasına erişim yetkiniz yok"
-          subTitle="Ürün sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
-        />;
-      }
-      return <Sort2 />;
+    // 'Sort' case'i artık kullanılmıyor, UnifiedSortTable kullanılıyor
 
     case 'BusinessProfile':
       if (!checkComponentPermission('business_profile', 'read')) {
@@ -202,13 +194,13 @@ function Content({ selectedComponent }) {
       return <TablesPage />;
 
     case 'CategorySort':
-      if (!checkComponentPermission('categories', 'sort')) {
+      if (!checkComponentPermission('categories', 'sort') && !checkComponentPermission('products', 'sort')) {
         return <NoPermission 
-          title="Kategori sıralama sayfasına erişim yetkiniz yok"
-          subTitle="Kategori sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
+          title="Kategori ve Ürün Sıralama sayfasına erişim yetkiniz yok"
+          subTitle="Kategori ve ürün sıralamasını değiştirmek için gerekli yetkilere sahip değilsiniz."
         />;
       }
-      return <CategorySortTable />;
+      return <UnifiedSortTable />;
 
     case 'GeneralQR':
       if (!checkComponentPermission('qrcodes', 'read')) {

@@ -220,6 +220,52 @@ exports.updateProductsBySiraId = async (req, res) => {
     }
 };
 
+// Belirli bir kategori içindeki ürünlerin sırasını güncelleme
+exports.updateCategoryProductsSira = async (req, res) => {
+    const { products, category_id } = req.body;
+
+    try {
+        if (!products || !Array.isArray(products) || !category_id) {
+            return res.status(400).json({ error: 'Ürünler listesi ve kategori ID gerekli' });
+        }
+
+        // Kategori kontrolü
+        const category = await Category.findOne({
+            where: {
+                category_id,
+                business_id: req.user.business_id
+            }
+        });
+
+        if (!category) {
+            return res.status(404).json({ error: 'Kategori bulunamadı' });
+        }
+
+        // Her ürün için sira_id'yi güncelle
+        for (let i = 0; i < products.length; i++) {
+            const product = products[i];
+            await Products.update(
+                { sira_id: i + 1 },
+                { 
+                    where: { 
+                        product_id: product.product_id,
+                        category_id: category_id,
+                        business_id: req.user.business_id
+                    } 
+                }
+            );
+        }
+
+        res.status(200).json({ 
+            message: 'Kategori ürün sıralaması başarıyla güncellendi',
+            updatedCount: products.length 
+        });
+    } catch (err) {
+        console.error('Kategori ürün sıralama hatası:', err);
+        res.status(500).json({ error: 'Kategori ürün sıralaması güncellenirken bir hata oluştu' });
+    }
+};
+
 exports.getProductsByBusiness = async (req, res) => {
     const { business_id } = req.params; 
     try {
@@ -1071,6 +1117,19 @@ exports.getProductsByCategory = async (req, res) => {
       if (!category_id) {
         return res.status(400).json({ message: 'Kategori ID gerekli' });
       }
+      
+      // Önce kategori varlığını kontrol et
+      const category = await Category.findOne({
+        where: {
+          category_id,
+          business_id: req.user.business_id
+        }
+      });
+      
+      if (!category) {
+        console.log(`⚠️ Kategori bulunamadı: ${category_id}`);
+        return res.status(404).json({ message: 'Kategori bulunamadı' });
+      }
   
       const products = await Products.findAll({ 
         where: { 
@@ -1078,7 +1137,10 @@ exports.getProductsByCategory = async (req, res) => {
           business_id: req.user.business_id
         } 
       });
+      
+      console.log(`✅ Kategori #${category_id} için ${products.length} ürün bulundu`);
   
+      // Ürün bulunamasa bile 200 OK ile boş dizi döndür
       res.status(200).json(products);
     } catch (error) {
       console.error('Ürünler alınırken hata oluştu:', error);

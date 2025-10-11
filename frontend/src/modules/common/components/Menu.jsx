@@ -204,7 +204,6 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       label: 'Ürün Yönetimi',
       children: [
         { key: 'Products', label: 'Ürünler' },
-        { key: 'Sort', label: 'Sıralama' },
         { key: 'Price Changing', label: 'Toplu Fiyat Değişikliği' }
       ]
     },
@@ -213,8 +212,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       icon: <GroupOutlined />,
       label: 'Kategori Yönetimi',
       children: [
-        { key: 'Categories', label: 'Kategoriler' },
-        { key: 'CategorySort', label: 'Sıralama' }
+        { key: 'Categories', label: 'Kategoriler' }
       ]
     },
     {
@@ -223,6 +221,7 @@ const SidebarMenu = ({ setSelectedComponent, onLogout }) => {
       label: 'İçerik Yönetimi',
       children: [
         { key: 'Labels', label: 'Etiketler' },
+        { key: 'CategorySort', label: 'Kategori ve Ürün Sıralama' },
         { key: 'Announcements', label: 'Duyurular' },
       ]
     },

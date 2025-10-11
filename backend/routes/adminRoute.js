@@ -46,6 +46,13 @@ router.put('/products/yeniSira',
   adminController.updateProductsBySiraId
 );
 
+// Kategori-spesifik ürün sıralama endpoint'i
+router.put('/products/updateCategorySira', 
+  authenticateToken, 
+  hasPermission('products', 'update'), 
+  adminController.updateCategoryProductsSira
+);
+
 // Ürün CRUD işlemleri
 router.post('/products/create', 
   authenticateToken, 
