@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const fs = require('fs').promises;
 const path = require('path');
@@ -92,6 +92,45 @@ class CloudflareService {
     }
   }
 
+  /**
+   * Dosyayı Cloudflare R2'den indirir ve yerel dosya sistemine kaydeder
+   * @param {string} cloudPath - R2'deki dosya yolu
+   * @param {string} localPath - İndirilecek yerel dosya yolu
+   * @returns {Promise<string>} - İndirilen dosyanın yerel yolu
+   */
+  async downloadFile(cloudPath, localPath) {
+    try {
+      console.log(`🔄 Cloudflare'dan dosya indiriliyor: ${cloudPath}`);
+      
+      const getParams = {
+        Bucket: BUCKET_NAME,
+        Key: cloudPath,
+      };
+      
+      const { Body } = await s3Client.send(new GetObjectCommand(getParams));
+      
+      if (!Body) {
+        throw new Error('Dosya içeriği alınamadı');
+      }
+      
+      // Stream'i buffer'a dönüştür
+      const chunks = [];
+      for await (const chunk of Body) {
+        chunks.push(chunk);
+      }
+      const fileBuffer = Buffer.concat(chunks);
+      
+      // Dosyayı yerel sisteme kaydet
+      await fs.writeFile(localPath, fileBuffer);
+      
+      console.log(`✅ Dosya başarıyla indirildi: ${localPath}`);
+      return localPath;
+    } catch (error) {
+      console.error(`❌ Cloudflare indirme hatası: ${error.message}`);
+      throw error;
+    }
+  }
+  
   /**
    * Geçici imzalı URL oluşturur
    * @param {string} cloudPath - R2'deki dosya yolu

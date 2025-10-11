@@ -8,6 +8,7 @@ const sequelize = require('../db');
 const { hasPermission } = require('../utils/permissionUtils');
 const { deleteImage, getImageUrl } = require('../middleware/uploadMiddleware');
 const { CloudflareService } = require('../middleware/cloudflareMiddleware');
+const fs = require('fs');
 
 
 exports.updateImageUrl = async (req, res) => {
@@ -1213,6 +1214,24 @@ exports.uploadExcel = async (req, res) => {
       return res.status(400).json({ message: 'Lütfen bir Excel dosyası yükleyin.' });
     }
 
+    // Dosya adındaki karakter kodlama sorunlarını tespit et
+    let originalFilename = req.file.originalname;
+    try {
+      // Türkçe karakter sorunu olabilecek dosya adını düzelt
+      originalFilename = decodeURIComponent(escape(originalFilename));
+    } catch (e) {
+      // Hata durumunda orijinal adı kullan
+      console.error(`⚠️ Dosya adı dekode edilemedi: ${e.message}`);
+    }
+    
+    console.log('📊 Excel dosyası bilgileri:', {
+      originalname: req.file.originalname,
+      decodedName: originalFilename,
+      path: req.file.path,
+      cloudUrl: req.file.cloudUrl,
+      cloudPath: req.file.cloudPath
+    });
+
     const columnMapping = {
       "Ürün Adı": "product_name",
       "Fiyat": "price",
@@ -1225,11 +1244,92 @@ exports.uploadExcel = async (req, res) => {
       "Kalori": "calorie_count",
       "Pişirme Süresi": "cooking_time"
     };
-
-    const workbook = xlsx.readFile(req.file.path);
+    
+    // Cloudflare entegrasyonu sonrası dosya işleme
+    let workbook;
+    
+    try {
+      // Önce yerel dosyayı kontrol et
+      const filePath = req.file.path;
+      if (fs.existsSync(filePath)) {
+        console.log(`✅ Yerel Excel dosyası bulundu: ${filePath}`);
+        // Excel dosyasını oku (karakter kodlama sorunlarına dikkat et)
+        console.log(`📄 Excel dosyası okunuyor: ${filePath}`);
+        workbook = xlsx.readFile(filePath, {
+          type: 'file',
+          cellDates: true,
+          cellNF: false,
+          cellText: false
+        });
+      } 
+      // Yerel dosya yoksa Cloudflare'dan indir
+      else if (req.file.cloudUrl) {
+        console.log(`🔄 Excel dosyası Cloudflare'dan indiriliyor: ${req.file.cloudUrl}`);
+        
+        // Geçici bir dosya oluştur
+        const tempFilePath = `./temp_excel_${Date.now()}.xlsx`;
+        
+        // Cloudflare servisini başlat
+        const cloudflareService = new CloudflareService();
+        
+        try {
+          // Dosyayı indir
+          await cloudflareService.downloadFile(req.file.cloudPath, tempFilePath);
+          console.log(`✅ Excel dosyası Cloudflare'dan indirildi: ${tempFilePath}`);
+          
+          // Excel dosyasını oku
+          // Excel dosyasını oku (karakter kodlama sorunlarına dikkat et)
+          console.log(`📄 Excel dosyası okunuyor: ${tempFilePath}`);
+          workbook = xlsx.readFile(tempFilePath, {
+            type: 'file',
+            cellDates: true,
+            cellNF: false,
+            cellText: false
+          });
+        } catch (downloadError) {
+          console.error(`❌ Excel dosyası indirme hatası: ${downloadError.message}`);
+          throw downloadError;
+        } finally {
+          // Geçici dosyayı temizle (varsa)
+          try {
+            if (fs.existsSync(tempFilePath)) {
+              fs.unlinkSync(tempFilePath);
+              console.log(`🗑️ Geçici Excel dosyası silindi: ${tempFilePath}`);
+            }
+          } catch (cleanupError) {
+            console.error(`⚠️ Geçici dosya silme hatası: ${cleanupError.message}, dosya yolu: ${tempFilePath}`);
+            // Silme hatası kritik değil, devam et
+          }
+        }
+      } else {
+        console.error('❌ Excel dosyası bulunamadı ve Cloudflare URL mevcut değil');
+        return res.status(400).json({ message: 'Excel dosyası işlenemedi. Dosya bulunamadı ve Cloudflare URL mevcut değil.' });
+      }
+    } catch (error) {
+      console.error(`❌ Excel dosyası işleme hatası: ${error.message}`);
+      return res.status(500).json({ message: 'Excel dosyası işlenirken bir hata oluştu', error: error.message });
+    }
     const sheetName = workbook.SheetNames[0];
+    console.log(`📑 Excel çalışma sayfası: ${sheetName}`);
+    
     const worksheet = workbook.Sheets[sheetName];
+    
+    // Sütun başlıklarını kontrol et
+    const headers = [];
+    const range = xlsx.utils.decode_range(worksheet['!ref']);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell = worksheet[xlsx.utils.encode_cell({r: range.s.r, c: C})];
+      headers.push(cell ? cell.v : undefined);
+    }
+    console.log(`📋 Excel sütun başlıkları:`, headers);
+    
     const rawData = xlsx.utils.sheet_to_json(worksheet);
+    console.log(`📊 Excel veri sayısı: ${rawData.length}`);
+    
+    // İlk satırı örnek olarak göster
+    if (rawData.length > 0) {
+      console.log(`📝 İlk satır örneği:`, rawData[0]);
+    }
 
     if (rawData.length === 0) {
       return res.status(400).json({ message: 'Excel dosyası boş.' });
@@ -1276,14 +1376,31 @@ exports.uploadExcel = async (req, res) => {
     const successfulProducts = [];
     const categoryErrors = [];
 
-    // 🧠 Kategorileri başta çekip bellekten kontrol edeceğiz
-    const allCategories = await Category.findAll();
+    // 🧠 Kullanıcının işletme ID'sini al
+    const userBusinessId = req.user.business_id;
+    console.log(`🏢 Kullanıcının business_id: ${userBusinessId}`);
+    
+    // 🧠 Sadece kullanıcının işletmesine ait kategorileri çekiyoruz
+    const allCategories = await Category.findAll({
+      where: {
+        business_id: userBusinessId
+      }
+    });
+    console.log(`📋 Mevcut kategori sayısı: ${allCategories.length}`);
+    
     const allCategoryNames = allCategories.map(cat =>
       cat.category_name.toString().trim().toLowerCase()
     );
 
-    // 🧠 Tüm ürünler belleğe alınıyor
-    const allProducts = await Products.findAll();
+    // 🧠 Sadece kullanıcının işletmesine ait ürünleri belleğe alıyoruz
+    
+    const allProducts = await Products.findAll({
+      where: {
+        business_id: userBusinessId
+      }
+    });
+    console.log(`📋 Mevcut ürün sayısı: ${allProducts.length}`);
+    
     const allProductNames = allProducts.map(p =>
       p.product_name.toString().trim().toLowerCase()
     );
@@ -1293,17 +1410,23 @@ exports.uploadExcel = async (req, res) => {
       
       const incomingName = item.product_name.toString().trim().toLowerCase();
 
-      // 🔍 Benzer ürün var mı?
+      // 🔍 Tam olarak aynı ürün var mı?
       let matchedProduct = allProducts.find(p =>
         p.product_name.toString().trim().toLowerCase() === incomingName
       );
-
-      if (!matchedProduct) {
+      
+      // Benzerlik kontrolü yapma seçeneği (varsayılan olarak kapalı)
+      const checkSimilarity = false; // Benzerlik kontrolünü açmak için true yapın
+      
+      if (!matchedProduct && checkSimilarity) {
+        console.log(`🔍 Benzer ürün aranıyor: "${incomingName}"`);
         const { bestMatch } = stringSimilarity.findBestMatch(incomingName, allProductNames);
         const bestMatchName = bestMatch.target;
         const bestRating = bestMatch.rating;
-
-        if (bestRating > 0.6) {
+        
+        // Benzerlik eşiğini 0.85'e yükselttik (daha katı)
+        if (bestRating > 0.85) {
+          console.log(`⚠️ Benzer ürün bulundu: "${bestMatchName}" (benzerlik: ${bestRating.toFixed(2)})`);
           matchedProduct = allProducts.find(p =>
             p.product_name.toString().trim().toLowerCase() === bestMatchName
           );
@@ -1311,11 +1434,16 @@ exports.uploadExcel = async (req, res) => {
       }
 
       if (matchedProduct) {
-        console.log(`⚠️ Duplicate ürün bulundu: ${item.product_name}`);
-        duplicateProducts.push(`${item.product_name} (benzer: ${matchedProduct.product_name})`);
+        console.log(`⚠️ Duplicate ürün bulundu: "${item.product_name}" (ID: ${matchedProduct.product_id})`);
+        duplicateProducts.push({
+          name: item.product_name,
+          existingId: matchedProduct.product_id,
+          existingName: matchedProduct.product_name
+        });
         continue;
       }
 
+      // Kategori kontrolü için kullanıcının business_id'sini kullan
       const categoryName = item.category_name.toString().trim().toLowerCase();
       let matchedCategory = allCategories.find(cat =>
         cat.category_name.toString().trim().toLowerCase() === categoryName
@@ -1333,20 +1461,26 @@ exports.uploadExcel = async (req, res) => {
           console.log(`✅ Benzer kategori bulundu: ${bestCategory.category_name} (rating: ${bestMatch.rating})`);
           matchedCategory = bestCategory;
         } else {
-          console.log(`🆕 Yeni kategori oluşturuluyor: ${item.category_name}`);
+          console.log(`🆕 Yeni kategori oluşturuluyor: ${item.category_name} (business_id: ${userBusinessId})`);
           try {
             matchedCategory = await Category.create({
               category_name: item.category_name.trim(),
               parent_id: null,
               sira_id: 0,
-              depth: 0
+              depth: 0,
+              business_id: userBusinessId // Kullanıcının business_id'sini ekliyoruz
             });
             allCategories.push(matchedCategory);
             allCategoryNames.push(matchedCategory.category_name.trim().toLowerCase());
             console.log(`✅ Yeni kategori oluşturuldu: ${matchedCategory.category_name}`);
           } catch (catErr) {
             console.error(`❌ Kategori oluşturma hatası:`, catErr);
-            categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı.`);
+            const errorDetail = catErr.errors && catErr.errors[0] ? 
+              `(${catErr.errors[0].message})` : 
+              catErr.message;
+            
+            categoryErrors.push(`Satır ${i + 1}: ${item.category_name} kategorisi oluşturulamadı. ${errorDetail}`);
+            console.error(`❌ Kategori oluşturulamadı: ${item.category_name} - Hata: ${errorDetail}`);
             continue;
           }
         }
@@ -1407,19 +1541,32 @@ if (successfulProducts.length === 0) {
   console.log('✅ Tam başarı, 200 status döndürülüyor');
 }
 
+// Duplicate ürünleri daha okunabilir formata dönüştür
+const formattedDuplicates = duplicateProducts.map(dup => 
+  `${dup.name} (Mevcut ID: ${dup.existingId}, Mevcut Ad: ${dup.existingName})`
+);
+
 console.log('📤 Response gönderiliyor:', {
   statusCode,
   message: responseMessage,
-  addedCount: successfulProducts.length
+  addedCount: successfulProducts.length,
+  duplicateCount: duplicateProducts.length
 });
 
 res.status(statusCode).json({
   message: responseMessage,
   addedProducts: successfulProducts,
-  duplicateProducts,
+  duplicateProducts: formattedDuplicates,
   categoryErrors,
   addedCount: successfulProducts.length,
-  duplicateCount: duplicateProducts.length
+  duplicateCount: duplicateProducts.length,
+  detailedResults: {
+    success: successfulProducts.length > 0,
+    totalProcessed: data.length,
+    successCount: successfulProducts.length,
+    duplicateCount: duplicateProducts.length,
+    errorCount: categoryErrors.length
+  }
 });
 
   } catch (error) {
